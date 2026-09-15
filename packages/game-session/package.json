@@ -16,12 +16,12 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/marioMH8/pocket-forge.git",
+		"url": "git+https://github.com/MarioMH8/pocket-forge.git",
 		"directory": "packages/game-session"
 	},
-	"homepage": "https://github.com/marioMH8/pocket-forge",
+	"homepage": "https://github.com/MarioMH8/pocket-forge",
 	"bugs": {
-		"url": "https://github.com/marioMH8/pocket-forge/issues"
+		"url": "https://github.com/MarioMH8/pocket-forge/issues"
 	},
 	"license": "MIT",
 	"publishConfig": {
