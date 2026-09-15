@@ -10,25 +10,25 @@ This record preserves the hexadrop-based package architecture decisions from the
 
 ## Accepted direction
 
-| Area | Decision |
-|---|---|
-| Foundation | `@hexadrop/command`, `@hexadrop/query`, `@hexadrop/aggregate-root`, `@hexadrop/event`, `@hexadrop/either`, `@hexadrop/ioc`, `@hexadrop/value-object` |
-| CQRS | Commands return `Either<E, void>`; Queries return data. Both defined in `application/`. |
-| Aggregate Roots | `GameSession` (contains Player, Party, Roster, Inventory) and `Battle` (autonomous, ephemeral). Only these two in v1. |
-| Entity model | Entities extend `@hexadrop/aggregate-root`, accumulate domain events internally, exposed via `pullEvents()`. |
-| Event bus | `@hexadrop/event` EventBus, registered as a service in the IoC container. No Pocket Forge wrapper needed. |
-| IoC container | `@hexadrop/ioc` container. Each domain package exports `./container` with `register(container, options)`. |
-| DI React hooks | Pocket Forge package provides `useCommand(CommandClass)` and `useQuery(QueryClass)`. |
+| Area                 | Decision                                                                                                                                                                                                                         |
+|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Foundation           | `@hexadrop/command`, `@hexadrop/query`, `@hexadrop/aggregate-root`, `@hexadrop/event`, `@hexadrop/either`, `@hexadrop/ioc`, `@hexadrop/value-object`                                                                             |
+| CQRS                 | Commands return `Either<E, void>`; Queries return data. Both defined in `application/`.                                                                                                                                          |
+| Aggregate Roots      | `GameSession` (contains Player, Party, Roster, Inventory) and `Battle` (autonomous, ephemeral). Only these two in v1.                                                                                                            |
+| Entity model         | Entities extend `@hexadrop/aggregate-root`, accumulate domain events internally, exposed via `pullEvents()`.                                                                                                                     |
+| Event bus            | `@hexadrop/event` EventBus, registered as a service in the IoC container. No Pocket Forge wrapper needed.                                                                                                                        |
+| IoC container        | `@hexadrop/ioc` container. Each domain package exports `./container` with `register(container, options)`.                                                                                                                        |
+| DI React hooks       | Pocket Forge package provides `useCommand(CommandClass)` and `useQuery(QueryClass)`.                                                                                                                                             |
 | Cache / invalidation | Pocket Forge package provides `useReactQuery(QueryClass)` and `useReactCommand(CommandClass)`. Keys defined on the use case class; cache invalidated after command execution. Optimistic updates via optional method on Command. |
-| Layer dependency | domain → nothing. application → domain. infrastructure → domain + application. presentation → application + domain. presentation never imports infrastructure. |
-| Entrypoints | `./domain`, `./application`, `./infrastructure`, `./presentation`, `./presentation/game`, `./presentation/editor`, `./container`, `./manifest.json`. Each with explicit `index.ts` barrel. |
-| Exports map | `types` and `development` conditions per entrypoint. Explicit re-exports only. |
-| Manifest | Open schema included only in packages that need it. Contains `editor` (panels, tools, eventNodes, schemaContributions), `game` (uiComponents, assetPaths), `locales`, `migrations`. |
-| Schemas | Co-located in domain packages; `manifest.json` declares `schemaContributions`. |
-| Repositories | IndexedDB, filesystem (Tauri/Capacitor), in-memory for tests. Only ARs have repositories. |
-| Persistence | GameSession and Battle saved as independent snapshots. GameSession composed at load time from its repository. |
-| Encounter → Battle | The Encounter use case orchestrates the transition: pause exploration, create Battle, apply results when Battle ends. |
-| Tests | Colocated with source. Cross-layer integration tests at `tests/` per package. |
+| Layer dependency     | domain → nothing. application → domain. infrastructure → domain + application. presentation → application + domain. presentation never imports infrastructure.                                                                   |
+| Entrypoints          | `./domain`, `./application`, `./infrastructure`, `./presentation`, `./presentation/game`, `./presentation/editor`, `./container`, `./manifest.json`. Each with explicit `index.ts` barrel.                                       |
+| Exports map          | `types` and `development` conditions per entrypoint. Explicit re-exports only.                                                                                                                                                   |
+| Manifest             | Open schema included only in packages that need it. Contains `editor` (panels, tools, eventNodes, schemaContributions), `game` (uiComponents, assetPaths), `locales`, `migrations`.                                              |
+| Schemas              | Co-located in domain packages; `manifest.json` declares `schemaContributions`.                                                                                                                                                   |
+| Repositories         | IndexedDB, filesystem (Tauri/Capacitor), in-memory for tests. Only ARs have repositories.                                                                                                                                        |
+| Persistence          | GameSession and Battle saved as independent snapshots. GameSession composed at load time from its repository.                                                                                                                    |
+| Encounter → Battle   | The Encounter use case orchestrates the transition: pause exploration, create Battle, apply results when Battle ends.                                                                                                            |
+| Tests                | Colocated with source. Cross-layer integration tests at `tests/` per package.                                                                                                                                                    |
 
 ## Decision log
 
