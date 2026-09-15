@@ -1,7 +1,5 @@
-![banner.png](.idea%2Fbanner.png)
-
 <h1 align="center">
-  Pocket Forge
+  <img src=".idea/banner.png" alt="Pocket Forge" />
 </h1>
 
 <p align="center">
