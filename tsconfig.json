@@ -1,7 +1,16 @@
 {
 	"extends": "@hexadrop/tsconfig",
 	"compilerOptions": {
+		"customConditions": ["development"],
+		"paths": {
+			"@pocket-forge/*/application": ["./packages/*/src/application/index.ts"],
+			"@pocket-forge/*/domain": ["./packages/*/src/domain/index.ts"],
+			"@pocket-forge/*/mock/domain": ["./packages/*/mock/domain/index.ts"],
+			"@pocket-forge/*/mother/domain": ["./packages/*/mother/domain/index.ts"],
+			"@pocket-forge/*/mother/application": ["./packages/*/mother/application/index.ts"],
+			"@pocket-forge/*": ["./packages/*/src/index.ts"]
+		},
 		"types": ["bun"]
 	},
-	"exclude": ["dist", "node_modules"]
+	"exclude": ["**/dist/**", "node_modules"]
 }

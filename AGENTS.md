@@ -15,3 +15,4 @@ Shared root tasks (PRs, branches, changesets, commits) are at the repo root.
 - [Release process](docs/agents/release-process.md) — changesets, beta snapshots, stable releases, and hotfixes.
 - [Pull requests](docs/agents/pull-requests.md) — approved-issue, labeling, checklist, and merge requirements.
 - [Branches and commits](docs/agents/branches-and-commits.md) — GitFlow branches, naming, conventions, and hooks.
+- [Package conventions](docs/agents/package-conventions.md) — domain-driven patterns, testing, and file structure for all packages.
