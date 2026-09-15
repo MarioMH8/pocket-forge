@@ -16,3 +16,9 @@ Shared root tasks (PRs, branches, changesets, commits) are at the repo root.
 - [Pull requests](docs/agents/pull-requests.md) — approved-issue, labeling, checklist, and merge requirements.
 - [Branches and commits](docs/agents/branches-and-commits.md) — GitFlow branches, naming, conventions, and hooks.
 - [Package conventions](docs/agents/package-conventions.md) — domain-driven patterns, testing, and file structure for all packages.
+
+## Agent skills
+
+- [Issue tracker](docs/agents/issue-tracker.md) Issues live in GitHub Issues.
+- [Triage labels](docs/agents/triage-labels.md) Custom label vocabulary.
+- [Domain docs](docs/agents/domain.md) Multi-context layout via `CONTEXT-MAP.md`
