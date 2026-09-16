@@ -5,4 +5,3 @@ This repo uses a multi-context domain layout. Each context has its own `CONTEXT.
 ## Contexts
 
 - **Game Session** — `packages/game-session/CONTEXT.md`. Covers Game Session terminology.
-- **Combat** — `packages/combat/CONTEXT.md`. Covers the deterministic, turn-based combat simulation vocabulary.
