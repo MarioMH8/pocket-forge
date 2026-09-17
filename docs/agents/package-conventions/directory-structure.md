@@ -14,9 +14,7 @@ packages/<name>/
 ├── tests/                # Test files, mirroring src/ layers
 │   ├── domain/
 │   │   ├── event/
-│   │   └── index.ts      # Barrel (may be empty)
 │   └── application/
-│       └── index.ts      # Barrel (may be empty)
 ├── mother/               # Object Mother factories for tests
 │   ├── domain/
 │   │   └── index.ts      # Barrel: named re-exports
