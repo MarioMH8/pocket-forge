@@ -1,6 +1,7 @@
-import { GameSession } from '@pocket-forge/game-session/domain';
-import { GameSessionMother } from '@pocket-forge/game-session/mother/domain';
 import { describe, expect, it } from 'bun:test';
+
+import GameSessionMother from '../../mother/domain/game-session.mother';
+import GameSession from '../../src/domain/game-session';
 
 describe('GameSession', () => {
 	describe('create', () => {

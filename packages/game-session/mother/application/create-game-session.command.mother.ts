@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { CreateGameSessionCommand } from '@pocket-forge/game-session/application';
+
+import { CreateGameSessionCommand } from '../../src/application';
 
 export default class CreateGameSessionCommandMother {
 	static create(overrides?: { id?: string }): CreateGameSessionCommand {

@@ -1,6 +1,7 @@
-import { Species } from '@pocket-forge/species/domain';
-import { SpeciesMother } from '@pocket-forge/species/mother/domain';
 import { describe, expect, it } from 'bun:test';
+
+import SpeciesMother from '../../mother/domain/species.mother';
+import Species from '../../src/domain/species';
 
 describe('Species', () => {
 	describe('create', () => {

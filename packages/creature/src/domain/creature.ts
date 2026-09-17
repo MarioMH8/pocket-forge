@@ -1,12 +1,12 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
-import type { AbilityPrimitives } from '@pocket-forge/abilities/domain';
-import type { AttributeAssignment, AttributeDefinition, AttributeValues } from '@pocket-forge/attributes/domain';
+import type { AbilityPrimitives } from '@pocket-forge/ability/domain';
+import type { AttributeAssignment, AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
 import {
 	hydrateAttributeMap,
 	serializeAttributeMap,
 	validateAndBuildAttributeMap,
-} from '@pocket-forge/attributes/domain';
-import type { MovePrimitives } from '@pocket-forge/moves/domain';
+} from '@pocket-forge/attribute/domain';
+import type { MovePrimitives } from '@pocket-forge/move/domain';
 import type { SpeciesPrimitives } from '@pocket-forge/species/domain';
 
 /**

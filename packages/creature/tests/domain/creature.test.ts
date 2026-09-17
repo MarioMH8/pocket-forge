@@ -1,8 +1,9 @@
-import { AttributeDefinitionMother } from '@pocket-forge/attributes/mother/domain';
-import { Creature } from '@pocket-forge/creature/domain';
-import { CreatureMother } from '@pocket-forge/creature/mother/domain';
+import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
 import { SpeciesMother } from '@pocket-forge/species/mother/domain';
 import { describe, expect, it } from 'bun:test';
+
+import CreatureMother from '../../mother/domain/creature.mother';
+import Creature from '../../src/domain/creature';
 
 describe('Creature', () => {
 	describe('create', () => {

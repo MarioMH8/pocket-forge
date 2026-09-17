@@ -4,8 +4,9 @@ import CommandHandler from '@hexadrop/command/decorator';
 import type Either from '@hexadrop/either';
 import type DomainError from '@hexadrop/error';
 import type EventBus from '@hexadrop/event/bus';
-import type { GameSessionRepository } from '@pocket-forge/game-session/domain';
-import { GameSession } from '@pocket-forge/game-session/domain';
+
+import GameSession from '../domain/game-session';
+import type GameSessionRepository from '../domain/repository';
 
 interface CreateGameSessionCommandConstructorParameters {
 	id: string;

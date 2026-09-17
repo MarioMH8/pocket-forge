@@ -1,10 +1,10 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
-import type { AttributeAssignment, AttributeDefinition, AttributeValues } from '@pocket-forge/attributes/domain';
+import type { AttributeAssignment, AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
 import {
 	hydrateAttributeMap,
 	serializeAttributeMap,
 	validateAndBuildAttributeMap,
-} from '@pocket-forge/attributes/domain';
+} from '@pocket-forge/attribute/domain';
 
 /**
  * Primitives representation of a Species snapshot.

@@ -46,17 +46,17 @@
 	},
 	"peerDependencies": {
 		"@hexadrop/error": "^2.0.0",
-		"@pocket-forge/abilities": "workspace:*",
-		"@pocket-forge/attributes": "workspace:*",
-		"@pocket-forge/moves": "workspace:*",
+		"@pocket-forge/ability": "workspace:*",
+		"@pocket-forge/attribute": "workspace:*",
+		"@pocket-forge/move": "workspace:*",
 		"@pocket-forge/species": "workspace:*"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "10.6.0",
 		"@hexadrop/error": "2.0.0",
-		"@pocket-forge/abilities": "workspace:*",
-		"@pocket-forge/attributes": "workspace:*",
-		"@pocket-forge/moves": "workspace:*",
+		"@pocket-forge/ability": "workspace:*",
+		"@pocket-forge/attribute": "workspace:*",
+		"@pocket-forge/move": "workspace:*",
 		"@pocket-forge/species": "workspace:*",
 		"tsdown": "0.23.0"
 	}

@@ -1,9 +1,10 @@
 import Either from '@hexadrop/either';
-import { GetGameSessionQueryHandler } from '@pocket-forge/game-session/application';
-import { MockGameSessionRepository } from '@pocket-forge/game-session/mock/domain';
-import { GetGameSessionQueryMother } from '@pocket-forge/game-session/mother/application';
-import { GameSessionMother } from '@pocket-forge/game-session/mother/domain';
 import { describe, expect, it } from 'bun:test';
+
+import MockGameSessionRepository from '../../mock/domain/game-session.repository';
+import { GetGameSessionQueryMother } from '../../mother/application';
+import GameSessionMother from '../../mother/domain/game-session.mother';
+import { GetGameSessionQueryHandler } from '../../src/application';
 
 describe('GetGameSessionQueryHandler', () => {
 	it('returns the session when found', async () => {

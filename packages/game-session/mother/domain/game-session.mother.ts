@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { GameSession } from '@pocket-forge/game-session/domain';
+
+import GameSession from '../../src/domain/game-session';
 
 export default class GameSessionMother {
 	static create(overrides?: { id?: string }): GameSession {

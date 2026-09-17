@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
-import type { AttributeAssignment, AttributeDefinition } from '@pocket-forge/attributes/domain';
-import { AttributeAssignmentMother, AttributeDefinitionMother } from '@pocket-forge/attributes/mother/domain';
-import type { SpeciesPrimitives } from '@pocket-forge/species/domain';
-import { Species } from '@pocket-forge/species/domain';
+import type { AttributeAssignment, AttributeDefinition } from '@pocket-forge/attribute/domain';
+import { AttributeAssignmentMother, AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
+
+import type { SpeciesPrimitives } from '../../src/domain/species';
+import Species from '../../src/domain/species';
 
 export default class SpeciesMother {
 	static create(overrides?: {

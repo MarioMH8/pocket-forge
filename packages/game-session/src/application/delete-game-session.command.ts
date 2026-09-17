@@ -4,8 +4,10 @@ import CommandHandler from '@hexadrop/command/decorator';
 import Either from '@hexadrop/either';
 import type DomainError from '@hexadrop/error';
 import type EventBus from '@hexadrop/event/bus';
-import type { GameSessionRepository } from '@pocket-forge/game-session/domain';
-import { GameSession, GameSessionId } from '@pocket-forge/game-session/domain';
+
+import GameSession from '../domain/game-session';
+import GameSessionId from '../domain/game-session-id';
+import type GameSessionRepository from '../domain/repository';
 
 interface DeleteGameSessionCommandConstructorParameters {
 	id: string;

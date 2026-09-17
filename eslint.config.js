@@ -33,8 +33,11 @@ export default hexadrop(
 		},
 	},
 	{
-		files: ['**/*.md/**/*'],
+		files: ['**/*.md/**/*', '**/*.md'],
 		rules: {
+			'import-sort/imports': 'off',
+			'import-unused/no-unused-imports': 'off',
+			'import/no-duplicates': 'off',
 			'import/no-unresolved': 'off',
 		},
 	}

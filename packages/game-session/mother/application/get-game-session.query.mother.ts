@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { GetGameSessionQuery } from '@pocket-forge/game-session/application';
+
+import { GetGameSessionQuery } from '../../src/application';
 
 export default class GetGameSessionQueryMother {
 	static create(overrides?: { id?: string }): GetGameSessionQuery {

@@ -1,5 +1,6 @@
-import { GameSessionDeletedEvent } from '@pocket-forge/game-session/domain';
 import { describe, expect, it } from 'bun:test';
+
+import { GameSessionDeletedEvent } from '../../../src/domain';
 
 describe('GameSessionDeletedEvent', () => {
 	it('has EVENT_NAME "GameSession.deleted"', () => {

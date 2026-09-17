@@ -1,5 +1,6 @@
-import type { Creature } from '@pocket-forge/creature/domain';
 import { vi } from 'bun:test';
+
+import type Creature from '../../src/domain/creature';
 
 export default class MockCreatureRepository {
 	findAll = vi.fn<() => Creature[]>();
