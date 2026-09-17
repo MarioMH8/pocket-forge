@@ -1,0 +1,57 @@
+{
+	"name": "@pocket-forge/abilities",
+	"version": "0.0.0",
+	"description": "Immutable catalog entries describing creature abilities for Pocket Forge.",
+	"keywords": [
+		"pocket-forge",
+		"rpg",
+		"game-development",
+		"ability",
+		"creature"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/MarioMH8/pocket-forge.git",
+		"directory": "packages/abilities"
+	},
+	"homepage": "https://github.com/MarioMH8/pocket-forge",
+	"bugs": {
+		"url": "https://github.com/MarioMH8/pocket-forge/issues"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"type": "module",
+	"sideEffects": false,
+	"files": [
+		"dist"
+	],
+	"exports": {
+		"./domain": {
+			"development": "./src/domain/index.ts",
+			"types": "./dist/domain/index.d.mts",
+			"default": "./dist/domain/index.mjs"
+		},
+		"./mock/domain": {
+			"development": "./mock/domain/index.ts"
+		},
+		"./mother/domain": {
+			"development": "./mother/domain/index.ts"
+		}
+	},
+	"scripts": {
+		"build": "tsdown",
+		"prepublishOnly": "tsdown"
+	},
+	"peerDependencies": {
+		"@hexadrop/error": "^2.0.0",
+		"@pocket-forge/attributes": "workspace:*"
+	},
+	"devDependencies": {
+		"@faker-js/faker": "10.6.0",
+		"@hexadrop/error": "2.0.0",
+		"@pocket-forge/attributes": "workspace:*",
+		"tsdown": "0.23.0"
+	}
+}
