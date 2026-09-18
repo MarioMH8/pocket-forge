@@ -45,10 +45,13 @@ export default class AttributeMap<T extends AttributeValues = AttributeValues> {
 	/**
 	 * Creates a validated AttributeMap from a typed values object.
 	 *
-	 * Every key in `values` must have a matching entry in `definitions`,
-	 * and its value must satisfy that definition's constraints.
+	 * Every definition contributes an entry to the map: if a key is present
+	 * in `values` its value is used; otherwise the definition's
+	 * `defaultValue` is applied. All entries are validated against their
+	 * corresponding definition.
 	 *
-	 * @param values - A typed record of attribute values.
+	 * @param values - A typed record of attribute values. Keys not listed
+	 *                 here receive their definition's default.
 	 * @param definitions - The attribute definitions that govern the values.
 	 * @param entityName - Name of the entity being built (used in error messages).
 	 * @returns A fully validated AttributeMap with the inferred type.
@@ -62,15 +65,23 @@ export default class AttributeMap<T extends AttributeValues = AttributeValues> {
 	): AttributeMap<T> {
 		const definitionMap = new Map(definitions.map(d => [d.key, d]));
 
-		for (const [key, value] of Object.entries(values)) {
-			const definition = definitionMap.get(key);
-			if (!definition) {
+		// Validate extra keys in values that have no definition
+		for (const key of Object.keys(values)) {
+			if (!definitionMap.has(key)) {
 				throw new InvalidArgumentError(`No definition found for attribute "${key}"`, entityName);
 			}
-			AttributeAssignment.create({ key, value }, definition);
 		}
 
-		return new AttributeMap(values);
+		// Build merged record: values take precedence, missing keys get defaults
+		const merged = {} as Record<string, AttributeValue>;
+		for (const definition of definitions) {
+			const raw = (values as Record<string, AttributeValue>)[definition.key];
+			const value = raw ?? definition.defaultValue;
+			AttributeAssignment.create({ key: definition.key, value }, definition);
+			merged[definition.key] = value;
+		}
+
+		return new AttributeMap(merged as unknown as T);
 	}
 
 	/**

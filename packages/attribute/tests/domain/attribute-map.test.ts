@@ -12,6 +12,22 @@ describe('AttributeMap', () => {
 			expect(map.value.name).toBe('hello');
 		});
 
+		it('applies default values for keys not provided', () => {
+			const definition = AttributeDefinitionMother.string({ defaultValue: 'fallback', key: 'label' });
+
+			const map = AttributeMap.create({}, [definition], 'Test');
+
+			expect((map.value as Record<string, string>)['label']).toBe('fallback');
+		});
+
+		it('overrides default with provided value', () => {
+			const definition = AttributeDefinitionMother.string({ defaultValue: 'fallback', key: 'label' });
+
+			const map = AttributeMap.create({ label: 'custom' }, [definition], 'Test');
+
+			expect(map.value.label).toBe('custom');
+		});
+
 		it('throws when a value has no matching definition', () => {
 			expect(() => AttributeMap.create({ name: 'hello' }, [], 'Test')).toThrow();
 		});
