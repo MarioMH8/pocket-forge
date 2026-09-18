@@ -10,7 +10,7 @@ import type { AttributeConstraints, AttributeType, AttributeValue } from './attr
  * AttributeDefinitions are the schema layer of the attribute system. They
  * describe *what kind* of data an attribute holds and how to validate it.
  * Individual entities (Species, Moves, Abilities, Creatures) then carry
- * {@link AttributeAssignment}s whose values must conform to these definitions.
+ * {@link AttributeMap}s whose values must conform to these definitions.
  *
  * @example
  * ```ts
