@@ -1,6 +1,8 @@
 # Document public APIs with JSDoc
 
-Every public API surface in `src/` — classes, methods, properties, and exported functions — must carry JSDoc that explains intent, contracts, and constraints. Internal helpers and trivial accessors may omit documentation when the intent is self-evident from the surrounding context.
+Every public API surface in `src/` — classes, methods, properties, and exported functions — must carry JSDoc that
+explains intent, contracts, and constraints. Internal helpers and trivial accessors may omit documentation when the
+intent is self-evident from the surrounding context.
 
 ## What to document
 
