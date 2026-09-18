@@ -4,10 +4,21 @@ import type { AttributeValues } from './attribute.types';
 import AttributeAssignment from './attribute-assignment';
 import type AttributeDefinition from './attribute-definition';
 
+/**
+ * Static utility for building, hydrating, and serialising attribute maps.
+ *
+ * AttributeMap bridges the gap between the plain {@link AttributeValues}
+ * records used for persistence and the strongly-typed
+ * `ReadonlyMap<string, AttributeAssignment>` used internally by domain entities.
+ */
 export default class AttributeMap {
 	/**
-	 * Hydrates a ReadonlyMap of AttributeAssignments from a plain record of values.
-	 * Skips validation (for persistence hydration).
+	 * Hydrates a `ReadonlyMap` of {@link AttributeAssignment}s from a plain
+	 * record of values. Skips validation — intended for persistence hydration
+	 * where data was already validated at write time.
+	 *
+	 * @param attributes - A plain record of attribute values keyed by attribute name.
+	 * @returns A read-only map of rehydrated assignments.
 	 */
 	static fromPrimitives(attributes: AttributeValues): ReadonlyMap<string, AttributeAssignment> {
 		const attributeMap = new Map<string, AttributeAssignment>();
@@ -19,7 +30,11 @@ export default class AttributeMap {
 	}
 
 	/**
-	 * Serializes a ReadonlyMap of AttributeAssignments into a plain record.
+	 * Serialises a `ReadonlyMap` of {@link AttributeAssignment}s into a plain
+	 * {@link AttributeValues} record suitable for persistence or transport.
+	 *
+	 * @param attributeMap - The map of assignments to serialise.
+	 * @returns A plain record of attribute values.
 	 */
 	static toPrimitives(attributeMap: ReadonlyMap<string, AttributeAssignment>): AttributeValues {
 		const attributes: AttributeValues = {};
@@ -31,9 +46,18 @@ export default class AttributeMap {
 	}
 
 	/**
-	 * Validates and builds a ReadonlyMap of AttributeAssignments from raw assignments
-	 * and their corresponding definitions. Throws if any assignment lacks a definition
-	 * or fails validation.
+	 * Validates and builds a `ReadonlyMap` of {@link AttributeAssignment}s
+	 * from raw assignments and their corresponding definitions.
+	 *
+	 * Every assignment must have a matching definition, and its value must
+	 * satisfy that definition's constraints.
+	 *
+	 * @param assignments - The raw attribute assignments to validate.
+	 * @param definitions - The attribute definitions that govern the assignments.
+	 * @param entityName - Name of the entity being built (used in error messages).
+	 * @returns A read-only map of validated assignments.
+	 * @throws {InvalidArgumentError} When any assignment lacks a definition
+	 *         or fails validation.
 	 */
 	static validateAndBuildAttributeMap(
 		assignments: AttributeAssignment[],

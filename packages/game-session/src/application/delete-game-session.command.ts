@@ -11,9 +11,23 @@ interface DeleteGameSessionCommandConstructorParameters {
 	id: string;
 }
 
+/**
+ * Command to delete an existing {@link GameSession}.
+ *
+ * The handler looks up the session, marks it for deletion, removes it from
+ * persistence, and publishes the {@link GameSessionDeletedEvent}.
+ *
+ * @example
+ * ```ts
+ * const cmd = new DeleteGameSessionCommand({ id: '01ARZ3NDEKTSV4RRFFQ69G5FAV' });
+ * ```
+ */
 class DeleteGameSessionCommand extends Command {
 	static override COMMAND_NAME = 'DeleteGameSessionCommand';
 
+	/**
+	 *The ULID of the session to delete.
+	 */
 	readonly id: string;
 
 	constructor({ id }: DeleteGameSessionCommandConstructorParameters) {
@@ -22,6 +36,14 @@ class DeleteGameSessionCommand extends Command {
 	}
 }
 
+/**
+ * Handles {@link DeleteGameSessionCommand} by looking up the session,
+ * marking it deleted, removing it from the store, and publishing events.
+ *
+ * If the session is not found the repository error is propagated as-is.
+ *
+ * @throws Never throws — errors are returned as left-side {@link Either} values.
+ */
 @CommandHandler(DeleteGameSessionCommand)
 class DeleteGameSessionCommandHandler implements CommandHandlerInterface<DeleteGameSessionCommand> {
 	constructor(

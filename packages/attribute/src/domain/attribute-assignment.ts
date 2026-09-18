@@ -6,10 +6,34 @@ import type AttributeDefinition from './attribute-definition';
 
 /**
  * Stores one validated current value per attribute key.
- * The assignment is validated against its corresponding AttributeDefinition.
+ *
+ * An AttributeAssignment is the *instance* side of the attribute system:
+ * it holds a concrete value for a specific attribute key, and that value
+ * must have been validated against the corresponding
+ * {@link AttributeDefinition} at creation time.
+ *
+ * @example
+ * ```ts
+ * const hpDef = AttributeDefinition.create({
+ *   key: 'baseHp', type: 'number', defaultValue: 10,
+ *   constraints: { min: 1, max: 255 },
+ * });
+ *
+ * // Valid assignment
+ * const hp = AttributeAssignment.create({ key: 'baseHp', value: 45 }, hpDef);
+ *
+ * // Throws — value out of range
+ * AttributeAssignment.create({ key: 'baseHp', value: 999 }, hpDef);
+ * ```
  */
 export default class AttributeAssignment {
+	/**
+	 *The attribute key this assignment corresponds to.
+	 */
 	readonly key: string;
+	/**
+	 *The current validated value.
+	 */
 	readonly value: AttributeValue;
 
 	private constructor(primitives: Primitives<AttributeAssignment>) {
@@ -19,7 +43,15 @@ export default class AttributeAssignment {
 
 	/**
 	 * Creates a validated AttributeAssignment.
-	 * Validates the value against the provided definition.
+	 *
+	 * The assignment key must match the definition key, and the value must
+	 * pass the definition's type and constraint checks.
+	 *
+	 * @param primitives - Plain object with `key` and `value`.
+	 * @param definition - The {@link AttributeDefinition} that governs this assignment.
+	 * @returns A validated AttributeAssignment.
+	 * @throws {InvalidArgumentError} When the key does not match the definition,
+	 *         or the value fails validation.
 	 */
 	static create(primitives: Primitives<AttributeAssignment>, definition: AttributeDefinition): AttributeAssignment {
 		if (primitives.key !== definition.key) {
@@ -39,6 +71,15 @@ export default class AttributeAssignment {
 		return new AttributeAssignment(primitives);
 	}
 
+	/**
+	 * Hydrates an AttributeAssignment from primitives without re-validating.
+	 *
+	 * Use this when reconstructing from a persistence layer where the value
+	 * was already validated at write time.
+	 *
+	 * @param primitives - Plain object with `key` and `value`.
+	 * @returns A rehydrated AttributeAssignment.
+	 */
 	static fromPrimitives(primitives: Primitives<AttributeAssignment>): AttributeAssignment {
 		return new AttributeAssignment(primitives);
 	}

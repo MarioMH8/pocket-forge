@@ -6,11 +6,47 @@ import type { AttributeConstraints, AttributeType, AttributeValue } from './attr
 /**
  * A catalog-owned definition that declares the key, type, default value,
  * and optional constraints for a reusable project-level attribute.
+ *
+ * AttributeDefinitions are the schema layer of the attribute system. They
+ * describe *what kind* of data an attribute holds and how to validate it.
+ * Individual entities (Species, Moves, Abilities, Creatures) then carry
+ * {@link AttributeAssignment}s whose values must conform to these definitions.
+ *
+ * @example
+ * ```ts
+ * // A numeric attribute with range constraints
+ * const hpDef = AttributeDefinition.create({
+ *   key: 'baseHp', type: 'number', defaultValue: 10,
+ *   constraints: { min: 1, max: 255 },
+ * });
+ *
+ * // An enum attribute
+ * const typeDef = AttributeDefinition.create({
+ *   key: 'element', type: 'enum', defaultValue: 'neutral',
+ *   constraints: { validValues: ['fire', 'water', 'grass', 'neutral'] },
+ * });
+ *
+ * // Validate a raw value at runtime
+ * const error = hpDef.validateValue(300);
+ * // error.message === 'Value 300 exceeds maximum 255'
+ * ```
  */
 export default class AttributeDefinition {
+	/**
+	 *Optional constraints that govern valid values (ranges, allowed values, etc.).
+	 */
 	readonly constraints: AttributeConstraints;
+	/**
+	 *The fallback value used when no explicit assignment is provided.
+	 */
 	readonly defaultValue: AttributeValue;
+	/**
+	 *Unique key that identifies this attribute across the project.
+	 */
 	readonly key: string;
+	/**
+	 *The data type of this attribute.
+	 */
 	readonly type: AttributeType;
 
 	private constructor(primitives: Primitives<AttributeDefinition>) {
@@ -23,7 +59,16 @@ export default class AttributeDefinition {
 
 	/**
 	 * Creates a validated AttributeDefinition.
-	 * Throws an InvalidArgumentError if the definition is invalid.
+	 *
+	 * Self-validates the definition on construction: the key must be non-empty,
+	 * the type must be one of the known {@link AttributeType} values, the default
+	 * value must pass validation, and type-specific constraints (e.g. `validValues`
+	 * for enums, `itemType` for arrays) must be present.
+	 *
+	 * @param primitives - Plain object with `key`, `type`, `defaultValue`, and `constraints`.
+	 * @returns A fully validated AttributeDefinition.
+	 * @throws {InvalidArgumentError} When the definition is structurally invalid
+	 *         or the default value fails its own validation.
 	 */
 	static create(primitives: Primitives<AttributeDefinition>): AttributeDefinition {
 		const definition = new AttributeDefinition(primitives);
@@ -33,7 +78,13 @@ export default class AttributeDefinition {
 	}
 
 	/**
-	 * Hydrates from primitives without re-validating (for persistence).
+	 * Hydrates an AttributeDefinition from primitives without re-validating.
+	 *
+	 * Use this when reconstructing from a persistence layer where the definition
+	 * was already validated at write time.
+	 *
+	 * @param primitives - Plain object with `key`, `type`, `defaultValue`, and `constraints`.
+	 * @returns A rehydrated AttributeDefinition.
 	 */
 	static fromPrimitives(primitives: Primitives<AttributeDefinition>): AttributeDefinition {
 		return new AttributeDefinition(primitives);
@@ -49,8 +100,11 @@ export default class AttributeDefinition {
 	}
 
 	/**
-	 * Validates a raw value against this definition.
-	 * Returns an InvalidArgumentError if invalid, or undefined if valid.
+	 * Validates a raw value against this definition's type and constraints.
+	 *
+	 * @param value - The raw value to validate.
+	 * @returns An {@link InvalidArgumentError} describing the violation,
+	 *          or `undefined` if the value is valid.
 	 */
 	validateValue(value: unknown): InvalidArgumentError | undefined {
 		switch (this.type) {

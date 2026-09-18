@@ -10,9 +10,20 @@ interface GetGameSessionQueryConstructorParameters {
 	id: string;
 }
 
+/**
+ * Read-side query to retrieve a {@link GameSession} by its ULID.
+ *
+ * @example
+ * ```ts
+ * const query = new GetGameSessionQuery({ id: '01ARZ3NDEKTSV4RRFFQ69G5FAV' });
+ * ```
+ */
 class GetGameSessionQuery extends Query<GameSession> {
 	static override QUERY_NAME = 'GetGameSessionQuery';
 
+	/**
+	 *The ULID of the session to fetch.
+	 */
 	readonly id: string;
 
 	constructor({ id }: GetGameSessionQueryConstructorParameters) {
@@ -25,6 +36,11 @@ class GetGameSessionQuery extends Query<GameSession> {
 	}
 }
 
+/**
+ * Handles {@link GetGameSessionQuery} by delegating to the repository.
+ *
+ * @throws Never throws — errors are returned as left-side {@link Either} values.
+ */
 @QueryHandler(GetGameSessionQuery)
 class GetGameSessionQueryHandler implements QueryHandlerInterface<GameSession, GetGameSessionQuery> {
 	constructor(private readonly repository: GameSessionRepository) {}
