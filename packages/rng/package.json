@@ -1,0 +1,54 @@
+{
+	"name": "@pocket-forge/rng",
+	"version": "0.0.0",
+	"description": "Seedable, deterministic random number generation for Pocket Forge.",
+	"keywords": [
+		"pocket-forge",
+		"rpg",
+		"game-development",
+		"rng",
+		"random",
+		"seedable",
+		"deterministic"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/MarioMH8/pocket-forge.git",
+		"directory": "packages/rng"
+	},
+	"homepage": "https://github.com/MarioMH8/pocket-forge",
+	"bugs": {
+		"url": "https://github.com/MarioMH8/pocket-forge/issues"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"type": "module",
+	"sideEffects": false,
+	"files": [
+		"dist"
+	],
+	"exports": {
+		"./domain": {
+			"development": "./src/domain/index.ts",
+			"types": "./dist/domain/index.d.mts",
+			"default": "./dist/domain/index.mjs"
+		},
+		"./mother/domain": {
+			"development": "./mother/domain/index.ts"
+		}
+	},
+	"scripts": {
+		"build": "tsdown",
+		"prepublishOnly": "tsdown"
+	},
+	"peerDependencies": {
+		"@hexadrop/types": "^2.0.0"
+	},
+	"devDependencies": {
+		"@faker-js/faker": "10.6.0",
+		"@hexadrop/types": "2.0.0",
+		"tsdown": "0.23.0"
+	}
+}

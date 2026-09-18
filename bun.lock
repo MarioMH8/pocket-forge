@@ -26,13 +26,13 @@
         "@faker-js/faker": "10.6.0",
         "@hexadrop/error": "2.0.0",
         "@hexadrop/types": "2.0.0",
-        "@pocket-forge/attribute": "workspace:*",
+        "@pocket-forge/attribute": "0.0.0",
         "tsdown": "0.23.0",
       },
       "peerDependencies": {
         "@hexadrop/error": "^2.0.0",
         "@hexadrop/types": "^2.0.0",
-        "@pocket-forge/attribute": "workspace:*",
+        "@pocket-forge/attribute": "^0.0.0",
       },
     },
     "packages/attribute": {
@@ -56,19 +56,19 @@
         "@faker-js/faker": "10.6.0",
         "@hexadrop/error": "2.0.0",
         "@hexadrop/types": "2.0.0",
-        "@pocket-forge/ability": "workspace:*",
-        "@pocket-forge/attribute": "workspace:*",
-        "@pocket-forge/move": "workspace:*",
-        "@pocket-forge/species": "workspace:*",
+        "@pocket-forge/ability": "0.0.0",
+        "@pocket-forge/attribute": "0.0.0",
+        "@pocket-forge/move": "0.0.0",
+        "@pocket-forge/species": "0.0.0",
         "tsdown": "0.23.0",
       },
       "peerDependencies": {
         "@hexadrop/error": "^2.0.0",
         "@hexadrop/types": "^2.0.0",
-        "@pocket-forge/ability": "workspace:*",
-        "@pocket-forge/attribute": "workspace:*",
-        "@pocket-forge/move": "workspace:*",
-        "@pocket-forge/species": "workspace:*",
+        "@pocket-forge/ability": "^0.0.0",
+        "@pocket-forge/attribute": "^0.0.0",
+        "@pocket-forge/move": "^0.0.0",
+        "@pocket-forge/species": "^0.0.0",
       },
     },
     "packages/game-session": {
@@ -108,13 +108,27 @@
         "@faker-js/faker": "10.6.0",
         "@hexadrop/error": "2.0.0",
         "@hexadrop/types": "2.0.0",
-        "@pocket-forge/attribute": "workspace:*",
+        "@pocket-forge/attribute": "0.0.0",
         "tsdown": "0.23.0",
       },
       "peerDependencies": {
         "@hexadrop/error": "^2.0.0",
         "@hexadrop/types": "^2.0.0",
-        "@pocket-forge/attribute": "workspace:*",
+        "@pocket-forge/attribute": "^0.0.0",
+      },
+    },
+    "packages/rng": {
+      "name": "@pocket-forge/rng",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@faker-js/faker": "10.6.0",
+        "@hexadrop/error": "2.0.0",
+        "@hexadrop/types": "2.0.0",
+        "tsdown": "0.23.0",
+      },
+      "peerDependencies": {
+        "@hexadrop/error": "^2.0.0",
+        "@hexadrop/types": "^2.0.0",
       },
     },
     "packages/species": {
@@ -124,13 +138,13 @@
         "@faker-js/faker": "10.6.0",
         "@hexadrop/error": "2.0.0",
         "@hexadrop/types": "2.0.0",
-        "@pocket-forge/attribute": "workspace:*",
+        "@pocket-forge/attribute": "0.0.0",
         "tsdown": "0.23.0",
       },
       "peerDependencies": {
         "@hexadrop/error": "^2.0.0",
         "@hexadrop/types": "^2.0.0",
-        "@pocket-forge/attribute": "workspace:*",
+        "@pocket-forge/attribute": "^0.0.0",
       },
     },
   },
@@ -412,6 +426,8 @@
     "@pocket-forge/game-session": ["@pocket-forge/game-session@workspace:packages/game-session"],
 
     "@pocket-forge/move": ["@pocket-forge/move@workspace:packages/move"],
+
+    "@pocket-forge/rng": ["@pocket-forge/rng@workspace:packages/rng"],
 
     "@pocket-forge/species": ["@pocket-forge/species@workspace:packages/species"],
 
