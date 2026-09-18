@@ -55,7 +55,7 @@ export interface CreaturePrimitives extends Omit<
  * console.log(creature.attributes.value.currentHp); // 42
  * ```
  */
-export default class Creature<T extends AttributeValues = AttributeValues> {
+export default class Creature<T extends Record<keyof T, AttributeValue> = AttributeValues> {
 	/**
 	 *Embedded ability snapshots known by this creature.
 	 */
@@ -114,7 +114,7 @@ export default class Creature<T extends AttributeValues = AttributeValues> {
 	 * @throws {InvalidArgumentError} When `id` or `name` is empty, or when any
 	 *         value lacks a definition or fails validation.
 	 */
-	static create<T extends AttributeValues>(
+	static create<T extends Record<keyof T, AttributeValue>>(
 		id: string,
 		name: string,
 		species: SpeciesPrimitives,

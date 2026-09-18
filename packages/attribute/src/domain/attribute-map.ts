@@ -31,7 +31,7 @@ import type AttributeDefinition from './attribute-definition';
  * console.log(hydrated.value.hp); // 45 (typed as AttributeValue)
  * ```
  */
-export default class AttributeMap<T extends AttributeValues = AttributeValues> {
+export default class AttributeMap<T extends Record<keyof T, AttributeValue> = AttributeValues> {
 	/**
 	 * The validated attribute values, keyed by attribute name.
 	 */
@@ -57,7 +57,7 @@ export default class AttributeMap<T extends AttributeValues = AttributeValues> {
 	 * @throws {InvalidArgumentError} When any value lacks a definition
 	 *         or fails validation.
 	 */
-	static create<T extends AttributeValues>(
+	static create<T extends Record<keyof T, AttributeValue>>(
 		values: T,
 		definitions: AttributeDefinition[],
 		entityName: string

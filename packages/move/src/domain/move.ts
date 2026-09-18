@@ -43,7 +43,7 @@ export interface MovePrimitives extends Primitives<Omit<Move, 'attributes'>> {
  * console.log(move.attributes.value.power); // 90
  * ```
  */
-export default class Move<T extends AttributeValues = AttributeValues> {
+export default class Move<T extends Record<keyof T, AttributeValue> = AttributeValues> {
 	/**
 	 *Validated attribute values keyed by attribute name.
 	 */
@@ -83,7 +83,7 @@ export default class Move<T extends AttributeValues = AttributeValues> {
 	 * @throws {InvalidArgumentError} When `id` or `name` is empty, or when any
 	 *         value lacks a definition or fails validation.
 	 */
-	static create<T extends AttributeValues>(
+	static create<T extends Record<keyof T, AttributeValue>>(
 		id: string,
 		name: string,
 		description: string,

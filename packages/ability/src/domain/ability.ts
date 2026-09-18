@@ -43,7 +43,7 @@ export interface AbilityPrimitives extends Primitives<Omit<Ability, 'attributes'
  * console.log(ability.attributes.value.cooldown); // 3
  * ```
  */
-export default class Ability<T extends AttributeValues = AttributeValues> {
+export default class Ability<T extends Record<keyof T, AttributeValue> = AttributeValues> {
 	/**
 	 *Validated attribute values keyed by attribute name.
 	 */
@@ -83,7 +83,7 @@ export default class Ability<T extends AttributeValues = AttributeValues> {
 	 * @throws {InvalidArgumentError} When `id` or `name` is empty, or when any
 	 *         value lacks a definition or fails validation.
 	 */
-	static create<T extends AttributeValues>(
+	static create<T extends Record<keyof T, AttributeValue>>(
 		id: string,
 		name: string,
 		description: string,
