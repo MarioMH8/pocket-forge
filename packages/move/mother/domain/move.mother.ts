@@ -1,8 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { AttributeAssignmentMother } from '@pocket-forge/attribute/mother/domain';
-
-import type { MovePrimitives } from '../../src/domain/move';
-import Move from '../../src/domain/move';
+import type { MovePrimitives } from '@pocket-forge/move/domain';
+import { Move } from '@pocket-forge/move/domain';
 
 export default class MoveMother {
 	static create(overrides?: Partial<MovePrimitives>): Move {

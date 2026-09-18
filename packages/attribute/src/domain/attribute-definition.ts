@@ -1,6 +1,7 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
+import type { Primitives } from '@hexadrop/types/primitives';
 
-import type { AttributeConstraints, AttributeDefinitionPrimitives, AttributeType } from './attribute-types';
+import type { AttributeConstraints, AttributeType, AttributeValue } from './attribute.types';
 
 /**
  * A catalog-owned definition that declares the key, type, default value,
@@ -8,12 +9,12 @@ import type { AttributeConstraints, AttributeDefinitionPrimitives, AttributeType
  */
 export default class AttributeDefinition {
 	readonly constraints: AttributeConstraints;
-	readonly defaultValue: boolean | boolean[] | number | number[] | string | string[];
+	readonly defaultValue: AttributeValue;
 	readonly key: string;
 	readonly type: AttributeType;
 
-	private constructor(primitives: AttributeDefinitionPrimitives) {
-		const { constraints = {}, defaultValue, key, type } = primitives;
+	private constructor(primitives: Primitives<AttributeDefinition>) {
+		const { constraints, defaultValue, key, type } = primitives;
 		this.constraints = constraints;
 		this.defaultValue = defaultValue;
 		this.key = key;
@@ -24,7 +25,7 @@ export default class AttributeDefinition {
 	 * Creates a validated AttributeDefinition.
 	 * Throws an InvalidArgumentError if the definition is invalid.
 	 */
-	static create(primitives: AttributeDefinitionPrimitives): AttributeDefinition {
+	static create(primitives: Primitives<AttributeDefinition>): AttributeDefinition {
 		const definition = new AttributeDefinition(primitives);
 		definition.validateDefinition();
 
@@ -34,18 +35,16 @@ export default class AttributeDefinition {
 	/**
 	 * Hydrates from primitives without re-validating (for persistence).
 	 */
-	static fromPrimitives(primitives: AttributeDefinitionPrimitives): AttributeDefinition {
+	static fromPrimitives(primitives: Primitives<AttributeDefinition>): AttributeDefinition {
 		return new AttributeDefinition(primitives);
 	}
 
-	toPrimitives(): AttributeDefinitionPrimitives {
-		const constraints = Object.keys(this.constraints).length > 0 ? { ...this.constraints } : undefined;
-
+	toPrimitives(): Primitives<AttributeDefinition> {
 		return {
+			constraints: { ...this.constraints },
 			defaultValue: this.defaultValue,
 			key: this.key,
 			type: this.type,
-			...(constraints !== undefined && { constraints }),
 		};
 	}
 

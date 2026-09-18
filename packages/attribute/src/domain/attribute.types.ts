@@ -16,25 +16,7 @@ interface AttributeConstraints {
 	readonly maxLength?: number;
 	readonly min?: number;
 	readonly minLength?: number;
-	readonly validValues?: readonly string[];
-}
-
-/**
- * Primitives representation of an AttributeDefinition.
- */
-interface AttributeDefinitionPrimitives {
-	readonly constraints?: AttributeConstraints | undefined;
-	readonly defaultValue: AttributeValue;
-	readonly key: string;
-	readonly type: AttributeType;
-}
-
-/**
- * Primitives representation of an AttributeAssignment.
- */
-interface AttributeAssignmentPrimitives {
-	readonly key: string;
-	readonly value: AttributeValue;
+	readonly validValues?: string[];
 }
 
 /**
@@ -47,11 +29,4 @@ type AttributeValue = boolean | boolean[] | number | number[] | string | string[
  */
 type AttributeValues = Record<string, AttributeValue>;
 
-export type {
-	AttributeAssignmentPrimitives,
-	AttributeConstraints,
-	AttributeDefinitionPrimitives,
-	AttributeType,
-	AttributeValue,
-	AttributeValues,
-};
+export type { AttributeConstraints, AttributeType, AttributeValue, AttributeValues };

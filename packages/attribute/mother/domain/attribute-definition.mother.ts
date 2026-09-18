@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
-
-import AttributeDefinition from '../../src/domain/attribute-definition';
-import type { AttributeDefinitionPrimitives, AttributeType } from '../../src/domain/attribute-types';
+import type { Primitives } from '@hexadrop/types/primitives';
+import type { AttributeType } from '@pocket-forge/attribute/domain';
+import { AttributeDefinition } from '@pocket-forge/attribute/domain';
 
 export default class AttributeDefinitionMother {
-	static array(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
+	static array(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
 		return AttributeDefinition.create({
 			constraints: overrides?.constraints ?? { itemType: 'string', maxLength: 10, minLength: 0 },
 			defaultValue: overrides?.defaultValue ?? [],
@@ -13,27 +13,28 @@ export default class AttributeDefinitionMother {
 		});
 	}
 
-	static boolean(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
+	static boolean(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
 		return AttributeDefinition.create({
+			constraints: overrides?.constraints ?? {},
 			defaultValue: overrides?.defaultValue ?? false,
 			key: overrides?.key ?? 'isActive',
 			type: 'boolean',
 		});
 	}
 
-	static create(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
+	static create(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
 		const constraints = overrides?.constraints;
-		const primitives: AttributeDefinitionPrimitives = {
+		const primitives: Primitives<AttributeDefinition> = {
+			constraints: constraints ?? {},
 			defaultValue: overrides?.defaultValue ?? faker.string.alpha(10),
 			key: overrides?.key ?? faker.string.alpha({ length: { max: 20, min: 3 } }),
 			type: overrides?.type ?? 'string',
-			...(constraints !== undefined && { constraints }),
 		};
 
 		return AttributeDefinition.create(primitives);
 	}
 
-	static enum(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
+	static enum(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
 		return AttributeDefinition.create({
 			constraints: overrides?.constraints ?? { validValues: ['fire', 'water', 'earth', 'air'] },
 			defaultValue: overrides?.defaultValue ?? 'fire',
@@ -42,19 +43,19 @@ export default class AttributeDefinitionMother {
 		});
 	}
 
-	static fromPrimitives(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
+	static fromPrimitives(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
 		const constraints = overrides?.constraints;
-		const primitives: AttributeDefinitionPrimitives = {
+		const primitives: Primitives<AttributeDefinition> = {
+			constraints: constraints ?? {},
 			defaultValue: overrides?.defaultValue ?? faker.string.alpha(10),
 			key: overrides?.key ?? faker.string.alpha({ length: { max: 20, min: 3 } }),
 			type: overrides?.type ?? 'string',
-			...(constraints !== undefined && { constraints }),
 		};
 
 		return AttributeDefinition.fromPrimitives(primitives);
 	}
 
-	static number(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
+	static number(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
 		return AttributeDefinition.create({
 			constraints: overrides?.constraints ?? { max: 999, min: 0 },
 			defaultValue: overrides?.defaultValue ?? 0,
@@ -63,7 +64,7 @@ export default class AttributeDefinitionMother {
 		});
 	}
 
-	static string(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
+	static string(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
 		return AttributeDefinition.create({
 			constraints: overrides?.constraints ?? { maxLength: 100, minLength: 1 },
 			defaultValue: overrides?.defaultValue ?? 'default',

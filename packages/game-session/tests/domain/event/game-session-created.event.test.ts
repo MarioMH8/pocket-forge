@@ -1,6 +1,5 @@
+import { GameSessionCreatedEvent } from '@pocket-forge/game-session/domain';
 import { describe, expect, it } from 'bun:test';
-
-import { GameSessionCreatedEvent } from '../../../src/domain';
 
 describe('GameSessionCreatedEvent', () => {
 	it('has EVENT_NAME "GameSession.created"', () => {

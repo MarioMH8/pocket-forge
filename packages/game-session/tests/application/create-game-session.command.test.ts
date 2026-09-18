@@ -1,11 +1,10 @@
 import Either from '@hexadrop/either';
 import BunMockEventBus from '@hexadrop/event/bus/mock/bun';
+import { CreateGameSessionCommandHandler } from '@pocket-forge/game-session/application';
+import { GameSessionCreatedEvent } from '@pocket-forge/game-session/domain';
+import { MockGameSessionRepository } from '@pocket-forge/game-session/mock/domain';
+import { CreateGameSessionCommandMother } from '@pocket-forge/game-session/mother/application';
 import { describe, expect, it } from 'bun:test';
-
-import MockGameSessionRepository from '../../mock/domain/game-session.repository';
-import { CreateGameSessionCommandMother } from '../../mother/application';
-import { CreateGameSessionCommandHandler } from '../../src/application';
-import { GameSessionCreatedEvent } from '../../src/domain';
 
 describe('CreateGameSessionCommandHandler', () => {
 	it('persists the session and publishes created event', async () => {

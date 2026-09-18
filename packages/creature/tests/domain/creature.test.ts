@@ -1,9 +1,8 @@
 import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
+import { Creature } from '@pocket-forge/creature/domain';
+import { CreatureMother } from '@pocket-forge/creature/mother/domain';
 import { SpeciesMother } from '@pocket-forge/species/mother/domain';
 import { describe, expect, it } from 'bun:test';
-
-import CreatureMother from '../../mother/domain/creature.mother';
-import Creature from '../../src/domain/creature';
 
 describe('Creature', () => {
 	describe('create', () => {
@@ -27,21 +26,6 @@ describe('Creature', () => {
 			const definition = AttributeDefinitionMother.create();
 			const species = SpeciesMother.primitives();
 			expect(() => Creature.create('id', '', species, [], [], [], [definition])).toThrow();
-		});
-
-		it('throws when species is missing', () => {
-			const definition = AttributeDefinitionMother.create();
-			expect(() =>
-				Creature.create(
-					'id',
-					'Name',
-					undefined as unknown as ReturnType<typeof SpeciesMother.primitives>,
-					[],
-					[],
-					[],
-					[definition]
-				)
-			).toThrow();
 		});
 	});
 

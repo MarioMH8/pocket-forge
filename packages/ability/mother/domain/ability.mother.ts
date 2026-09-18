@@ -1,8 +1,7 @@
 import { faker } from '@faker-js/faker';
+import type { AbilityPrimitives } from '@pocket-forge/ability/domain';
+import { Ability } from '@pocket-forge/ability/domain';
 import { AttributeAssignmentMother } from '@pocket-forge/attribute/mother/domain';
-
-import type { AbilityPrimitives } from '../../src/domain/ability';
-import Ability from '../../src/domain/ability';
 
 export default class AbilityMother {
 	static create(overrides?: Partial<AbilityPrimitives>): Ability {

@@ -1,8 +1,7 @@
+import { Ability } from '@pocket-forge/ability/domain';
+import { AbilityMother } from '@pocket-forge/ability/mother/domain';
 import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
 import { describe, expect, it } from 'bun:test';
-
-import AbilityMother from '../../mother/domain/ability.mother';
-import Ability from '../../src/domain/ability';
 
 describe('Ability', () => {
 	describe('create', () => {

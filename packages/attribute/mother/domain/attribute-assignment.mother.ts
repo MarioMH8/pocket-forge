@@ -1,8 +1,7 @@
 import { faker } from '@faker-js/faker';
+import type { Primitives } from '@hexadrop/types/primitives';
+import { AttributeAssignment, AttributeDefinition } from '@pocket-forge/attribute/domain';
 
-import AttributeAssignment from '../../src/domain/attribute-assignment';
-import AttributeDefinition from '../../src/domain/attribute-definition';
-import type { AttributeAssignmentPrimitives } from '../../src/domain/attribute-types';
 import AttributeDefinitionMother from './attribute-definition.mother';
 
 export default class AttributeAssignmentMother {
@@ -11,7 +10,7 @@ export default class AttributeAssignmentMother {
 
 	static create(
 		definition?: AttributeDefinition,
-		overrides?: Partial<AttributeAssignmentPrimitives>
+		overrides?: Partial<Primitives<AttributeAssignment>>
 	): AttributeAssignment {
 		const resolved = definition ?? AttributeDefinitionMother.string();
 
@@ -24,11 +23,7 @@ export default class AttributeAssignmentMother {
 		);
 	}
 
-	static default(definition: AttributeDefinition): AttributeAssignment {
-		return AttributeAssignment.default(definition);
-	}
-
-	static fromPrimitives(overrides?: Partial<AttributeAssignmentPrimitives>): AttributeAssignment {
+	static fromPrimitives(overrides?: Partial<Primitives<AttributeAssignment>>): AttributeAssignment {
 		return AttributeAssignment.fromPrimitives({
 			key: overrides?.key ?? faker.string.alpha({ length: { max: 20, min: 3 } }),
 			value: overrides?.value ?? faker.string.alpha(10),

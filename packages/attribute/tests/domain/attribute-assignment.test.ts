@@ -1,8 +1,6 @@
+import { AttributeAssignment } from '@pocket-forge/attribute/domain';
+import { AttributeAssignmentMother, AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
 import { describe, expect, it } from 'bun:test';
-
-import AttributeAssignmentMother from '../../mother/domain/attribute-assignment.mother';
-import AttributeDefinitionMother from '../../mother/domain/attribute-definition.mother';
-import AttributeAssignment from '../../src/domain/attribute-assignment';
 
 describe('AttributeAssignment', () => {
 	describe('create', () => {
@@ -24,16 +22,6 @@ describe('AttributeAssignment', () => {
 			const definition = AttributeDefinitionMother.string({ key: 'name' });
 
 			expect(() => AttributeAssignment.create({ key: 'wrong-key', value: 'hello' }, definition)).toThrow();
-		});
-	});
-
-	describe('default', () => {
-		it('creates an assignment with the default value', () => {
-			const definition = AttributeDefinitionMother.string({ defaultValue: 'default-name' });
-			const assignment = AttributeAssignment.default(definition);
-
-			expect(assignment.key).toBe(definition.key);
-			expect(assignment.value).toBe('default-name');
 		});
 	});
 

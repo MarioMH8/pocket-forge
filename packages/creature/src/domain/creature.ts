@@ -1,23 +1,26 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
+import type { Primitives } from '@hexadrop/types/primitives';
 import type { AbilityPrimitives } from '@pocket-forge/ability/domain';
-import type { AttributeAssignment, AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
-import {
-	hydrateAttributeMap,
-	serializeAttributeMap,
-	validateAndBuildAttributeMap,
+import type {
+	AttributeAssignment,
+	AttributeDefinition,
+	AttributeValue,
+	AttributeValues,
 } from '@pocket-forge/attribute/domain';
+import { AttributeMap } from '@pocket-forge/attribute/domain';
 import type { MovePrimitives } from '@pocket-forge/move/domain';
 import type { SpeciesPrimitives } from '@pocket-forge/species/domain';
 
 /**
  * Primitives representation of a Creature snapshot.
  */
-export interface CreaturePrimitives {
+export interface CreaturePrimitives extends Omit<
+	Primitives<Creature>,
+	'abilities' | 'attributes' | 'moves' | 'species'
+> {
 	readonly abilities: AbilityPrimitives[];
 	readonly attributes: AttributeValues;
-	readonly id: string;
 	readonly moves: MovePrimitives[];
-	readonly name: string;
 	readonly species: SpeciesPrimitives;
 }
 
@@ -67,12 +70,8 @@ export default class Creature {
 		if (!name) {
 			throw new InvalidArgumentError('Creature name is required', 'Creature');
 		}
-		// eslint-disable-next-line typescript/no-unnecessary-condition
-		if (!species) {
-			throw new InvalidArgumentError('Creature species is required', 'Creature');
-		}
 
-		const attributeMap = validateAndBuildAttributeMap(assignments, definitions, 'Creature');
+		const attributeMap = AttributeMap.validateAndBuildAttributeMap(assignments, definitions, 'Creature');
 
 		return new Creature(abilities, attributeMap, id, moves, name, species);
 	}
@@ -81,7 +80,7 @@ export default class Creature {
 	 * Hydrates from primitives without re-validating (for persistence).
 	 */
 	static fromPrimitives(primitives: CreaturePrimitives): Creature {
-		const attributeMap = hydrateAttributeMap(primitives.attributes);
+		const attributeMap = AttributeMap.fromPrimitives(primitives.attributes);
 
 		return new Creature(
 			primitives.abilities,
@@ -96,14 +95,14 @@ export default class Creature {
 	/**
 	 * Returns the value of a specific attribute, or undefined if not set.
 	 */
-	getAttribute(key: string): boolean | boolean[] | number | number[] | string | string[] | undefined {
+	getAttribute(key: string): AttributeValue | undefined {
 		return this.attributes.get(key)?.value;
 	}
 
 	toPrimitives(): CreaturePrimitives {
 		return {
 			abilities: this.abilities,
-			attributes: serializeAttributeMap(this.attributes),
+			attributes: AttributeMap.toPrimitives(this.attributes),
 			id: this.id,
 			moves: this.moves,
 			name: this.name,

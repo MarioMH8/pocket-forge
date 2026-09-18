@@ -1,7 +1,8 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
+import type { Primitives } from '@hexadrop/types/primitives';
 
+import type { AttributeValue } from './attribute.types';
 import type AttributeDefinition from './attribute-definition';
-import type { AttributeAssignmentPrimitives } from './attribute-types';
 
 /**
  * Stores one validated current value per attribute key.
@@ -9,9 +10,9 @@ import type { AttributeAssignmentPrimitives } from './attribute-types';
  */
 export default class AttributeAssignment {
 	readonly key: string;
-	readonly value: boolean | boolean[] | number | number[] | string | string[];
+	readonly value: AttributeValue;
 
-	private constructor(primitives: AttributeAssignmentPrimitives) {
+	private constructor(primitives: Primitives<AttributeAssignment>) {
 		this.key = primitives.key;
 		this.value = primitives.value;
 	}
@@ -20,7 +21,13 @@ export default class AttributeAssignment {
 	 * Creates a validated AttributeAssignment.
 	 * Validates the value against the provided definition.
 	 */
-	static create(primitives: AttributeAssignmentPrimitives, definition: AttributeDefinition): AttributeAssignment {
+	static create(primitives: Primitives<AttributeAssignment>, definition: AttributeDefinition): AttributeAssignment {
+		if (primitives.key !== definition.key) {
+			throw new InvalidArgumentError(
+				`Assignment key "${primitives.key}" does not match definition key "${definition.key}"`,
+				'AttributeAssignment'
+			);
+		}
 		const error = definition.validateValue(primitives.value);
 		if (error) {
 			throw new InvalidArgumentError(
@@ -28,31 +35,15 @@ export default class AttributeAssignment {
 				'AttributeAssignment'
 			);
 		}
-		if (primitives.key !== definition.key) {
-			throw new InvalidArgumentError(
-				`Assignment key "${primitives.key}" does not match definition key "${definition.key}"`,
-				'AttributeAssignment'
-			);
-		}
 
 		return new AttributeAssignment(primitives);
 	}
 
-	/**
-	 * Hydrates from primitives without re-validating (for persistence).
-	 */
-	static default(definition: AttributeDefinition): AttributeAssignment {
-		return new AttributeAssignment({
-			key: definition.key,
-			value: definition.defaultValue,
-		});
-	}
-
-	static fromPrimitives(primitives: AttributeAssignmentPrimitives): AttributeAssignment {
+	static fromPrimitives(primitives: Primitives<AttributeAssignment>): AttributeAssignment {
 		return new AttributeAssignment(primitives);
 	}
 
-	toPrimitives(): AttributeAssignmentPrimitives {
+	toPrimitives(): Primitives<AttributeAssignment> {
 		return {
 			key: this.key,
 			value: this.value,

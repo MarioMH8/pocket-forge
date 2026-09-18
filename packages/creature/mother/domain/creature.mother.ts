@@ -1,11 +1,10 @@
 import { faker } from '@faker-js/faker';
 import { AbilityMother } from '@pocket-forge/ability/mother/domain';
 import { AttributeAssignmentMother } from '@pocket-forge/attribute/mother/domain';
+import type { CreaturePrimitives } from '@pocket-forge/creature/domain';
+import { Creature } from '@pocket-forge/creature/domain';
 import { MoveMother } from '@pocket-forge/move/mother/domain';
 import { SpeciesMother } from '@pocket-forge/species/mother/domain';
-
-import type { CreaturePrimitives } from '../../src/domain/creature';
-import Creature from '../../src/domain/creature';
 
 export default class CreatureMother {
 	static create(overrides?: Partial<CreaturePrimitives>): Creature {

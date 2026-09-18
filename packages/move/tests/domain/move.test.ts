@@ -1,8 +1,7 @@
 import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
+import { Move } from '@pocket-forge/move/domain';
+import { MoveMother } from '@pocket-forge/move/mother/domain';
 import { describe, expect, it } from 'bun:test';
-
-import MoveMother from '../../mother/domain/move.mother';
-import Move from '../../src/domain/move';
 
 describe('Move', () => {
 	describe('create', () => {

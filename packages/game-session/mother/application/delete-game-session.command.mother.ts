@@ -1,6 +1,5 @@
 import { faker } from '@faker-js/faker';
-
-import { DeleteGameSessionCommand } from '../../src/application';
+import { DeleteGameSessionCommand } from '@pocket-forge/game-session/application';
 
 export default class DeleteGameSessionCommandMother {
 	static create(overrides?: { id?: string }): DeleteGameSessionCommand {

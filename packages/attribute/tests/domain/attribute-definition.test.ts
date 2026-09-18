@@ -1,7 +1,6 @@
+import { AttributeDefinition } from '@pocket-forge/attribute/domain';
+import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
 import { describe, expect, it } from 'bun:test';
-
-import AttributeDefinitionMother from '../../mother/domain/attribute-definition.mother';
-import AttributeDefinition from '../../src/domain/attribute-definition';
 
 describe('AttributeDefinition', () => {
 	describe('create', () => {
@@ -52,6 +51,7 @@ describe('AttributeDefinition', () => {
 		it('throws when type is invalid', () => {
 			expect(() =>
 				AttributeDefinition.create({
+					constraints: {},
 					defaultValue: 'hello',
 					key: 'test',
 					type: 'invalid' as never,
@@ -62,6 +62,7 @@ describe('AttributeDefinition', () => {
 		it('throws when default value does not match type', () => {
 			expect(() =>
 				AttributeDefinition.create({
+					constraints: {},
 					defaultValue: 'not-a-number',
 					key: 'test',
 					type: 'number',
@@ -72,6 +73,7 @@ describe('AttributeDefinition', () => {
 		it('throws when enum has no validValues', () => {
 			expect(() =>
 				AttributeDefinition.create({
+					constraints: {},
 					defaultValue: 'a',
 					key: 'test',
 					type: 'enum',
@@ -82,6 +84,7 @@ describe('AttributeDefinition', () => {
 		it('throws when array has no itemType', () => {
 			expect(() =>
 				AttributeDefinition.create({
+					constraints: {},
 					defaultValue: [],
 					key: 'test',
 					type: 'array',
@@ -217,15 +220,16 @@ describe('AttributeDefinition', () => {
 			const primitives = definition.toPrimitives();
 
 			expect(primitives.constraints).toBeDefined();
-			expect(primitives.constraints?.minLength).toBe(1);
+			expect(primitives.constraints.minLength).toBe(1);
 		});
 
-		it('omits constraints when empty', () => {
+		it('includes constraints even when empty', () => {
 			const definition = AttributeDefinitionMother.boolean();
 
 			const primitives = definition.toPrimitives();
 
-			expect(primitives.constraints).toBeUndefined();
+			expect(primitives.constraints).toBeDefined();
+			expect(primitives.constraints).toEqual({});
 		});
 	});
 });

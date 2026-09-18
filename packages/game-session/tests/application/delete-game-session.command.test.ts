@@ -1,12 +1,11 @@
 import Either from '@hexadrop/either';
 import BunMockEventBus from '@hexadrop/event/bus/mock/bun';
+import { DeleteGameSessionCommandHandler } from '@pocket-forge/game-session/application';
+import { GameSessionDeletedEvent } from '@pocket-forge/game-session/domain';
+import { MockGameSessionRepository } from '@pocket-forge/game-session/mock/domain';
+import { DeleteGameSessionCommandMother } from '@pocket-forge/game-session/mother/application';
+import { GameSessionMother } from '@pocket-forge/game-session/mother/domain';
 import { describe, expect, it } from 'bun:test';
-
-import MockGameSessionRepository from '../../mock/domain/game-session.repository';
-import { DeleteGameSessionCommandMother } from '../../mother/application';
-import GameSessionMother from '../../mother/domain/game-session.mother';
-import { DeleteGameSessionCommandHandler } from '../../src/application';
-import { GameSessionDeletedEvent } from '../../src/domain';
 
 describe('DeleteGameSessionCommandHandler', () => {
 	it('deletes the session and publishes deleted event', async () => {

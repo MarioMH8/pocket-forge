@@ -3,10 +3,8 @@ import type DomainError from '@hexadrop/error';
 import Query from '@hexadrop/query';
 import type { QueryHandler as QueryHandlerInterface } from '@hexadrop/query/bus';
 import QueryHandler from '@hexadrop/query/decorator';
-
-import GameSession from '../domain/game-session';
-import GameSessionId from '../domain/game-session-id';
-import type GameSessionRepository from '../domain/repository';
+import type { GameSessionRepository } from '@pocket-forge/game-session/domain';
+import { GameSession, GameSessionId } from '@pocket-forge/game-session/domain';
 
 interface GetGameSessionQueryConstructorParameters {
 	id: string;

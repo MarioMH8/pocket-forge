@@ -1,19 +1,18 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
-import type { AttributeAssignment, AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
-import {
-	hydrateAttributeMap,
-	serializeAttributeMap,
-	validateAndBuildAttributeMap,
+import type { Primitives } from '@hexadrop/types/primitives';
+import type {
+	AttributeAssignment,
+	AttributeDefinition,
+	AttributeValue,
+	AttributeValues,
 } from '@pocket-forge/attribute/domain';
+import { AttributeMap } from '@pocket-forge/attribute/domain';
 
 /**
  * Primitives representation of an Ability snapshot.
  */
-export interface AbilityPrimitives {
+export interface AbilityPrimitives extends Primitives<Omit<Ability, 'attributes'>> {
 	readonly attributes: AttributeValues;
-	readonly description: string;
-	readonly id: string;
-	readonly name: string;
 }
 
 /**
@@ -55,7 +54,7 @@ export default class Ability {
 			throw new InvalidArgumentError('Ability name is required', 'Ability');
 		}
 
-		const attributeMap = validateAndBuildAttributeMap(assignments, definitions, 'Ability');
+		const attributeMap = AttributeMap.validateAndBuildAttributeMap(assignments, definitions, 'Ability');
 
 		return new Ability(attributeMap, description, id, name);
 	}
@@ -64,7 +63,7 @@ export default class Ability {
 	 * Hydrates from primitives without re-validating (for persistence).
 	 */
 	static fromPrimitives(primitives: AbilityPrimitives): Ability {
-		const attributeMap = hydrateAttributeMap(primitives.attributes);
+		const attributeMap = AttributeMap.fromPrimitives(primitives.attributes);
 
 		return new Ability(attributeMap, primitives.description, primitives.id, primitives.name);
 	}
@@ -72,13 +71,13 @@ export default class Ability {
 	/**
 	 * Returns the value of a specific attribute, or undefined if not set.
 	 */
-	getAttribute(key: string): boolean | boolean[] | number | number[] | string | string[] | undefined {
+	getAttribute(key: string): AttributeValue | undefined {
 		return this.attributes.get(key)?.value;
 	}
 
 	toPrimitives(): AbilityPrimitives {
 		return {
-			attributes: serializeAttributeMap(this.attributes),
+			attributes: AttributeMap.toPrimitives(this.attributes),
 			description: this.description,
 			id: this.id,
 			name: this.name,
