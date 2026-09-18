@@ -1,7 +1,6 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 
 import type { AttributeValue, AttributeValues } from './attribute.types';
-import AttributeAssignment from './attribute-assignment';
 import type AttributeDefinition from './attribute-definition';
 
 /**
@@ -77,7 +76,13 @@ export default class AttributeMap<T extends AttributeValues = AttributeValues> {
 		for (const definition of definitions) {
 			const raw = (values as Record<string, AttributeValue>)[definition.key];
 			const value = raw ?? definition.defaultValue;
-			AttributeAssignment.create({ key: definition.key, value }, definition);
+			const error = definition.validateValue(value);
+			if (error) {
+				throw new InvalidArgumentError(
+					`Invalid value for attribute "${definition.key}": ${error.message}`,
+					entityName
+				);
+			}
 			merged[definition.key] = value;
 		}
 
