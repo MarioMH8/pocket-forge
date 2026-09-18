@@ -1,12 +1,7 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 import type { Primitives } from '@hexadrop/types/primitives';
 import type { AbilityPrimitives } from '@pocket-forge/ability/domain';
-import type {
-	AttributeAssignment,
-	AttributeDefinition,
-	AttributeValue,
-	AttributeValues,
-} from '@pocket-forge/attribute/domain';
+import type { AttributeDefinition, AttributeValue, AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeMap } from '@pocket-forge/attribute/domain';
 import type { MovePrimitives } from '@pocket-forge/move/domain';
 import type { SpeciesPrimitives } from '@pocket-forge/species/domain';
@@ -15,7 +10,7 @@ import type { SpeciesPrimitives } from '@pocket-forge/species/domain';
  * Primitives representation of a Creature snapshot.
  *
  * Mirrors the {@link Creature} shape but replaces embedded domain objects
- * (species, abilities, moves) and the internal `ReadonlyMap` of attributes
+ * (species, abilities, moves) and the internal {@link AttributeMap} of attributes
  * with their plain primitives equivalents for serialisation and persistence.
  */
 export interface CreaturePrimitives extends Omit<
@@ -34,39 +29,41 @@ export interface CreaturePrimitives extends Omit<
  * A Creature represents an individual creature owned by a player within a
  * {@link GameSession}. It carries a reference to its {@link SpeciesPrimitives species},
  * a list of {@link AbilityPrimitives abilities} and {@link MovePrimitives moves},
- * and its own set of validated {@link AttributeAssignment} values (which may
- * override or extend the species defaults).
+ * and its own set of validated attribute values (which may override or extend
+ * the species defaults).
+ *
+ * @typeParam T - A record of attribute keys to their {@link AttributeValue} types.
+ *                Defaults to `AttributeValues` for untyped hydration.
  *
  * @example
  * ```ts
- * import { AttributeAssignment, AttributeDefinition } from '@pocket-forge/attribute/domain';
+ * import { AttributeDefinition } from '@pocket-forge/attribute/domain';
  *
  * const hpDef = AttributeDefinition.create({
  *   key: 'currentHp', type: 'number', defaultValue: 10,
  *   constraints: { min: 0, max: 255 },
  * });
- * const hpAssignment = AttributeAssignment.create({ key: 'currentHp', value: 42 }, hpDef);
  *
  * const creature = Creature.create(
  *   'cr-001', 'Blaze',
  *   { id: 'sp-001', name: 'Pyrofox', description: '', attributes: { baseHp: 45 } },
  *   [], // abilities
  *   [], // moves
- *   [hpAssignment],
+ *   { currentHp: 42 },
  *   [hpDef]
  * );
- * console.log(creature.getAttribute('currentHp')); // 42
+ * console.log(creature.attributes.value.currentHp); // 42
  * ```
  */
-export default class Creature {
+export default class Creature<T extends AttributeValues = AttributeValues> {
 	/**
 	 *Embedded ability snapshots known by this creature.
 	 */
 	readonly abilities: AbilityPrimitives[];
 	/**
-	 *Validated attribute assignments keyed by attribute name.
+	 *Validated attribute values keyed by attribute name.
 	 */
-	readonly attributes: ReadonlyMap<string, AttributeAssignment>;
+	readonly attributes: AttributeMap<T>;
 	/**
 	 *Unique identifier for this creature instance.
 	 */
@@ -86,7 +83,7 @@ export default class Creature {
 
 	private constructor(
 		abilities: AbilityPrimitives[],
-		attributes: ReadonlyMap<string, AttributeAssignment>,
+		attributes: AttributeMap<T>,
 		id: string,
 		moves: MovePrimitives[],
 		name: string,
@@ -101,31 +98,31 @@ export default class Creature {
 	}
 
 	/**
-	 * Creates a Creature with validated attribute assignments.
+	 * Creates a Creature with validated attribute values.
 	 *
-	 * Every assignment in `assignments` must have a matching entry in
-	 * `definitions`, and its value must satisfy the definition's constraints.
+	 * Every key in `values` must have a matching entry in `definitions`,
+	 * and its value must satisfy the definition's constraints.
 	 *
 	 * @param id - Unique creature identifier. Must be non-empty.
 	 * @param name - Display name. Must be non-empty.
 	 * @param species - Primitives snapshot of the creature's species.
 	 * @param abilities - Primitives snapshots of the creature's abilities.
 	 * @param moves - Primitives snapshots of the creature's moves.
-	 * @param assignments - Attribute values to assign to this creature.
-	 * @param definitions - Attribute definitions that govern the assignments.
+	 * @param values - Typed attribute values to assign to this creature.
+	 * @param definitions - Attribute definitions that govern the values.
 	 * @returns A fully validated Creature instance.
 	 * @throws {InvalidArgumentError} When `id` or `name` is empty, or when any
-	 *         assignment lacks a definition or fails validation.
+	 *         value lacks a definition or fails validation.
 	 */
-	static create(
+	static create<T extends AttributeValues>(
 		id: string,
 		name: string,
 		species: SpeciesPrimitives,
 		abilities: AbilityPrimitives[],
 		moves: MovePrimitives[],
-		assignments: AttributeAssignment[],
+		values: T,
 		definitions: AttributeDefinition[]
-	): Creature {
+	): Creature<T> {
 		if (!id) {
 			throw new InvalidArgumentError('Creature id is required', 'Creature');
 		}
@@ -133,7 +130,7 @@ export default class Creature {
 			throw new InvalidArgumentError('Creature name is required', 'Creature');
 		}
 
-		const attributeMap = AttributeMap.validateAndBuildAttributeMap(assignments, definitions, 'Creature');
+		const attributeMap = AttributeMap.create(values, definitions, 'Creature');
 
 		return new Creature(abilities, attributeMap, id, moves, name, species);
 	}
@@ -161,22 +158,12 @@ export default class Creature {
 	}
 
 	/**
-	 * Returns the value of a specific attribute, or `undefined` if not set.
-	 *
-	 * @param key - The attribute key to look up (e.g. `'currentHp'`).
-	 * @returns The attribute's current value, or `undefined`.
-	 */
-	getAttribute(key: string): AttributeValue | undefined {
-		return this.attributes.get(key)?.value;
-	}
-
-	/**
 	 * Serialises this Creature into a plain {@link CreaturePrimitives} object.
 	 */
 	toPrimitives(): CreaturePrimitives {
 		return {
 			abilities: this.abilities,
-			attributes: AttributeMap.toPrimitives(this.attributes),
+			attributes: this.attributes.toPrimitives(),
 			id: this.id,
 			moves: this.moves,
 			name: this.name,

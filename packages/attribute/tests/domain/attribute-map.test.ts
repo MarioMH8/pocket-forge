@@ -1,39 +1,45 @@
 import { AttributeMap } from '@pocket-forge/attribute/domain';
-import { AttributeAssignmentMother, AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
+import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
 describe('AttributeMap', () => {
-	describe('validateAndBuildAttributeMap', () => {
-		it('builds a map from assignments and definitions', () => {
+	describe('create', () => {
+		it('builds a typed map from values and definitions', () => {
 			const definition = AttributeDefinitionMother.string({ key: 'name' });
-			const assignment = AttributeAssignmentMother.create(definition, { key: 'name', value: 'hello' });
 
-			const map = AttributeMap.validateAndBuildAttributeMap([assignment], [definition], 'Test');
+			const map = AttributeMap.create({ name: 'hello' }, [definition], 'Test');
 
-			expect(map.get('name')?.value).toBe('hello');
+			expect(map.value.name).toBe('hello');
 		});
 
-		it('throws when assignment has no matching definition', () => {
-			const definition = AttributeDefinitionMother.string({ key: 'name' });
-			const assignment = AttributeAssignmentMother.create(definition, { key: 'name', value: 'hello' });
+		it('throws when a value has no matching definition', () => {
+			expect(() => AttributeMap.create({ name: 'hello' }, [], 'Test')).toThrow();
+		});
 
-			expect(() => AttributeMap.validateAndBuildAttributeMap([assignment], [], 'Test')).toThrow();
+		it('throws when a value fails validation', () => {
+			const definition = AttributeDefinitionMother.number({
+				constraints: { min: 1 },
+				defaultValue: 10,
+				key: 'hp',
+			});
+
+			expect(() => AttributeMap.create({ hp: 0 }, [definition], 'Test')).toThrow();
 		});
 	});
 
-	describe('hydrateAttributeMap', () => {
+	describe('fromPrimitives', () => {
 		it('hydrates from a plain record', () => {
 			const map = AttributeMap.fromPrimitives({ level: 5, name: 'hello' });
 
-			expect(map.get('name')?.value).toBe('hello');
-			expect(map.get('level')?.value).toBe(5);
+			expect(map.value['name']).toBe('hello');
+			expect(map.value['level']).toBe(5);
 		});
 	});
 
-	describe('serializeAttributeMap', () => {
+	describe('toPrimitives', () => {
 		it('serializes to a plain record', () => {
 			const map = AttributeMap.fromPrimitives({ level: 5, name: 'hello' });
-			const record = AttributeMap.toPrimitives(map);
+			const record = map.toPrimitives();
 
 			expect(record).toEqual({ level: 5, name: 'hello' });
 		});

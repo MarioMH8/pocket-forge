@@ -1,26 +1,25 @@
 import { faker } from '@faker-js/faker';
-import type { AttributeAssignment, AttributeDefinition } from '@pocket-forge/attribute/domain';
-import { AttributeAssignmentMother, AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
+import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
+import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
 import type { SpeciesPrimitives } from '@pocket-forge/species/domain';
 import { Species } from '@pocket-forge/species/domain';
 
 export default class SpeciesMother {
 	static create(overrides?: {
-		assignments?: AttributeAssignment[];
 		definitions?: AttributeDefinition[];
 		description?: string;
 		id?: string;
 		name?: string;
+		values?: AttributeValues;
 	}): Species {
 		const definitions = overrides?.definitions ?? [AttributeDefinitionMother.string()];
-		const assignments =
-			overrides?.assignments ?? definitions.map(d => AttributeAssignmentMother.fromPrimitives(d.toPrimitives()));
+		const values = overrides?.values ?? Object.fromEntries(definitions.map(d => [d.key, d.defaultValue]));
 
 		return Species.create(
 			overrides?.id ?? faker.string.ulid(),
 			overrides?.name ?? faker.string.alpha({ length: { max: 20, min: 3 } }),
 			overrides?.description ?? faker.lorem.sentence(),
-			assignments,
+			values,
 			definitions
 		);
 	}

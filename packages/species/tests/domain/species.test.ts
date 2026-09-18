@@ -13,11 +13,11 @@ describe('Species', () => {
 		});
 
 		it('throws when id is empty', () => {
-			expect(() => Species.create('', 'Name', 'Desc', [], [])).toThrow();
+			expect(() => Species.create('', 'Name', 'Desc', {}, [])).toThrow();
 		});
 
 		it('throws when name is empty', () => {
-			expect(() => Species.create('id', '', 'Desc', [], [])).toThrow();
+			expect(() => Species.create('id', '', 'Desc', {}, [])).toThrow();
 		});
 	});
 
@@ -32,11 +32,11 @@ describe('Species', () => {
 
 			expect(species.id).toBe('species-1');
 			expect(species.name).toBe('Dragon');
-			expect(species.getAttribute('element')).toBe('fire');
+			expect(species.attributes.value['element']).toBe('fire');
 		});
 	});
 
-	describe('getAttribute', () => {
+	describe('attributes', () => {
 		it('returns undefined for missing attribute', () => {
 			const species = SpeciesMother.fromPrimitives({
 				attributes: {},
@@ -45,7 +45,7 @@ describe('Species', () => {
 				name: 'Dragon',
 			});
 
-			expect(species.getAttribute('nonexistent')).toBeUndefined();
+			expect(species.attributes.value['nonexistent']).toBeUndefined();
 		});
 	});
 

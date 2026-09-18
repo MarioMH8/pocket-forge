@@ -1,81 +1,97 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 
-import type { AttributeValues } from './attribute.types';
+import type { AttributeValue, AttributeValues } from './attribute.types';
 import AttributeAssignment from './attribute-assignment';
 import type AttributeDefinition from './attribute-definition';
 
 /**
- * Static utility for building, hydrating, and serialising attribute maps.
+ * A typed, immutable container for validated attribute values.
  *
  * AttributeMap bridges the gap between the plain {@link AttributeValues}
- * records used for persistence and the strongly-typed
- * `ReadonlyMap<string, AttributeAssignment>` used internally by domain entities.
+ * records used for persistence and strongly-typed attribute access in
+ * domain entities. It validates values at construction time against
+ * {@link AttributeDefinition}s and exposes them through the typed
+ * {@link value} property.
+ *
+ * @typeParam T - A record of attribute keys to their {@link AttributeValue} types.
+ *                Defaults to `AttributeValues` for untyped hydration.
+ *
+ * @example
+ * ```ts
+ * const hpDef = AttributeDefinition.create({
+ *   key: 'hp', type: 'number', defaultValue: 10,
+ *   constraints: { min: 1, max: 255 },
+ * });
+ *
+ * // Typed creation — T is inferred as { hp: number }
+ * const map = AttributeMap.create({ hp: 45 }, [hpDef], 'Creature');
+ * console.log(map.value.hp); // 45 (typed as number)
+ *
+ * // Hydration from persistence — untyped
+ * const hydrated = AttributeMap.fromPrimitives({ hp: 45 });
+ * console.log(hydrated.value.hp); // 45 (typed as AttributeValue)
+ * ```
  */
-export default class AttributeMap {
+export default class AttributeMap<T extends AttributeValues = AttributeValues> {
 	/**
-	 * Hydrates a `ReadonlyMap` of {@link AttributeAssignment}s from a plain
-	 * record of values. Skips validation — intended for persistence hydration
-	 * where data was already validated at write time.
-	 *
-	 * @param attributes - A plain record of attribute values keyed by attribute name.
-	 * @returns A read-only map of rehydrated assignments.
+	 * The validated attribute values, keyed by attribute name.
 	 */
-	static fromPrimitives(attributes: AttributeValues): ReadonlyMap<string, AttributeAssignment> {
-		const attributeMap = new Map<string, AttributeAssignment>();
-		for (const [key, value] of Object.entries(attributes)) {
-			attributeMap.set(key, AttributeAssignment.fromPrimitives({ key, value }));
-		}
+	readonly value: T;
 
-		return attributeMap;
+	private constructor(value: T) {
+		this.value = value;
 	}
 
 	/**
-	 * Serialises a `ReadonlyMap` of {@link AttributeAssignment}s into a plain
-	 * {@link AttributeValues} record suitable for persistence or transport.
+	 * Creates a validated AttributeMap from a typed values object.
 	 *
-	 * @param attributeMap - The map of assignments to serialise.
-	 * @returns A plain record of attribute values.
-	 */
-	static toPrimitives(attributeMap: ReadonlyMap<string, AttributeAssignment>): AttributeValues {
-		const attributes: AttributeValues = {};
-		for (const [key, assignment] of attributeMap) {
-			attributes[key] = assignment.value;
-		}
-
-		return attributes;
-	}
-
-	/**
-	 * Validates and builds a `ReadonlyMap` of {@link AttributeAssignment}s
-	 * from raw assignments and their corresponding definitions.
+	 * Every key in `values` must have a matching entry in `definitions`,
+	 * and its value must satisfy that definition's constraints.
 	 *
-	 * Every assignment must have a matching definition, and its value must
-	 * satisfy that definition's constraints.
-	 *
-	 * @param assignments - The raw attribute assignments to validate.
-	 * @param definitions - The attribute definitions that govern the assignments.
+	 * @param values - A typed record of attribute values.
+	 * @param definitions - The attribute definitions that govern the values.
 	 * @param entityName - Name of the entity being built (used in error messages).
-	 * @returns A read-only map of validated assignments.
-	 * @throws {InvalidArgumentError} When any assignment lacks a definition
+	 * @returns A fully validated AttributeMap with the inferred type.
+	 * @throws {InvalidArgumentError} When any value lacks a definition
 	 *         or fails validation.
 	 */
-	static validateAndBuildAttributeMap(
-		assignments: AttributeAssignment[],
+	static create<T extends AttributeValues>(
+		values: T,
 		definitions: AttributeDefinition[],
 		entityName: string
-	): ReadonlyMap<string, AttributeAssignment> {
+	): AttributeMap<T> {
 		const definitionMap = new Map(definitions.map(d => [d.key, d]));
-		const attributeMap = new Map<string, AttributeAssignment>();
 
-		for (const assignment of assignments) {
-			const definition = definitionMap.get(assignment.key);
+		for (const [key, value] of Object.entries(values)) {
+			const definition = definitionMap.get(key);
 			if (!definition) {
-				throw new InvalidArgumentError(`No definition found for attribute "${assignment.key}"`, entityName);
+				throw new InvalidArgumentError(`No definition found for attribute "${key}"`, entityName);
 			}
-			AttributeAssignment.create(assignment.toPrimitives(), definition);
-			attributeMap.set(assignment.key, assignment);
+			AttributeAssignment.create({ key, value }, definition);
 		}
 
-		return attributeMap;
+		return new AttributeMap(values);
+	}
+
+	/**
+	 * Hydrates an AttributeMap from a plain record without re-validating.
+	 *
+	 * Use this when reconstructing from a persistence layer where data
+	 * was already validated at write time. The returned map is untyped
+	 * since no type information is available at hydration time.
+	 *
+	 * @param attributes - A plain record of attribute values keyed by attribute name.
+	 * @returns A rehydrated, untyped AttributeMap.
+	 */
+	static fromPrimitives(attributes: AttributeValues): AttributeMap {
+		return new AttributeMap(attributes);
+	}
+
+	/**
+	 * Serialises this AttributeMap into a plain {@link AttributeValues} record
+	 * suitable for persistence or transport.
+	 */
+	toPrimitives(): AttributeValues {
+		return { ...this.value };
 	}
 }

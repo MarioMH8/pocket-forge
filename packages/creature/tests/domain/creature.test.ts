@@ -9,7 +9,7 @@ describe('Creature', () => {
 		it('creates a creature with valid attributes', () => {
 			const definition = AttributeDefinitionMother.create();
 			const species = SpeciesMother.primitives();
-			const creature = Creature.create('creature-1', 'Sparky', species, [], [], [], [definition]);
+			const creature = Creature.create('creature-1', 'Sparky', species, [], [], {}, [definition]);
 
 			expect(creature.id).toBe('creature-1');
 			expect(creature.name).toBe('Sparky');
@@ -19,13 +19,13 @@ describe('Creature', () => {
 		it('throws when id is empty', () => {
 			const definition = AttributeDefinitionMother.create();
 			const species = SpeciesMother.primitives();
-			expect(() => Creature.create('', 'Name', species, [], [], [], [definition])).toThrow();
+			expect(() => Creature.create('', 'Name', species, [], [], {}, [definition])).toThrow();
 		});
 
 		it('throws when name is empty', () => {
 			const definition = AttributeDefinitionMother.create();
 			const species = SpeciesMother.primitives();
-			expect(() => Creature.create('id', '', species, [], [], [], [definition])).toThrow();
+			expect(() => Creature.create('id', '', species, [], [], {}, [definition])).toThrow();
 		});
 	});
 
@@ -38,19 +38,19 @@ describe('Creature', () => {
 		});
 	});
 
-	describe('getAttribute', () => {
+	describe('attributes', () => {
 		it('returns the attribute value when set', () => {
 			const creature = CreatureMother.create({
 				attributes: { level: 5 },
 			});
 
-			expect(creature.getAttribute('level')).toBe(5);
+			expect(creature.attributes.value['level']).toBe(5);
 		});
 
 		it('returns undefined for missing attribute', () => {
 			const creature = CreatureMother.create();
 
-			expect(creature.getAttribute('nonexistent')).toBeUndefined();
+			expect(creature.attributes.value['nonexistent']).toBeUndefined();
 		});
 	});
 });

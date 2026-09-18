@@ -7,7 +7,7 @@ describe('Move', () => {
 	describe('create', () => {
 		it('creates a move with valid attributes', () => {
 			const definition = AttributeDefinitionMother.create();
-			const move = Move.create('move-1', 'Tackle', 'A basic charge', [], [definition]);
+			const move = Move.create('move-1', 'Tackle', 'A basic charge', {}, [definition]);
 
 			expect(move.id).toBe('move-1');
 			expect(move.name).toBe('Tackle');
@@ -16,12 +16,12 @@ describe('Move', () => {
 
 		it('throws when id is empty', () => {
 			const definition = AttributeDefinitionMother.create();
-			expect(() => Move.create('', 'Name', 'Desc', [], [definition])).toThrow();
+			expect(() => Move.create('', 'Name', 'Desc', {}, [definition])).toThrow();
 		});
 
 		it('throws when name is empty', () => {
 			const definition = AttributeDefinitionMother.create();
-			expect(() => Move.create('id', '', 'Desc', [], [definition])).toThrow();
+			expect(() => Move.create('id', '', 'Desc', {}, [definition])).toThrow();
 		});
 	});
 
@@ -34,19 +34,19 @@ describe('Move', () => {
 		});
 	});
 
-	describe('getAttribute', () => {
+	describe('attributes', () => {
 		it('returns the attribute value when set', () => {
 			const move = MoveMother.create({
 				attributes: { power: 80 },
 			});
 
-			expect(move.getAttribute('power')).toBe(80);
+			expect(move.attributes.value['power']).toBe(80);
 		});
 
 		it('returns undefined for missing attribute', () => {
 			const move = MoveMother.create();
 
-			expect(move.getAttribute('nonexistent')).toBeUndefined();
+			expect(move.attributes.value['nonexistent']).toBeUndefined();
 		});
 	});
 });

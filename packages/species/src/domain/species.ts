@@ -1,18 +1,13 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 import type { Primitives } from '@hexadrop/types/primitives';
-import type {
-	AttributeAssignment,
-	AttributeDefinition,
-	AttributeValue,
-	AttributeValues,
-} from '@pocket-forge/attribute/domain';
+import type { AttributeDefinition, AttributeValue, AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeMap } from '@pocket-forge/attribute/domain';
 
 /**
  * Primitives representation of a Species snapshot.
  *
  * Mirrors the {@link Species} shape but replaces the internal
- * `ReadonlyMap` of attributes with a plain {@link AttributeValues} record
+ * {@link AttributeMap} of attributes with a plain {@link AttributeValues} record
  * suitable for serialisation and persistence.
  */
 export interface SpeciesPrimitives extends Primitives<Omit<Species, 'attributes'>> {
@@ -22,34 +17,37 @@ export interface SpeciesPrimitives extends Primitives<Omit<Species, 'attributes'
 /**
  * An immutable catalog entry describing a creature species.
  *
- * Each species carries a set of validated {@link AttributeAssignment} values
- * that define baseline stats, traits, or other gameplay properties shared
- * by every creature of that species. Species are created through the
- * {@link Species.create} factory, which validates all assignments against
+ * Each species carries a set of validated attribute values that define
+ * baseline stats, traits, or other gameplay properties shared by every
+ * creature of that species. Species are created through the
+ * {@link Species.create} factory, which validates all values against
  * their corresponding {@link AttributeDefinition}s.
+ *
+ * @typeParam T - A record of attribute keys to their {@link AttributeValue} types.
+ *                Defaults to `AttributeValues` for untyped hydration.
  *
  * @example
  * ```ts
- * import { AttributeAssignment, AttributeDefinition } from '@pocket-forge/attribute/domain';
+ * import { AttributeDefinition } from '@pocket-forge/attribute/domain';
  *
  * const hpDef = AttributeDefinition.create({
  *   key: 'baseHp', type: 'number', defaultValue: 10,
  *   constraints: { min: 1, max: 255 },
  * });
- * const hpAssignment = AttributeAssignment.create({ key: 'baseHp', value: 45 }, hpDef);
  *
  * const species = Species.create(
  *   'sp-001', 'Pyrofox', 'A fire-aligned fox species.',
- *   [hpAssignment], [hpDef]
+ *   { baseHp: 45 },
+ *   [hpDef]
  * );
- * console.log(species.getAttribute('baseHp')); // 45
+ * console.log(species.attributes.value.baseHp); // 45
  * ```
  */
-export default class Species {
+export default class Species<T extends AttributeValues = AttributeValues> {
 	/**
-	 *Validated attribute assignments keyed by attribute name.
+	 *Validated attribute values keyed by attribute name.
 	 */
-	readonly attributes: ReadonlyMap<string, AttributeAssignment>;
+	readonly attributes: AttributeMap<T>;
 	/**
 	 *Human-readable flavour or lore text.
 	 */
@@ -63,12 +61,7 @@ export default class Species {
 	 */
 	readonly name: string;
 
-	private constructor(
-		attributes: ReadonlyMap<string, AttributeAssignment>,
-		description: string,
-		id: string,
-		name: string
-	) {
+	private constructor(attributes: AttributeMap<T>, description: string, id: string, name: string) {
 		this.attributes = attributes;
 		this.description = description;
 		this.id = id;
@@ -76,27 +69,27 @@ export default class Species {
 	}
 
 	/**
-	 * Creates a Species with validated attribute assignments.
+	 * Creates a Species with validated attribute values.
 	 *
-	 * Every assignment in `assignments` must have a matching entry in
-	 * `definitions`, and its value must satisfy the definition's constraints.
+	 * Every key in `values` must have a matching entry in `definitions`,
+	 * and its value must satisfy the definition's constraints.
 	 *
 	 * @param id - Unique catalog identifier. Must be non-empty.
 	 * @param name - Display name. Must be non-empty.
 	 * @param description - Flavour or lore text (may be empty).
-	 * @param assignments - Attribute values to assign to this species.
-	 * @param definitions - Attribute definitions that govern the assignments.
+	 * @param values - Typed attribute values to assign to this species.
+	 * @param definitions - Attribute definitions that govern the values.
 	 * @returns A fully validated Species instance.
 	 * @throws {InvalidArgumentError} When `id` or `name` is empty, or when any
-	 *         assignment lacks a definition or fails validation.
+	 *         value lacks a definition or fails validation.
 	 */
-	static create(
+	static create<T extends AttributeValues>(
 		id: string,
 		name: string,
 		description: string,
-		assignments: AttributeAssignment[],
+		values: T,
 		definitions: AttributeDefinition[]
-	): Species {
+	): Species<T> {
 		if (!id) {
 			throw new InvalidArgumentError('Species id is required', 'Species');
 		}
@@ -104,7 +97,7 @@ export default class Species {
 			throw new InvalidArgumentError('Species name is required', 'Species');
 		}
 
-		const attributeMap = AttributeMap.validateAndBuildAttributeMap(assignments, definitions, 'Species');
+		const attributeMap = AttributeMap.create(values, definitions, 'Species');
 
 		return new Species(attributeMap, description, id, name);
 	}
@@ -125,21 +118,11 @@ export default class Species {
 	}
 
 	/**
-	 * Returns the value of a specific attribute, or `undefined` if not set.
-	 *
-	 * @param key - The attribute key to look up (e.g. `'baseHp'`).
-	 * @returns The attribute's current value, or `undefined`.
-	 */
-	getAttribute(key: string): AttributeValue | undefined {
-		return this.attributes.get(key)?.value;
-	}
-
-	/**
 	 * Serialises this Species into a plain {@link SpeciesPrimitives} object.
 	 */
 	toPrimitives(): SpeciesPrimitives {
 		return {
-			attributes: AttributeMap.toPrimitives(this.attributes),
+			attributes: this.attributes.toPrimitives(),
 			description: this.description,
 			id: this.id,
 			name: this.name,

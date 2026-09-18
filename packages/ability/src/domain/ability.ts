@@ -1,18 +1,13 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 import type { Primitives } from '@hexadrop/types/primitives';
-import type {
-	AttributeAssignment,
-	AttributeDefinition,
-	AttributeValue,
-	AttributeValues,
-} from '@pocket-forge/attribute/domain';
+import type { AttributeDefinition, AttributeValue, AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeMap } from '@pocket-forge/attribute/domain';
 
 /**
  * Primitives representation of an Ability snapshot.
  *
  * Mirrors the {@link Ability} shape but replaces the internal
- * `ReadonlyMap` of attributes with a plain {@link AttributeValues} record
+ * {@link AttributeMap} of attributes with a plain {@link AttributeValues} record
  * suitable for serialisation and persistence.
  */
 export interface AbilityPrimitives extends Primitives<Omit<Ability, 'attributes'>> {
@@ -22,34 +17,37 @@ export interface AbilityPrimitives extends Primitives<Omit<Ability, 'attributes'
 /**
  * An immutable catalog entry describing a creature ability.
  *
- * Each ability carries a set of validated {@link AttributeAssignment} values
- * that define its gameplay properties — cooldown, duration, effect magnitude,
- * etc. Abilities are created through the {@link Ability.create} factory,
- * which validates all assignments against their corresponding
+ * Each ability carries a set of validated attribute values that define
+ * its gameplay properties — cooldown, duration, effect magnitude, etc.
+ * Abilities are created through the {@link Ability.create} factory,
+ * which validates all values against their corresponding
  * {@link AttributeDefinition}s.
+ *
+ * @typeParam T - A record of attribute keys to their {@link AttributeValue} types.
+ *                Defaults to `AttributeValues` for untyped hydration.
  *
  * @example
  * ```ts
- * import { AttributeAssignment, AttributeDefinition } from '@pocket-forge/attribute/domain';
+ * import { AttributeDefinition } from '@pocket-forge/attribute/domain';
  *
  * const cooldownDef = AttributeDefinition.create({
  *   key: 'cooldown', type: 'number', defaultValue: 0,
  *   constraints: { min: 0 },
  * });
- * const cooldownAssignment = AttributeAssignment.create({ key: 'cooldown', value: 3 }, cooldownDef);
  *
  * const ability = Ability.create(
  *   'ab-001', 'Intimidate', 'Lowers the foe\'s attack on entry.',
- *   [cooldownAssignment], [cooldownDef]
+ *   { cooldown: 3 },
+ *   [cooldownDef]
  * );
- * console.log(ability.getAttribute('cooldown')); // 3
+ * console.log(ability.attributes.value.cooldown); // 3
  * ```
  */
-export default class Ability {
+export default class Ability<T extends AttributeValues = AttributeValues> {
 	/**
-	 *Validated attribute assignments keyed by attribute name.
+	 *Validated attribute values keyed by attribute name.
 	 */
-	readonly attributes: ReadonlyMap<string, AttributeAssignment>;
+	readonly attributes: AttributeMap<T>;
 	/**
 	 *Human-readable flavour or lore text.
 	 */
@@ -63,12 +61,7 @@ export default class Ability {
 	 */
 	readonly name: string;
 
-	private constructor(
-		attributes: ReadonlyMap<string, AttributeAssignment>,
-		description: string,
-		id: string,
-		name: string
-	) {
+	private constructor(attributes: AttributeMap<T>, description: string, id: string, name: string) {
 		this.attributes = attributes;
 		this.description = description;
 		this.id = id;
@@ -76,27 +69,27 @@ export default class Ability {
 	}
 
 	/**
-	 * Creates an Ability with validated attribute assignments.
+	 * Creates an Ability with validated attribute values.
 	 *
-	 * Every assignment in `assignments` must have a matching entry in
-	 * `definitions`, and its value must satisfy the definition's constraints.
+	 * Every key in `values` must have a matching entry in `definitions`,
+	 * and its value must satisfy the definition's constraints.
 	 *
 	 * @param id - Unique catalog identifier. Must be non-empty.
 	 * @param name - Display name. Must be non-empty.
 	 * @param description - Flavour or lore text (may be empty).
-	 * @param assignments - Attribute values to assign to this ability.
-	 * @param definitions - Attribute definitions that govern the assignments.
+	 * @param values - Typed attribute values to assign to this ability.
+	 * @param definitions - Attribute definitions that govern the values.
 	 * @returns A fully validated Ability instance.
 	 * @throws {InvalidArgumentError} When `id` or `name` is empty, or when any
-	 *         assignment lacks a definition or fails validation.
+	 *         value lacks a definition or fails validation.
 	 */
-	static create(
+	static create<T extends AttributeValues>(
 		id: string,
 		name: string,
 		description: string,
-		assignments: AttributeAssignment[],
+		values: T,
 		definitions: AttributeDefinition[]
-	): Ability {
+	): Ability<T> {
 		if (!id) {
 			throw new InvalidArgumentError('Ability id is required', 'Ability');
 		}
@@ -104,7 +97,7 @@ export default class Ability {
 			throw new InvalidArgumentError('Ability name is required', 'Ability');
 		}
 
-		const attributeMap = AttributeMap.validateAndBuildAttributeMap(assignments, definitions, 'Ability');
+		const attributeMap = AttributeMap.create(values, definitions, 'Ability');
 
 		return new Ability(attributeMap, description, id, name);
 	}
@@ -125,21 +118,11 @@ export default class Ability {
 	}
 
 	/**
-	 * Returns the value of a specific attribute, or `undefined` if not set.
-	 *
-	 * @param key - The attribute key to look up (e.g. `'cooldown'`).
-	 * @returns The attribute's current value, or `undefined`.
-	 */
-	getAttribute(key: string): AttributeValue | undefined {
-		return this.attributes.get(key)?.value;
-	}
-
-	/**
 	 * Serialises this Ability into a plain {@link AbilityPrimitives} object.
 	 */
 	toPrimitives(): AbilityPrimitives {
 		return {
-			attributes: AttributeMap.toPrimitives(this.attributes),
+			attributes: this.attributes.toPrimitives(),
 			description: this.description,
 			id: this.id,
 			name: this.name,
