@@ -70,6 +70,17 @@ describe('AttributeDefinition', () => {
 			).toThrow();
 		});
 
+		it('skips default validation for optional attributes (no defaultValue)', () => {
+			expect(() =>
+				AttributeDefinition.create({
+					constraints: {},
+					defaultValue: undefined,
+					key: 'test',
+					type: 'number',
+				})
+			).not.toThrow();
+		});
+
 		it('throws when enum has no validValues', () => {
 			expect(() =>
 				AttributeDefinition.create({

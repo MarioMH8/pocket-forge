@@ -71,11 +71,17 @@ export default class AttributeMap<T extends Record<keyof T, AttributeValue> = At
 			}
 		}
 
-		// Build merged record: values take precedence, missing keys get defaults
+		/*
+		 * Build merged record: values take precedence, missing required keys get defaults,
+		 * missing optional keys are skipped entirely.
+		 */
 		const merged = {} as Record<string, AttributeValue>;
 		for (const definition of definitions) {
 			const raw = (values as Record<string, AttributeValue>)[definition.key];
 			const value = raw ?? definition.defaultValue;
+			if (value === undefined) {
+				continue;
+			}
 			const error = definition.validateValue(value);
 			if (error) {
 				throw new InvalidArgumentError(

@@ -38,8 +38,12 @@ export default class AttributeDefinition {
 	readonly constraints: AttributeConstraints;
 	/**
 	 *The fallback value used when no explicit assignment is provided.
+	 *
+	 * When `undefined`, the attribute is optional: {@link AttributeMap.create}
+	 * skips the key entirely if no value is provided, and the definition
+	 * does not require a default.
 	 */
-	readonly defaultValue: AttributeValue;
+	readonly defaultValue: AttributeValue | undefined;
 	/**
 	 *Unique key that identifies this attribute across the project.
 	 */
@@ -177,12 +181,15 @@ export default class AttributeDefinition {
 			);
 		}
 
-		const defaultError = this.validateValue(this.defaultValue);
-		if (defaultError) {
-			throw new InvalidArgumentError(
-				`AttributeDefinition default value is invalid: ${defaultError.message}`,
-				'AttributeDefinition'
-			);
+		// Optional attributes (no defaultValue) skip default-value validation.
+		if (this.defaultValue !== undefined) {
+			const defaultError = this.validateValue(this.defaultValue);
+			if (defaultError) {
+				throw new InvalidArgumentError(
+					`AttributeDefinition default value is invalid: ${defaultError.message}`,
+					'AttributeDefinition'
+				);
+			}
 		}
 
 		if (this.type === 'enum' && (!this.constraints.validValues || this.constraints.validValues.length === 0)) {

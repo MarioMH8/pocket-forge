@@ -12,7 +12,13 @@ export default class SpeciesMother {
 		values?: AttributeValues;
 	}): Species {
 		const definitions = overrides?.definitions ?? [AttributeDefinitionMother.string()];
-		const values = overrides?.values ?? Object.fromEntries(definitions.map(d => [d.key, d.defaultValue]));
+		const values =
+			overrides?.values ??
+			Object.fromEntries(
+				definitions
+					.filter(d => d.defaultValue !== undefined)
+					.map(d => [d.key, d.defaultValue] as [string, AttributeValues[string]])
+			);
 
 		return Species.create(
 			overrides?.id ?? faker.string.ulid(),

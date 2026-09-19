@@ -1,4 +1,5 @@
-import { AttributeMap } from '@pocket-forge/attribute/domain';
+import type { AttributeValue } from '@pocket-forge/attribute/domain';
+import { AttributeDefinition, AttributeMap } from '@pocket-forge/attribute/domain';
 import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
@@ -40,6 +41,32 @@ describe('AttributeMap', () => {
 			});
 
 			expect(() => AttributeMap.create({ hp: 0 }, [definition], 'Test')).toThrow();
+		});
+
+		it('skips optional attributes when no value is provided', () => {
+			const definition = AttributeDefinition.create({
+				constraints: {},
+				defaultValue: undefined,
+				key: 'forme',
+				type: 'string',
+			});
+
+			const map = AttributeMap.create({}, [definition], 'Test');
+
+			expect((map.value as Record<string, AttributeValue>)['forme']).toBeUndefined();
+		});
+
+		it('includes optional attributes when a value is provided', () => {
+			const definition = AttributeDefinition.create({
+				constraints: {},
+				defaultValue: undefined,
+				key: 'forme',
+				type: 'string',
+			});
+
+			const map = AttributeMap.create({ forme: 'Mega' }, [definition], 'Test');
+
+			expect(map.value.forme).toBe('Mega');
 		});
 	});
 
