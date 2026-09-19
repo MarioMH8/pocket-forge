@@ -36,7 +36,7 @@ export interface SpeciesPrimitives extends Primitives<Omit<Species, 'attributes'
  * });
  *
  * const species = Species.create(
- *   'sp-001', 'Pyrofox', 'A fire-aligned fox species.',
+ *   'sp-001', 'Pyrofox',
  *   { baseHp: 45 },
  *   [hpDef]
  * );
@@ -49,10 +49,6 @@ export default class Species<T extends Record<keyof T, AttributeValue> = Attribu
 	 */
 	readonly attributes: AttributeMap<T>;
 	/**
-	 *Human-readable flavour or lore text.
-	 */
-	readonly description: string;
-	/**
 	 *Unique catalog identifier for this species.
 	 */
 	readonly id: string;
@@ -61,9 +57,8 @@ export default class Species<T extends Record<keyof T, AttributeValue> = Attribu
 	 */
 	readonly name: string;
 
-	private constructor(attributes: AttributeMap<T>, description: string, id: string, name: string) {
+	private constructor(attributes: AttributeMap<T>, id: string, name: string) {
 		this.attributes = attributes;
-		this.description = description;
 		this.id = id;
 		this.name = name;
 	}
@@ -76,7 +71,6 @@ export default class Species<T extends Record<keyof T, AttributeValue> = Attribu
 	 *
 	 * @param id - Unique catalog identifier. Must be non-empty.
 	 * @param name - Display name. Must be non-empty.
-	 * @param description - Flavour or lore text (may be empty).
 	 * @param values - Typed attribute values to assign to this species.
 	 * @param definitions - Attribute definitions that govern the values.
 	 * @returns A fully validated Species instance.
@@ -86,7 +80,6 @@ export default class Species<T extends Record<keyof T, AttributeValue> = Attribu
 	static create<T extends Record<keyof T, AttributeValue>>(
 		id: string,
 		name: string,
-		description: string,
 		values: T,
 		definitions: AttributeDefinition[]
 	): Species<T> {
@@ -99,7 +92,7 @@ export default class Species<T extends Record<keyof T, AttributeValue> = Attribu
 
 		const attributeMap = AttributeMap.create(values, definitions, 'Species');
 
-		return new Species(attributeMap, description, id, name);
+		return new Species(attributeMap, id, name);
 	}
 
 	/**
@@ -114,7 +107,7 @@ export default class Species<T extends Record<keyof T, AttributeValue> = Attribu
 	static fromPrimitives(primitives: SpeciesPrimitives): Species {
 		const attributeMap = AttributeMap.fromPrimitives(primitives.attributes);
 
-		return new Species(attributeMap, primitives.description, primitives.id, primitives.name);
+		return new Species(attributeMap, primitives.id, primitives.name);
 	}
 
 	/**
@@ -123,7 +116,6 @@ export default class Species<T extends Record<keyof T, AttributeValue> = Attribu
 	toPrimitives(): SpeciesPrimitives {
 		return {
 			attributes: this.attributes.toPrimitives(),
-			description: this.description,
 			id: this.id,
 			name: this.name,
 		};
