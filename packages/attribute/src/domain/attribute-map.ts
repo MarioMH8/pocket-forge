@@ -78,9 +78,15 @@ export default class AttributeMap<T extends Record<keyof T, AttributeValue> = At
 		const merged = {} as Record<string, AttributeValue>;
 		for (const definition of definitions) {
 			const raw = (values as Record<string, AttributeValue>)[definition.key];
+			if (raw === undefined && !definition.required) {
+				continue;
+			}
 			const value = raw ?? definition.defaultValue;
 			if (value === undefined) {
-				continue;
+				throw new InvalidArgumentError(
+					`Attribute "${definition.key}" is required but no value or default was provided`,
+					entityName
+				);
 			}
 			const error = definition.validateValue(value);
 			if (error) {

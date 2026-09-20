@@ -37,5 +37,11 @@ export default hexadrop(
 		rules: {
 			'import-sort/imports': 'off',
 		},
+	},
+	{
+		files: ['packages/species/mother/domain/species.mother.ts'],
+		rules: {
+			'typescript/no-non-null-assertion': 'off',
+		},
 	}
 );

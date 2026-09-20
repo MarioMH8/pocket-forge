@@ -9,6 +9,7 @@ export default class AttributeDefinitionMother {
 			constraints: overrides?.constraints ?? { itemType: 'string', maxLength: 10, minLength: 0 },
 			defaultValue: overrides?.defaultValue ?? [],
 			key: overrides?.key ?? 'tags',
+			required: overrides?.required,
 			type: 'array',
 		});
 	}
@@ -18,6 +19,7 @@ export default class AttributeDefinitionMother {
 			constraints: overrides?.constraints ?? {},
 			defaultValue: overrides?.defaultValue ?? false,
 			key: overrides?.key ?? 'isActive',
+			required: overrides?.required,
 			type: 'boolean',
 		});
 	}
@@ -28,6 +30,7 @@ export default class AttributeDefinitionMother {
 			constraints: constraints ?? {},
 			defaultValue: overrides?.defaultValue ?? faker.string.alpha(10),
 			key: overrides?.key ?? faker.string.alpha({ length: { max: 20, min: 3 } }),
+			required: overrides?.required,
 			type: overrides?.type ?? 'string',
 		};
 
@@ -39,6 +42,7 @@ export default class AttributeDefinitionMother {
 			constraints: overrides?.constraints ?? { validValues: ['fire', 'water', 'earth', 'air'] },
 			defaultValue: overrides?.defaultValue ?? 'fire',
 			key: overrides?.key ?? 'element',
+			required: overrides?.required,
 			type: 'enum',
 		});
 	}
@@ -49,6 +53,7 @@ export default class AttributeDefinitionMother {
 			constraints: constraints ?? {},
 			defaultValue: overrides?.defaultValue ?? faker.string.alpha(10),
 			key: overrides?.key ?? faker.string.alpha({ length: { max: 20, min: 3 } }),
+			required: overrides?.required,
 			type: overrides?.type ?? 'string',
 		};
 
@@ -60,6 +65,7 @@ export default class AttributeDefinitionMother {
 			constraints: overrides?.constraints ?? { max: 999, min: 0 },
 			defaultValue: overrides?.defaultValue ?? 0,
 			key: overrides?.key ?? 'power',
+			required: overrides?.required,
 			type: 'number',
 		});
 	}
@@ -69,6 +75,7 @@ export default class AttributeDefinitionMother {
 			constraints: overrides?.constraints ?? { maxLength: 100, minLength: 1 },
 			defaultValue: overrides?.defaultValue ?? 'default',
 			key: overrides?.key ?? 'name',
+			required: overrides?.required,
 			type: 'string',
 		});
 	}

@@ -14,7 +14,11 @@ describe('AttributeMap', () => {
 		});
 
 		it('applies default values for keys not provided', () => {
-			const definition = AttributeDefinitionMother.string({ defaultValue: 'fallback', key: 'label' });
+			const definition = AttributeDefinitionMother.string({
+				defaultValue: 'fallback',
+				key: 'label',
+				required: true,
+			});
 
 			const map = AttributeMap.create({}, [definition], 'Test');
 
@@ -46,8 +50,9 @@ describe('AttributeMap', () => {
 		it('skips optional attributes when no value is provided', () => {
 			const definition = AttributeDefinition.create({
 				constraints: {},
-				defaultValue: undefined,
+				defaultValue: '',
 				key: 'forme',
+				required: false,
 				type: 'string',
 			});
 
@@ -59,8 +64,9 @@ describe('AttributeMap', () => {
 		it('includes optional attributes when a value is provided', () => {
 			const definition = AttributeDefinition.create({
 				constraints: {},
-				defaultValue: undefined,
+				defaultValue: '',
 				key: 'forme',
+				required: false,
 				type: 'string',
 			});
 

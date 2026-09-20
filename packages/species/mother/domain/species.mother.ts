@@ -14,11 +14,7 @@ export default class SpeciesMother {
 		const definitions = overrides?.definitions ?? [AttributeDefinitionMother.string()];
 		const values =
 			overrides?.values ??
-			Object.fromEntries(
-				definitions
-					.filter(d => d.defaultValue !== undefined)
-					.map(d => [d.key, d.defaultValue] as [string, AttributeValues[string]])
-			);
+			Object.fromEntries(definitions.filter(d => d.required).map(d => [d.key, d.defaultValue!]));
 
 		return Species.create(
 			overrides?.id ?? faker.string.ulid(),

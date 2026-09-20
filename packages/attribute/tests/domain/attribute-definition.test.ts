@@ -54,6 +54,7 @@ describe('AttributeDefinition', () => {
 					constraints: {},
 					defaultValue: 'hello',
 					key: 'test',
+					required: true,
 					type: 'invalid' as never,
 				})
 			).toThrow();
@@ -65,20 +66,22 @@ describe('AttributeDefinition', () => {
 					constraints: {},
 					defaultValue: 'not-a-number',
 					key: 'test',
+					required: true,
 					type: 'number',
 				})
 			).toThrow();
 		});
 
-		it('skips default validation for optional attributes (no defaultValue)', () => {
+		it('skips default validation for optional attributes', () => {
 			expect(() =>
 				AttributeDefinition.create({
 					constraints: {},
-					defaultValue: undefined,
+					defaultValue: 'not-a-number',
 					key: 'test',
+					required: false,
 					type: 'number',
 				})
-			).not.toThrow();
+			).toThrow();
 		});
 
 		it('throws when enum has no validValues', () => {
@@ -87,6 +90,7 @@ describe('AttributeDefinition', () => {
 					constraints: {},
 					defaultValue: 'a',
 					key: 'test',
+					required: true,
 					type: 'enum',
 				})
 			).toThrow();
@@ -98,6 +102,7 @@ describe('AttributeDefinition', () => {
 					constraints: {},
 					defaultValue: [],
 					key: 'test',
+					required: true,
 					type: 'array',
 				})
 			).toThrow();

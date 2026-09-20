@@ -39,25 +39,33 @@ export default class AttributeDefinition {
 	/**
 	 *The fallback value used when no explicit assignment is provided.
 	 *
-	 * When `undefined`, the attribute is optional: {@link AttributeMap.create}
-	 * skips the key entirely if no value is provided, and the definition
-	 * does not require a default.
+	 * Optional. When omitted and {@link required} is `true`, the caller
+	 * must supply an explicit value for every entity.
 	 */
-	readonly defaultValue: AttributeValue | undefined;
+	readonly defaultValue?: AttributeValue | undefined;
 	/**
 	 *Unique key that identifies this attribute across the project.
 	 */
 	readonly key: string;
+	/**
+	 *Whether this attribute must be present on every entity.
+	 *
+	 * Defaults to `false`. When `true`, {@link AttributeMap.create}
+	 * requires an explicit value or a `defaultValue` for the key.
+	 * When `false`, the key is skipped entirely if no value is provided.
+	 */
+	readonly required?: boolean | undefined;
 	/**
 	 *The data type of this attribute.
 	 */
 	readonly type: AttributeType;
 
 	private constructor(primitives: Primitives<AttributeDefinition>) {
-		const { constraints, defaultValue, key, type } = primitives;
+		const { constraints, defaultValue, key, required, type } = primitives;
 		this.constraints = constraints;
 		this.defaultValue = defaultValue;
 		this.key = key;
+		this.required = required;
 		this.type = type;
 	}
 
@@ -99,6 +107,7 @@ export default class AttributeDefinition {
 			constraints: { ...this.constraints },
 			defaultValue: this.defaultValue,
 			key: this.key,
+			required: this.required,
 			type: this.type,
 		};
 	}
@@ -181,7 +190,10 @@ export default class AttributeDefinition {
 			);
 		}
 
-		// Optional attributes (no defaultValue) skip default-value validation.
+		/*
+		 * Required attributes must have a defaultValue or the caller must provide one.
+		 * We only validate defaultValue when it's present.
+		 */
 		if (this.defaultValue !== undefined) {
 			const defaultError = this.validateValue(this.defaultValue);
 			if (defaultError) {
@@ -213,7 +225,7 @@ export default class AttributeDefinition {
 		}
 		if (!this.constraints.validValues?.includes(value)) {
 			return new InvalidArgumentError(
-				`"${value}" is not a valid value. Allowed: ${String(this.constraints.validValues?.join(', '))}`,
+				`"${value}" is not a valid value for attribute "${this.key}". Allowed: ${String(this.constraints.validValues?.join(', '))}`,
 				'AttributeDefinition'
 			);
 		}
