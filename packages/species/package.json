@@ -33,6 +33,11 @@
 			"types": "./dist/domain/index.d.mts",
 			"default": "./dist/domain/index.mjs"
 		},
+		"./infrastructure": {
+			"development": "./src/infrastructure/index.ts",
+			"types": "./dist/infrastructure/index.d.mts",
+			"default": "./dist/infrastructure/index.mjs"
+		},
 		"./mother/domain": {
 			"development": "./mother/domain/index.ts"
 		}
@@ -44,13 +49,15 @@
 	"peerDependencies": {
 		"@hexadrop/error": "^2.0.0",
 		"@hexadrop/types": "^2.0.0",
-		"@pocket-forge/attribute": "^0.0.0"
+		"@pocket-forge/attribute": "^0.0.0",
+		"zod": "^3.0.0"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "10.6.0",
 		"@hexadrop/error": "2.0.0",
 		"@hexadrop/types": "2.0.0",
 		"@pocket-forge/attribute": "0.0.0",
-		"tsdown": "0.23.0"
+		"tsdown": "0.23.0",
+		"zod": "3.25.76"
 	}
 }

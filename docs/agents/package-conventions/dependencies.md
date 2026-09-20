@@ -12,6 +12,7 @@ The root `tsconfig.json` maps `@pocket-forge/*` paths for development resolution
 {
   "@pocket-forge/*/application": ["./packages/*/src/application/index.ts"],
   "@pocket-forge/*/domain": ["./packages/*/src/domain/index.ts"],
+  "@pocket-forge/*/infrastructure": ["./packages/*/src/infrastructure/index.ts"],
   "@pocket-forge/*/mock/domain": ["./packages/*/mock/domain/index.ts"],
   "@pocket-forge/*/mother/domain": ["./packages/*/mother/domain/index.ts"],
   "@pocket-forge/*/mother/application": ["./packages/*/mother/application/index.ts"],
@@ -31,6 +32,11 @@ Production exports point to `dist/`. Development-only exports (`mock/`, `mother/
     "development": "./src/domain/index.ts",
     "types": "./dist/domain/index.d.mts",
     "default": "./dist/domain/index.mjs"
+  },
+  "./infrastructure": {
+    "development": "./src/infrastructure/index.ts",
+    "types": "./dist/infrastructure/index.d.mts",
+    "default": "./dist/infrastructure/index.mjs"
   },
   "./mock/domain": {
     "development": "./mock/domain/index.ts"

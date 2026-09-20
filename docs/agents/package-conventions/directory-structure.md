@@ -9,12 +9,15 @@ packages/<name>/
 │   │   ├── event/        # Domain events (one file per event)
 │   │   ├── repository/   # Abstract repository classes
 │   │   └── index.ts      # Barrel: re-exports everything public
-│   └── application/      # Commands, queries, and their handlers
+│   ├── application/      # Commands, queries, and their handlers
+│   │   └── index.ts      # Barrel: re-exports everything public
+│   └── infrastructure/   # Concrete implementations of repository abstractions
 │       └── index.ts      # Barrel: re-exports everything public
 ├── tests/                # Test files, mirroring src/ layers
 │   ├── domain/
 │   │   ├── event/
-│   └── application/
+│   ├── application/
+│   └── infrastructure/
 ├── mother/               # Object Mother factories for tests
 │   ├── domain/
 │   │   └── index.ts      # Barrel: named re-exports

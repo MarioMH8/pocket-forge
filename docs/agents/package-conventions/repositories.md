@@ -26,3 +26,7 @@ export default abstract class EntityRepository {
 - Each method is `abstract` — the implementation lives in `infrastructure/`.
 - The repository is the **only** contract the domain exposes to the outside world for persistence.
 - Query methods return the entity (or `null`/`NotFoundError`), write methods return `void` on success.
+
+## Infrastructure implementations
+
+Concrete repository implementations live in `src/infrastructure/`. See the [directory structure](./directory-structure.md#infrastructure-layer) for conventions and examples.

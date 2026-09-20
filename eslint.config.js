@@ -35,7 +35,7 @@ export default hexadrop(
 	{
 		files: ['**/*.md/**/*'],
 		rules: {
-			'import-sort/imports': 'off',
+			'import/no-unresolved': 'off',
 		},
 	},
 	{
