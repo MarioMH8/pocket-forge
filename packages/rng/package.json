@@ -44,10 +44,12 @@
 		"prepublishOnly": "tsdown"
 	},
 	"peerDependencies": {
+		"@hexadrop/error": "^2.0.0",
 		"@hexadrop/types": "^2.0.0"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "10.6.0",
+		"@hexadrop/error": "2.0.0",
 		"@hexadrop/types": "2.0.0",
 		"tsdown": "0.23.0"
 	}

@@ -11,6 +11,14 @@ describe('RandomPocket', () => {
 			expect(rng.state).toBe(12_345);
 		});
 
+		it('throws when seed is NaN', () => {
+			expect(() => RandomPocket.create(NaN)).toThrow();
+		});
+
+		it('throws when seed is Infinity', () => {
+			expect(() => RandomPocket.create(Infinity)).toThrow();
+		});
+
 		it('coerces negative seeds to unsigned 32-bit', () => {
 			const rng = RandomPocket.create(-1);
 

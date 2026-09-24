@@ -1,3 +1,4 @@
+import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 import type { Primitives } from '@hexadrop/types/primitives';
 
 /**
@@ -52,6 +53,10 @@ export default class RandomPocket {
 	 * @returns A fresh RandomPocket ready for use.
 	 */
 	static create(seed: number): RandomPocket {
+		if (typeof seed !== 'number' || !Number.isFinite(seed)) {
+			throw new InvalidArgumentError('RandomPocket seed must be a finite number', 'RandomPocket');
+		}
+
 		// Coerce to unsigned 32-bit
 		// eslint-disable-next-line no-bitwise, unicorn/prefer-math-trunc
 		const state = (seed | 0) >>> 0;
