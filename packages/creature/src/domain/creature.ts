@@ -11,7 +11,7 @@ import type { SpeciesPrimitives } from '@pocket-forge/species/domain';
  *
  * Mirrors the {@link Creature} shape but replaces embedded domain objects
  * (species, abilities, moves) and the internal {@link AttributeMap} of attributes
- * with their plain primitives equivalents for serialisation and persistence.
+ * with their plain primitives equivalents for serialization and persistence.
  */
 export interface CreaturePrimitives extends Omit<
 	Primitives<Creature>,
@@ -27,7 +27,7 @@ export interface CreaturePrimitives extends Omit<
  * An immutable creature instance with embedded species, ability, and move snapshots.
  *
  * A Creature represents an individual creature owned by a player within a
- * {@link GameSession}. It carries a reference to its {@link SpeciesPrimitives species},
+ * game session. It carries a reference to its {@link SpeciesPrimitives species},
  * a list of {@link AbilityPrimitives abilities} and {@link MovePrimitives moves},
  * and its own set of validated attribute values (which may override or extend
  * the species defaults).
@@ -158,7 +158,7 @@ export default class Creature<T extends Record<keyof T, AttributeValue> = Attrib
 	}
 
 	/**
-	 * Serialises this Creature into a plain {@link CreaturePrimitives} object.
+	 * Serializes this Creature into a plain {@link CreaturePrimitives} object.
 	 */
 	toPrimitives(): CreaturePrimitives {
 		return {

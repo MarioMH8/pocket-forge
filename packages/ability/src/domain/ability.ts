@@ -8,7 +8,7 @@ import { AttributeMap } from '@pocket-forge/attribute/domain';
  *
  * Mirrors the {@link Ability} shape but replaces the internal
  * {@link AttributeMap} of attributes with a plain {@link AttributeValues} record
- * suitable for serialisation and persistence.
+ * suitable for serialization and persistence.
  */
 export interface AbilityPrimitives extends Primitives<Omit<Ability, 'attributes'>> {
 	readonly attributes: AttributeValues;
@@ -36,7 +36,7 @@ export interface AbilityPrimitives extends Primitives<Omit<Ability, 'attributes'
  * });
  *
  * const ability = Ability.create(
- *   'ab-001', 'Intimidate', 'Lowers the foe\'s attack on entry.',
+ *   'ab-001', 'Intimidate', `Lowers the foe\'s attack on entry.`,
  *   { cooldown: 3 },
  *   [cooldownDef]
  * );
@@ -118,7 +118,7 @@ export default class Ability<T extends Record<keyof T, AttributeValue> = Attribu
 	}
 
 	/**
-	 * Serialises this Ability into a plain {@link AbilityPrimitives} object.
+	 * Serializes this Ability into a plain {@link AbilityPrimitives} object.
 	 */
 	toPrimitives(): AbilityPrimitives {
 		return {

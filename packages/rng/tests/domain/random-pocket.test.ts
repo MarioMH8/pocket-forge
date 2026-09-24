@@ -354,7 +354,7 @@ describe('RandomPocket', () => {
 	});
 
 	describe('round-trip', () => {
-		it('serialises and deserialises preserving state', () => {
+		it('serializes and deserializes preserving state', () => {
 			const rng = RandomPocket.create(42);
 			const [, rng2] = rng.next();
 			const [, rng3] = rng2.nextInt(1, 100);

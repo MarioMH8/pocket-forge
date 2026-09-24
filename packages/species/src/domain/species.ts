@@ -8,7 +8,7 @@ import { AttributeMap } from '@pocket-forge/attribute/domain';
  *
  * Mirrors the {@link Species} shape but replaces the internal
  * {@link AttributeMap} of attributes with a plain {@link AttributeValues} record
- * suitable for serialisation and persistence.
+ * suitable for serialization and persistence.
  */
 export interface SpeciesPrimitives extends Primitives<Omit<Species, 'attributes'>> {
 	readonly attributes: AttributeValues;
@@ -111,7 +111,7 @@ export default class Species<T extends Record<keyof T, AttributeValue> = Attribu
 	}
 
 	/**
-	 * Serialises this Species into a plain {@link SpeciesPrimitives} object.
+	 * Serializes this Species into a plain {@link SpeciesPrimitives} object.
 	 */
 	toPrimitives(): SpeciesPrimitives {
 		return {

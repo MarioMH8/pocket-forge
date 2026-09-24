@@ -6,7 +6,7 @@ export default hexadrop(
 			'import/no-unresolved': [
 				'error',
 				{
-					ignore: ['@pocket-forge/*', 'bun:test'],
+					ignore: ['@pocket-forge/*', 'bun:test', 'astro:content'],
 				},
 			],
 			'unicorn/name-replacements': [
@@ -25,6 +25,7 @@ export default hexadrop(
 				},
 			],
 		},
+		typescript: ['tsconfig.json', 'apps/docs/tsconfig.json'],
 	},
 	{
 		files: ['**/mock/**/index.ts', '**/mother/**/index.ts'],
@@ -42,6 +43,19 @@ export default hexadrop(
 		files: ['packages/species/mother/domain/species.mother.ts'],
 		rules: {
 			'typescript/no-non-null-assertion': 'off',
+		},
+	},
+	{
+		files: ['apps/docs/src/content.config.ts'],
+		rules: {
+			'import/prefer-default-export': 'off',
+		},
+	},
+	{
+		files: ['apps/docs/scripts/*'],
+		rules: {
+			'no-cond-assign': 'off',
+			'no-console': 'off',
 		},
 	}
 );
