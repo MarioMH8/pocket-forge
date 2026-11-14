@@ -32,6 +32,7 @@
 		"lint": "eslint --cache",
 		"lint:ci": "eslint --cache --cache-strategy content",
 		"lint:fix": "eslint --cache --fix",
+		"prepare": "husky",
 		"test": "bun test --conditions=development",
 		"typecheck": "tsc --noEmit"
 	},
