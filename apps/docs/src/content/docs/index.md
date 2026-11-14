@@ -26,12 +26,12 @@ Pocket Forge gives mixed teams a shared language for game content, simulation, a
 
 ## Getting Started
 
-Check out the [Getting Started guide](/guides/getting-started/) to begin.
+Check out the [Getting Started guide](/pocket-forge/guides/getting-started/) to begin.
 
 ## API Reference
 
-Browse the [API Reference](/api/) for detailed documentation of all packages.
+Browse the [API Reference](/pocket-forge/api/) for detailed documentation of all packages.
 
 ## Domain Glossary
 
-The [Glossary](/guides/glossary/) defines the shared vocabulary used across all bounded contexts.
+The [Glossary](/pocket-forge/guides/glossary/) defines the shared vocabulary used across all bounded contexts.
