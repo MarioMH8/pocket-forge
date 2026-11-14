@@ -11,8 +11,8 @@
 		"start": "astro dev"
 	},
 	"dependencies": {
-		"@astrojs/starlight": "latest",
-		"astro": "latest"
+		"@astrojs/starlight": "0.43.1",
+		"astro": "7.4.12"
 	},
 	"devDependencies": {
 		"typedoc": "0.28.20",
