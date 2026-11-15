@@ -6,6 +6,7 @@ import type {
 	CombatRulesetData,
 	CombatRulesetFactory,
 	CombatRulesetPrimitives,
+	ContractVersionValidator,
 } from '@pocket-forge/combat/domain';
 import { CombatRuleset, CombatRulesetError } from '@pocket-forge/combat/domain';
 import {
@@ -22,6 +23,12 @@ const CONTRACT = {
 	kind: 'test',
 };
 
+class TestContractVersionValidator implements ContractVersionValidator {
+	isValid(version: string): boolean {
+		return /^\d+\.\d+\.\d+$/.test(version);
+	}
+}
+
 class TestCombatRuleset extends CombatRuleset {
 	readonly contractVersion = CONTRACT.contractVersion;
 	readonly kind = CONTRACT.kind;
@@ -32,18 +39,23 @@ class TestCombatRuleset extends CombatRuleset {
 
 	static create(
 		primitives: CombatRulesetPrimitives,
-		definitions: AttributeDefinition[]
+		definitions: AttributeDefinition[],
+		versionValidator: ContractVersionValidator
 	): Either<CombatRulesetError[], TestCombatRuleset> {
-		return this.validate(primitives, definitions, CONTRACT).mapRight(data => new TestCombatRuleset(data));
+		return this.validate(primitives, definitions, CONTRACT, versionValidator).mapRight(
+			data => new TestCombatRuleset(data)
+		);
 	}
 }
 
 class TestCombatRulesetFactory implements CombatRulesetFactory<TestCombatRuleset> {
+	constructor(private readonly versionValidator: ContractVersionValidator) {}
+
 	create(
 		primitives: CombatRulesetPrimitives,
 		definitions: AttributeDefinition[]
 	): Either<CombatRulesetError[], TestCombatRuleset> {
-		return TestCombatRuleset.create(primitives, definitions);
+		return TestCombatRuleset.create(primitives, definitions, this.versionValidator);
 	}
 }
 
@@ -54,9 +66,12 @@ class AlphaOnlyRuleset extends TestCombatRuleset {
 
 	static override create(
 		primitives: CombatRulesetPrimitives,
-		definitions: AttributeDefinition[]
+		definitions: AttributeDefinition[],
+		versionValidator: ContractVersionValidator
 	): Either<CombatRulesetError[], AlphaOnlyRuleset> {
-		return this.validate(primitives, definitions, CONTRACT).mapRight(data => new AlphaOnlyRuleset(data));
+		return this.validate(primitives, definitions, CONTRACT, versionValidator).mapRight(
+			data => new AlphaOnlyRuleset(data)
+		);
 	}
 
 	override validateGroups(groups: readonly CombatantGroupType[]): Either<CombatRulesetError[], void> {
@@ -87,9 +102,10 @@ function primitives(overrides?: Partial<CombatRulesetPrimitives>): CombatRuleset
 
 function create(
 	overrides?: Partial<CombatRulesetPrimitives>,
-	definitions: AttributeDefinition[] = []
+	definitions: AttributeDefinition[] = [],
+	versionValidator: ContractVersionValidator = new TestContractVersionValidator()
 ): Either<CombatRulesetError[], TestCombatRuleset> {
-	return TestCombatRuleset.create(primitives(overrides), definitions);
+	return TestCombatRuleset.create(primitives(overrides), definitions, versionValidator);
 }
 
 function group(id: string, combatants: number, name = `Group ${id}`): CombatantGroupType {
@@ -126,7 +142,7 @@ describe('CombatRuleset', () => {
 		});
 
 		it('hydrates primitives through a concrete factory', () => {
-			const factory = new TestCombatRulesetFactory();
+			const factory = new TestCombatRulesetFactory(new TestContractVersionValidator());
 
 			const result = factory.create(primitives(), []);
 
@@ -135,7 +151,7 @@ describe('CombatRuleset', () => {
 		});
 
 		it('rejects hydration when a constraint differs from the concrete factory', () => {
-			const factory = new TestCombatRulesetFactory();
+			const factory = new TestCombatRulesetFactory(new TestContractVersionValidator());
 
 			const result = factory.create(
 				primitives({ groupConstraints: { ...TEST_GROUP_CONSTRAINTS, maxGroups: 9 } }),
@@ -180,6 +196,16 @@ describe('CombatRuleset', () => {
 		it('rejects an invalid semver contract version', () => {
 			const result = create({ contractVersion: '1.0' });
 
+			expect(result.getLeft()[0]?.reason).toBe('invalid-version');
+			expect(result.getLeft()[0]?.path).toBe('contractVersion');
+		});
+
+		it('uses the injected contract version validator', () => {
+			const rejectAll: ContractVersionValidator = { isValid: () => false };
+
+			const result = create({}, [], rejectAll);
+
+			expect(result.isLeft()).toBe(true);
 			expect(result.getLeft()[0]?.reason).toBe('invalid-version');
 			expect(result.getLeft()[0]?.path).toBe('contractVersion');
 		});
@@ -421,7 +447,7 @@ describe('CombatRuleset', () => {
 		});
 
 		it('can be overridden by a concrete ruleset', () => {
-			const ruleset = AlphaOnlyRuleset.create(primitives(), []).getRight();
+			const ruleset = AlphaOnlyRuleset.create(primitives(), [], new TestContractVersionValidator()).getRight();
 
 			const valid = ruleset.validateGroups([group('alpha', 2, 'Alpha One'), group('beta', 2, 'Alpha Two')]);
 			const invalid = ruleset.validateGroups([group('alpha', 2, 'Alpha One'), group('beta', 2, 'Beta Two')]);
@@ -436,7 +462,7 @@ describe('CombatRuleset', () => {
 		it('round-trips', () => {
 			const source = primitives();
 
-			const result = TestCombatRuleset.create(source, []);
+			const result = TestCombatRuleset.create(source, [], new TestContractVersionValidator());
 
 			expect(result.getRight().toPrimitives()).toEqual(source);
 		});

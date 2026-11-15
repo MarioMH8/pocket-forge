@@ -1,12 +1,12 @@
 import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeMap } from '@pocket-forge/attribute/domain';
-import semver from 'semver';
 
 import type CombatantGroup from '../combatant-group';
 import type CombatGroupConstraints from './combat-group-constraints';
 import CombatRulesetError from './combat-ruleset.error';
 import type { CombatRulesetData, CombatRulesetPrimitives } from './combat-ruleset.types';
+import type ContractVersionValidator from './contract-version.validator';
 
 /**
  * The composition expected by a concrete Combat Ruleset implementation.
@@ -53,7 +53,7 @@ abstract class CombatRuleset {
 	 */
 	readonly name: string;
 	/**
-	 * Exact semver version of the concrete ruleset implementation.
+	 * Exact contract version of the concrete ruleset implementation.
 	 */
 	abstract readonly contractVersion: string;
 	/**
@@ -79,16 +79,18 @@ abstract class CombatRuleset {
 	 * @param primitives - Serialized ruleset data.
 	 * @param definitions - Attribute definitions that govern format attributes.
 	 * @param expected - Contract declared by the concrete implementation.
+	 * @param versionValidator - Domain port that validates the version scheme.
 	 * @returns Validated data, or every validation failure.
 	 */
 	protected static validate(
 		primitives: CombatRulesetPrimitives,
 		definitions: AttributeDefinition[],
-		expected: CombatRulesetContract
+		expected: CombatRulesetContract,
+		versionValidator: ContractVersionValidator
 	): Either<CombatRulesetError[], CombatRulesetData> {
 		const errors: CombatRulesetError[] = [];
 
-		this.validateIdentity(primitives, expected, errors);
+		this.validateIdentity(primitives, expected, versionValidator, errors);
 		this.validateConstraints(primitives.groupConstraints, expected.groupConstraints, errors);
 		errors.push(...this.validateAttributes(primitives.attributes, definitions));
 
@@ -236,6 +238,7 @@ abstract class CombatRuleset {
 	private static validateIdentity(
 		primitives: CombatRulesetPrimitives,
 		expected: CombatRulesetContract,
+		versionValidator: ContractVersionValidator,
 		errors: CombatRulesetError[]
 	): void {
 		if (!this.isNonEmpty(primitives.id)) {
@@ -266,11 +269,11 @@ abstract class CombatRuleset {
 					'contractVersion'
 				)
 			);
-		} else if (semver.valid(primitives.contractVersion) === null) {
+		} else if (!versionValidator.isValid(primitives.contractVersion)) {
 			errors.push(
 				new CombatRulesetError(
 					'invalid-version',
-					`Combat ruleset contract version "${primitives.contractVersion}" is not valid semver`,
+					`Combat ruleset contract version "${primitives.contractVersion}" is not valid`,
 					'contractVersion'
 				)
 			);

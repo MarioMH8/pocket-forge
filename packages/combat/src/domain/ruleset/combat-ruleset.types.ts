@@ -15,7 +15,7 @@ interface CombatRulesetPrimitives {
 	 */
 	readonly attributes: AttributeValues;
 	/**
-	 * Exact semver version of the concrete ruleset implementation.
+	 * Exact contract version of the concrete ruleset implementation.
 	 */
 	readonly contractVersion: string;
 	/**
