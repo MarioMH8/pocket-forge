@@ -77,6 +77,79 @@ describe('Combat', () => {
 		});
 	});
 
+	describe('validateComposition', () => {
+		it('accepts groups with unique ids and matching membership', () => {
+			const groups = [
+				CombatantGroupMother.create({
+					combatants: [CombatantMother.primitives({ groupId: 'group-1', id: 'combatant-1' })],
+					id: 'group-1',
+				}),
+				CombatantGroupMother.create({
+					combatants: [CombatantMother.primitives({ groupId: 'group-2', id: 'combatant-2' })],
+					id: 'group-2',
+				}),
+			];
+
+			const result = Combat.validateComposition(groups);
+
+			expect(result.isRight()).toBe(true);
+		});
+
+		it('rejects duplicated group ids', () => {
+			const groups = [
+				CombatantGroupMother.create({
+					combatants: [CombatantMother.primitives({ groupId: 'group-1', id: 'combatant-1' })],
+					id: 'group-1',
+				}),
+				CombatantGroupMother.create({
+					combatants: [CombatantMother.primitives({ groupId: 'group-1', id: 'combatant-2' })],
+					id: 'group-1',
+				}),
+			];
+
+			const result = Combat.validateComposition(groups);
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()).toHaveLength(1);
+			expect(result.getLeft()[0]?.reason).toBe('duplicate-group');
+			expect(result.getLeft()[0]?.path).toBe('groups.1');
+		});
+
+		it('rejects duplicated combatant ids across groups', () => {
+			const groups = [
+				CombatantGroupMother.create({
+					combatants: [CombatantMother.primitives({ groupId: 'group-1', id: 'combatant-1' })],
+					id: 'group-1',
+				}),
+				CombatantGroupMother.create({
+					combatants: [CombatantMother.primitives({ groupId: 'group-2', id: 'combatant-1' })],
+					id: 'group-2',
+				}),
+			];
+
+			const result = Combat.validateComposition(groups);
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]?.reason).toBe('duplicate-combatant');
+			expect(result.getLeft()[0]?.path).toBe('groups.1.combatants.0');
+		});
+
+		it('rejects a combatant whose groupId differs from its group id', () => {
+			const groups = [
+				CombatantGroupMother.create({
+					combatants: [CombatantMother.primitives({ groupId: 'group-2', id: 'combatant-1' })],
+					id: 'group-1',
+				}),
+			];
+
+			const result = Combat.validateComposition(groups);
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]?.reason).toBe('invalid-membership');
+			expect(result.getLeft()[0]?.path).toBe('groups.0.combatants.0.groupId');
+		});
+	});
+
 	describe('apply', () => {
 		it('produces a new immutable Combat snapshot', () => {
 			const combat = CombatMother.create();

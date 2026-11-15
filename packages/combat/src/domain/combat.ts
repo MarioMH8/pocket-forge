@@ -83,6 +83,22 @@ class Combat<T extends Record<keyof T, AttributeValue> = AttributeValues> {
 		);
 	}
 
+	/**
+	 * Validates the membership invariants of a group composition.
+	 *
+	 * Group ids and combatant ids must be unique across the combat, and every
+	 * combatant must belong to the group that contains it. Failures are
+	 * aggregated instead of thrown so callers can report every violation.
+	 *
+	 * @param groups - Groups that compose a combat.
+	 * @returns No value on success, or every membership violation.
+	 */
+	static validateComposition(groups: readonly CombatantGroup[]): Either<CombatTransitionError[], void> {
+		const errors = this.collectMembershipErrors(groups);
+
+		return errors.length > 0 ? Either.left(errors) : Either.right();
+	}
+
 	private static collectMembershipErrors(groups: readonly CombatantGroup[]): CombatTransitionError[] {
 		const errors: CombatTransitionError[] = [];
 		const groupIds = new Set<string>();
@@ -144,10 +160,10 @@ class Combat<T extends Record<keyof T, AttributeValue> = AttributeValues> {
 			]);
 		}
 
-		const errors = Combat.collectMembershipErrors(transition.groups);
+		const composition = Combat.validateComposition(transition.groups);
 
-		if (errors.length > 0) {
-			return Either.left(errors);
+		if (composition.isLeft()) {
+			return Either.left(composition.getLeft());
 		}
 
 		const successor = new Combat(
