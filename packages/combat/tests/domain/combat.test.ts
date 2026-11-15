@@ -35,15 +35,45 @@ describe('Combat', () => {
 			const rng = RandomPocketMother.create();
 			const combatant = CombatantMother.create();
 			const group1 = CombatantGroupMother.create({
-				combatants: [CombatantMother.primitives({ id: combatant.id })],
+				combatants: [CombatantMother.primitives({ groupId: 'group-1', id: combatant.id })],
+				id: 'group-1',
 			});
 			const group2 = CombatantGroupMother.create({
-				combatants: [CombatantMother.primitives({ id: combatant.id })],
+				combatants: [CombatantMother.primitives({ groupId: 'group-2', id: combatant.id })],
+				id: 'group-2',
 			});
 
 			expect(() => Combat.create('combat-1', [group1, group2], {}, [definition], rng)).toThrow(
 				/Duplicated combatant id/
 			);
+		});
+
+		it('throws when group ids are not unique', () => {
+			const definition = AttributeDefinitionMother.create();
+			const rng = RandomPocketMother.create();
+			const group1 = CombatantGroupMother.create({
+				combatants: [CombatantMother.primitives({ groupId: 'group-1', id: 'combatant-1' })],
+				id: 'group-1',
+			});
+			const group2 = CombatantGroupMother.create({
+				combatants: [CombatantMother.primitives({ groupId: 'group-1', id: 'combatant-2' })],
+				id: 'group-1',
+			});
+
+			expect(() => Combat.create('combat-1', [group1, group2], {}, [definition], rng)).toThrow(
+				/Duplicated group id/
+			);
+		});
+
+		it('throws when a combatant groupId differs from its group id', () => {
+			const definition = AttributeDefinitionMother.create();
+			const rng = RandomPocketMother.create();
+			const group = CombatantGroupMother.create({
+				combatants: [CombatantMother.primitives({ groupId: 'group-2', id: 'combatant-1' })],
+				id: 'group-1',
+			});
+
+			expect(() => Combat.create('combat-1', [group], {}, [definition], rng)).toThrow(/groupId/);
 		});
 	});
 
@@ -92,6 +122,66 @@ describe('Combat', () => {
 					status: 'completed',
 				})
 			).toThrow(/Cannot apply transition to completed combat/);
+		});
+
+		it('throws when group ids are not unique', () => {
+			const combat = CombatMother.create();
+			const group1 = CombatantGroupMother.create({
+				combatants: [CombatantMother.primitives({ groupId: 'group-1', id: 'combatant-1' })],
+				id: 'group-1',
+			});
+			const group2 = CombatantGroupMother.create({
+				combatants: [CombatantMother.primitives({ groupId: 'group-1', id: 'combatant-2' })],
+				id: 'group-1',
+			});
+
+			expect(() =>
+				combat.apply({
+					groups: [group1, group2],
+					randomPocket: RandomPocketMother.create(),
+					status: 'active',
+				})
+			).toThrow(/Duplicated group id/);
+		});
+
+		it('throws when a combatant groupId differs from its group id', () => {
+			const combat = CombatMother.create();
+			const group = CombatantGroupMother.create({
+				combatants: [CombatantMother.primitives({ groupId: 'group-2', id: 'combatant-1' })],
+				id: 'group-1',
+			});
+
+			expect(() =>
+				combat.apply({
+					groups: [group],
+					randomPocket: RandomPocketMother.create(),
+					status: 'active',
+				})
+			).toThrow(/groupId/);
+		});
+
+		it('leaves the previous combat unchanged when the transition is rejected', () => {
+			const combat = CombatMother.create();
+			const groups = combat.groups;
+			const status = combat.status;
+			const randomPocket = combat.randomPocket;
+
+			expect(() =>
+				combat.apply({
+					groups: [
+						CombatantGroupMother.create({
+							combatants: [CombatantMother.primitives({ groupId: 'group-2', id: 'combatant-1' })],
+							id: 'group-1',
+						}),
+					],
+					randomPocket: RandomPocketMother.create(),
+					status: 'completed',
+				})
+			).toThrow();
+
+			expect(combat.groups).toBe(groups);
+			expect(combat.status).toBe(status);
+			expect(combat.randomPocket).toBe(randomPocket);
 		});
 	});
 

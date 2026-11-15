@@ -10,10 +10,12 @@ export default class CombatantGroupMother {
 	}
 
 	static primitives(overrides?: Partial<CombatantGroupPrimitives>): CombatantGroupPrimitives {
+		const id = overrides?.id ?? faker.string.uuid();
+
 		return {
 			attributes: {},
-			combatants: [CombatantMother.primitives()],
-			id: faker.string.uuid(),
+			combatants: [CombatantMother.primitives({ groupId: id })],
+			id,
 			name: faker.word.noun(),
 			...overrides,
 		};
