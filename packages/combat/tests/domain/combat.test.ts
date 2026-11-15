@@ -85,12 +85,15 @@ describe('Combat', () => {
 				name: 'New Squad',
 			});
 
-			const next = combat.apply({
+			const result = combat.apply({
 				groups: [newGroup],
 				randomPocket: newRng,
 				status: 'active',
 			});
 
+			expect(result.isRight()).toBe(true);
+
+			const next = result.getRight();
 			expect(next).not.toBe(combat);
 			expect(next.id).toBe(combat.id);
 			expect(next.groups[0]?.name).toBe('New Squad');
@@ -102,29 +105,31 @@ describe('Combat', () => {
 			const rng = RandomPocketMother.create();
 			const group = CombatantGroupMother.create();
 
-			const next = combat.apply({
+			const result = combat.apply({
 				groups: [group],
 				randomPocket: rng,
 				status: 'completed',
 			});
 
-			expect(next.status).toBe('completed');
+			expect(result.getRight().status).toBe('completed');
 		});
 
-		it('throws when combat is already completed', () => {
+		it('rejects when combat is already completed', () => {
 			const combat = CombatMother.create({ status: 'completed' });
-			const rng = RandomPocketMother.create();
 
-			expect(() =>
-				combat.apply({
-					groups: [CombatantGroupMother.create()],
-					randomPocket: rng,
-					status: 'completed',
-				})
-			).toThrow(/Cannot apply transition to completed combat/);
+			const result = combat.apply({
+				groups: [CombatantGroupMother.create()],
+				randomPocket: RandomPocketMother.create(),
+				status: 'completed',
+			});
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]?.reason).toBe('completed-combat');
+			expect(result.getLeft()[0]?.path).toBe('status');
+			expect(result.getLeft()[0]?.message).toMatch(/Cannot apply transition to completed combat/);
 		});
 
-		it('throws when group ids are not unique', () => {
+		it('rejects duplicated group ids', () => {
 			const combat = CombatMother.create();
 			const group1 = CombatantGroupMother.create({
 				combatants: [CombatantMother.primitives({ groupId: 'group-1', id: 'combatant-1' })],
@@ -135,29 +140,87 @@ describe('Combat', () => {
 				id: 'group-1',
 			});
 
-			expect(() =>
-				combat.apply({
-					groups: [group1, group2],
-					randomPocket: RandomPocketMother.create(),
-					status: 'active',
-				})
-			).toThrow(/Duplicated group id/);
+			const result = combat.apply({
+				groups: [group1, group2],
+				randomPocket: RandomPocketMother.create(),
+				status: 'active',
+			});
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()).toHaveLength(1);
+			expect(result.getLeft()[0]?.reason).toBe('duplicate-group');
+			expect(result.getLeft()[0]?.path).toBe('groups.1');
+			expect(result.getLeft()[0]?.message).toMatch(/Duplicated group id/);
 		});
 
-		it('throws when a combatant groupId differs from its group id', () => {
+		it('rejects duplicated combatant ids across groups', () => {
+			const combat = CombatMother.create();
+			const group1 = CombatantGroupMother.create({
+				combatants: [CombatantMother.primitives({ groupId: 'group-1', id: 'combatant-1' })],
+				id: 'group-1',
+			});
+			const group2 = CombatantGroupMother.create({
+				combatants: [CombatantMother.primitives({ groupId: 'group-2', id: 'combatant-1' })],
+				id: 'group-2',
+			});
+
+			const result = combat.apply({
+				groups: [group1, group2],
+				randomPocket: RandomPocketMother.create(),
+				status: 'active',
+			});
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]?.reason).toBe('duplicate-combatant');
+			expect(result.getLeft()[0]?.path).toBe('groups.1.combatants.0');
+			expect(result.getLeft()[0]?.message).toMatch(/Duplicated combatant id/);
+		});
+
+		it('rejects a combatant whose groupId differs from its group id', () => {
 			const combat = CombatMother.create();
 			const group = CombatantGroupMother.create({
 				combatants: [CombatantMother.primitives({ groupId: 'group-2', id: 'combatant-1' })],
 				id: 'group-1',
 			});
 
-			expect(() =>
-				combat.apply({
-					groups: [group],
-					randomPocket: RandomPocketMother.create(),
-					status: 'active',
-				})
-			).toThrow(/groupId/);
+			const result = combat.apply({
+				groups: [group],
+				randomPocket: RandomPocketMother.create(),
+				status: 'active',
+			});
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]?.reason).toBe('invalid-membership');
+			expect(result.getLeft()[0]?.path).toBe('groups.0.combatants.0.groupId');
+			expect(result.getLeft()[0]?.message).toMatch(/groupId/);
+		});
+
+		it('aggregates every membership rejection', () => {
+			const combat = CombatMother.create();
+			const group1 = CombatantGroupMother.create({
+				combatants: [
+					CombatantMother.primitives({ groupId: 'group-2', id: 'combatant-1' }),
+					CombatantMother.primitives({ groupId: 'group-1', id: 'combatant-1' }),
+				],
+				id: 'group-1',
+			});
+			const group2 = CombatantGroupMother.create({
+				combatants: [CombatantMother.primitives({ groupId: 'group-1', id: 'combatant-2' })],
+				id: 'group-1',
+			});
+
+			const result = combat.apply({
+				groups: [group1, group2],
+				randomPocket: RandomPocketMother.create(),
+				status: 'active',
+			});
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft().map(error => error.reason)).toEqual([
+				'invalid-membership',
+				'duplicate-combatant',
+				'duplicate-group',
+			]);
 		});
 
 		it('leaves the previous combat unchanged when the transition is rejected', () => {
@@ -166,19 +229,18 @@ describe('Combat', () => {
 			const status = combat.status;
 			const randomPocket = combat.randomPocket;
 
-			expect(() =>
-				combat.apply({
-					groups: [
-						CombatantGroupMother.create({
-							combatants: [CombatantMother.primitives({ groupId: 'group-2', id: 'combatant-1' })],
-							id: 'group-1',
-						}),
-					],
-					randomPocket: RandomPocketMother.create(),
-					status: 'completed',
-				})
-			).toThrow();
+			const result = combat.apply({
+				groups: [
+					CombatantGroupMother.create({
+						combatants: [CombatantMother.primitives({ groupId: 'group-2', id: 'combatant-1' })],
+						id: 'group-1',
+					}),
+				],
+				randomPocket: RandomPocketMother.create(),
+				status: 'completed',
+			});
 
+			expect(result.isLeft()).toBe(true);
 			expect(combat.groups).toBe(groups);
 			expect(combat.status).toBe(status);
 			expect(combat.randomPocket).toBe(randomPocket);
