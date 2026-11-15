@@ -3,12 +3,12 @@
 Reference Combat rulesets, action plugin, and authored action set.
 
 - **Package manager:** Bun (`bun`)
-- **Build:** `bun run prepublishOnly` (at package folder)
-- **Test:** `bun test plugins/combat-reference` (at root)
+- **Build:** `bun run build` (at package folder)
+- **Test:** `bun test plugins/combat-reference --conditions=development` (at root)
 - **Type-check:** `bun run typecheck` (at root)
 - **Lint:** `bun run lint:fix` (at root)
 
-The package only keeps package-exclusive scripts (`prepublishOnly`); everything else runs from the repo root.
+The package only keeps package-exclusive scripts (`build`, `prepublishOnly`); everything else runs from the repo root.
 
 ## Boundary
 
