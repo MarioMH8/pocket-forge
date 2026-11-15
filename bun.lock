@@ -88,6 +88,9 @@
         "@pocket-forge/rng": "workspace:*",
         "semver": "^7.0.0",
       },
+      "optionalPeers": [
+        "semver",
+      ],
     },
     "packages/creature": {
       "name": "@pocket-forge/creature",
