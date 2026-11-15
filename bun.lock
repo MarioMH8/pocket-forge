@@ -192,6 +192,22 @@
         "zod": "^3.0.0",
       },
     },
+    "plugins/combat-reference": {
+      "name": "@pocket-forge/combat-reference",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@faker-js/faker": "10.6.0",
+        "@hexadrop/either": "2.0.1",
+        "@pocket-forge/attribute": "0.0.0",
+        "@pocket-forge/combat": "0.0.0",
+        "tsdown": "0.23.7",
+      },
+      "peerDependencies": {
+        "@hexadrop/either": "^2.0.0",
+        "@pocket-forge/attribute": "workspace:*",
+        "@pocket-forge/combat": "workspace:*",
+      },
+    },
   },
   "packages": {
     "@astrojs/compiler-binding": ["@astrojs/compiler-binding@0.5.2", "", { "optionalDependencies": { "@astrojs/compiler-binding-android-arm64": "0.5.2", "@astrojs/compiler-binding-darwin-arm64": "0.5.2", "@astrojs/compiler-binding-darwin-x64": "0.5.2", "@astrojs/compiler-binding-linux-arm64-gnu": "0.5.2", "@astrojs/compiler-binding-linux-arm64-musl": "0.5.2", "@astrojs/compiler-binding-linux-x64-gnu": "0.5.2", "@astrojs/compiler-binding-linux-x64-musl": "0.5.2", "@astrojs/compiler-binding-wasm32-wasi": "0.5.2", "@astrojs/compiler-binding-win32-arm64-msvc": "0.5.2", "@astrojs/compiler-binding-win32-x64-msvc": "0.5.2" } }, "sha512-lEn76+0JcMQ5RDXU0wSMWJg2ZppiZvSULpghC29cfv4o9bhvWFDbQjsCtvjjXN9iVLFQ7fL3wTR2L2UU13mP8g=="],
@@ -605,6 +621,8 @@
     "@pocket-forge/attribute": ["@pocket-forge/attribute@workspace:packages/attribute"],
 
     "@pocket-forge/combat": ["@pocket-forge/combat@workspace:packages/combat"],
+
+    "@pocket-forge/combat-reference": ["@pocket-forge/combat-reference@workspace:plugins/combat-reference"],
 
     "@pocket-forge/creature": ["@pocket-forge/creature@workspace:packages/creature"],
 

@@ -46,6 +46,23 @@ export default hexadrop(
 		},
 	},
 	{
+		files: ['packages/combat/**/*.ts'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: [
+						{
+							group: ['@pocket-forge/combat-reference', '@pocket-forge/combat-reference/*'],
+							message:
+								'The neutral Combat core cannot depend on reference implementations. Move this logic into plugins/combat-reference.',
+						},
+					],
+				},
+			],
+		},
+	},
+	{
 		files: ['apps/docs/src/content.config.ts'],
 		rules: {
 			'import/prefer-default-export': 'off',

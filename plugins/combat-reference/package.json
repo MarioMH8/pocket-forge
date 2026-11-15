@@ -1,0 +1,57 @@
+{
+	"name": "@pocket-forge/combat-reference",
+	"version": "0.0.0",
+	"description": "Reference Combat formats, action plugin, and authored action set for Pocket Forge. Proves format, move logic, and authored bindings live outside the neutral core.",
+	"keywords": [
+		"pocket-forge",
+		"rpg",
+		"game-development",
+		"combat",
+		"plugin",
+		"reference"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/MarioMH8/pocket-forge.git",
+		"directory": "plugins/combat-reference"
+	},
+	"homepage": "https://github.com/MarioMH8/pocket-forge",
+	"bugs": {
+		"url": "https://github.com/MarioMH8/pocket-forge/issues"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"type": "module",
+	"sideEffects": false,
+	"files": [
+		"dist"
+	],
+	"exports": {
+		"./domain": {
+			"development": "./src/domain/index.ts",
+			"types": "./dist/domain/index.d.mts",
+			"default": "./dist/domain/index.mjs"
+		},
+		"./mother/domain": {
+			"development": "./mother/domain/index.ts"
+		}
+	},
+	"scripts": {
+		"build": "tsdown",
+		"prepublishOnly": "tsdown"
+	},
+	"peerDependencies": {
+		"@hexadrop/either": "^2.0.0",
+		"@pocket-forge/attribute": "workspace:*",
+		"@pocket-forge/combat": "workspace:*"
+	},
+	"devDependencies": {
+		"@faker-js/faker": "10.6.0",
+		"@hexadrop/either": "2.0.1",
+		"@pocket-forge/attribute": "0.0.0",
+		"@pocket-forge/combat": "0.0.0",
+		"tsdown": "0.23.7"
+	}
+}
