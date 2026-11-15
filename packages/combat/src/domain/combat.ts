@@ -1,9 +1,11 @@
+import Either from '@hexadrop/either';
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 import type { Primitives } from '@hexadrop/types/primitives';
 import type { AttributeDefinition, AttributeValue, AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeMap } from '@pocket-forge/attribute/domain';
 import RandomPocket from '@pocket-forge/rng/domain';
 
+import CombatTransitionError from './combat-transition.error';
 import type { CombatantGroupPrimitives } from './combatant-group';
 import CombatantGroup from './combatant-group';
 
@@ -15,7 +17,7 @@ interface CombatPrimitives extends Omit<Primitives<Combat>, 'attributes' | 'grou
 	readonly randomPocket: Primitives<RandomPocket>;
 }
 
-interface CombatTransition {
+interface CombatTransitionData {
 	readonly groups: readonly CombatantGroup[];
 	readonly randomPocket: RandomPocket;
 	readonly status: CombatStatus;
@@ -57,7 +59,11 @@ class Combat<T extends Record<keyof T, AttributeValue> = AttributeValues> {
 			throw new InvalidArgumentError('Combat requires at least one group', 'Combat');
 		}
 
-		this.assertGroupMembership(groups);
+		const membershipErrors = this.collectMembershipErrors(groups);
+
+		if (membershipErrors.length > 0) {
+			throw new InvalidArgumentError(membershipErrors[0]?.message ?? 'Invalid combat membership', 'Combat');
+		}
 
 		const attributeMap = AttributeMap.create(values, definitions, 'Combat');
 
@@ -77,46 +83,82 @@ class Combat<T extends Record<keyof T, AttributeValue> = AttributeValues> {
 		);
 	}
 
-	private static assertGroupMembership(groups: readonly CombatantGroup[]): void {
+	private static collectMembershipErrors(groups: readonly CombatantGroup[]): CombatTransitionError[] {
+		const errors: CombatTransitionError[] = [];
 		const groupIds = new Set<string>();
 		const combatantIds = new Set<string>();
 
-		for (const group of groups) {
+		for (const [groupIndex, group] of groups.entries()) {
+			const groupPath = `groups.${String(groupIndex)}`;
+
 			if (groupIds.has(group.id)) {
-				throw new InvalidArgumentError(`Duplicated group id: ${group.id}`, 'Combat');
+				errors.push(
+					new CombatTransitionError('duplicate-group', `Duplicated group id: ${group.id}`, groupPath)
+				);
 			}
 			groupIds.add(group.id);
 
-			for (const combatant of group.combatants) {
+			for (const [combatantIndex, combatant] of group.combatants.entries()) {
+				const combatantPath = `${groupPath}.combatants.${String(combatantIndex)}`;
+
 				if (combatantIds.has(combatant.id)) {
-					throw new InvalidArgumentError(`Duplicated combatant id: ${combatant.id}`, 'Combat');
+					errors.push(
+						new CombatTransitionError(
+							'duplicate-combatant',
+							`Duplicated combatant id: ${combatant.id}`,
+							combatantPath
+						)
+					);
 				}
 				combatantIds.add(combatant.id);
 
 				if (combatant.groupId !== group.id) {
-					throw new InvalidArgumentError(
-						`Combatant ${combatant.id} groupId ${combatant.groupId} does not match group ${group.id}`,
-						'Combat'
+					errors.push(
+						new CombatTransitionError(
+							'invalid-membership',
+							`Combatant ${combatant.id} groupId ${combatant.groupId} does not match group ${group.id}`,
+							`${combatantPath}.groupId`
+						)
 					);
 				}
 			}
 		}
+
+		return errors;
 	}
 
-	apply(transition: CombatTransition): Combat {
+	/**
+	 * Applies a transition to this combat.
+	 *
+	 * Domain rejections are returned as structured failures: completed combat
+	 * never reopens, membership must stay consistent, and a rejected transition
+	 * leaves this snapshot unchanged.
+	 *
+	 * @param transition - Successor groups, randomness, and lifecycle status.
+	 * @returns The successor snapshot, or every rejection.
+	 */
+	apply(transition: CombatTransitionData): Either<CombatTransitionError[], Combat> {
 		if (this.status === 'completed') {
-			throw new InvalidArgumentError('Cannot apply transition to completed combat', 'Combat');
+			return Either.left([
+				new CombatTransitionError('completed-combat', 'Cannot apply transition to completed combat', 'status'),
+			]);
 		}
 
-		Combat.assertGroupMembership(transition.groups);
+		const errors = Combat.collectMembershipErrors(transition.groups);
 
-		return new Combat(
+		if (errors.length > 0) {
+			return Either.left(errors);
+		}
+
+		const successor = new Combat(
 			this.attributes,
 			Object.freeze(transition.groups.map(g => g)),
 			this.id,
 			transition.randomPocket,
 			transition.status
 		);
+
+		return Either.right(successor);
 	}
 
 	toPrimitives(): CombatPrimitives {
@@ -130,6 +172,6 @@ class Combat<T extends Record<keyof T, AttributeValue> = AttributeValues> {
 	}
 }
 
-export type { CombatPrimitives, CombatStatus, CombatTransition };
+export type { CombatPrimitives, CombatStatus, CombatTransitionData };
 
 export default Combat;

@@ -27,6 +27,14 @@ class TestContractVersionValidator implements ContractVersionValidator {
 	isValid(version: string): boolean {
 		return /^\d+\.\d+\.\d+$/.test(version);
 	}
+
+	isValidRange(range: string): boolean {
+		return /^\d+\.\d+\.\d+$/.test(range);
+	}
+
+	satisfies(version: string, range: string): boolean {
+		return version === range;
+	}
 }
 
 class TestCombatRuleset extends CombatRuleset {
@@ -201,7 +209,11 @@ describe('CombatRuleset', () => {
 		});
 
 		it('uses the injected contract version validator', () => {
-			const rejectAll: ContractVersionValidator = { isValid: () => false };
+			const rejectAll: ContractVersionValidator = {
+				isValid: () => false,
+				isValidRange: () => false,
+				satisfies: () => false,
+			};
 
 			const result = create({}, [], rejectAll);
 
