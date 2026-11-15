@@ -57,15 +57,7 @@ class Combat<T extends Record<keyof T, AttributeValue> = AttributeValues> {
 			throw new InvalidArgumentError('Combat requires at least one group', 'Combat');
 		}
 
-		const ids = new Set<string>();
-		for (const group of groups) {
-			for (const combatant of group.combatants) {
-				if (ids.has(combatant.id)) {
-					throw new InvalidArgumentError(`Duplicated combatant id: ${combatant.id}`, 'Combat');
-				}
-				ids.add(combatant.id);
-			}
-		}
+		this.assertGroupMembership(groups);
 
 		const attributeMap = AttributeMap.create(values, definitions, 'Combat');
 
@@ -85,20 +77,38 @@ class Combat<T extends Record<keyof T, AttributeValue> = AttributeValues> {
 		);
 	}
 
+	private static assertGroupMembership(groups: readonly CombatantGroup[]): void {
+		const groupIds = new Set<string>();
+		const combatantIds = new Set<string>();
+
+		for (const group of groups) {
+			if (groupIds.has(group.id)) {
+				throw new InvalidArgumentError(`Duplicated group id: ${group.id}`, 'Combat');
+			}
+			groupIds.add(group.id);
+
+			for (const combatant of group.combatants) {
+				if (combatantIds.has(combatant.id)) {
+					throw new InvalidArgumentError(`Duplicated combatant id: ${combatant.id}`, 'Combat');
+				}
+				combatantIds.add(combatant.id);
+
+				if (combatant.groupId !== group.id) {
+					throw new InvalidArgumentError(
+						`Combatant ${combatant.id} groupId ${combatant.groupId} does not match group ${group.id}`,
+						'Combat'
+					);
+				}
+			}
+		}
+	}
+
 	apply(transition: CombatTransition): Combat {
 		if (this.status === 'completed') {
 			throw new InvalidArgumentError('Cannot apply transition to completed combat', 'Combat');
 		}
 
-		const ids = new Set<string>();
-		for (const group of transition.groups) {
-			for (const combatant of group.combatants) {
-				if (ids.has(combatant.id)) {
-					throw new InvalidArgumentError(`Duplicated combatant id in transition: ${combatant.id}`, 'Combat');
-				}
-				ids.add(combatant.id);
-			}
-		}
+		Combat.assertGroupMembership(transition.groups);
 
 		return new Combat(
 			this.attributes,
