@@ -254,7 +254,7 @@ export default class RandomPocket {
 	}
 
 	/**
-	 * Serialises this RandomPocket into a plain object suitable for
+	 * Serializes this RandomPocket into a plain object suitable for
 	 * persistence or transport.
 	 */
 	toPrimitives(): Primitives<RandomPocket> {

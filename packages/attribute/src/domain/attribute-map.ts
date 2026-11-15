@@ -116,7 +116,7 @@ export default class AttributeMap<T extends Record<keyof T, AttributeValue> = At
 	}
 
 	/**
-	 * Serialises this AttributeMap into a plain {@link AttributeValues} record
+	 * Serializes this AttributeMap into a plain {@link AttributeValues} record
 	 * suitable for persistence or transport.
 	 */
 	toPrimitives(): AttributeValues {

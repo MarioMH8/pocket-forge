@@ -44,10 +44,10 @@
 	"peerDependencies": {
 		"@hexadrop/error": "^2.0.0",
 		"@hexadrop/types": "^2.0.0",
-		"@pocket-forge/ability": "^0.0.0",
-		"@pocket-forge/attribute": "^0.0.0",
-		"@pocket-forge/move": "^0.0.0",
-		"@pocket-forge/species": "^0.0.0"
+		"@pocket-forge/ability": "workspace:*",
+		"@pocket-forge/attribute": "workspace:*",
+		"@pocket-forge/move": "workspace:*",
+		"@pocket-forge/species": "workspace:*"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "10.6.0",

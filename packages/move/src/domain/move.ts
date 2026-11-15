@@ -8,7 +8,7 @@ import { AttributeMap } from '@pocket-forge/attribute/domain';
  *
  * Mirrors the {@link Move} shape but replaces the internal
  * {@link AttributeMap} of attributes with a plain {@link AttributeValues} record
- * suitable for serialisation and persistence.
+ * suitable for serialization and persistence.
  */
 export interface MovePrimitives extends Primitives<Omit<Move, 'attributes'>> {
 	readonly attributes: AttributeValues;
@@ -118,7 +118,7 @@ export default class Move<T extends Record<keyof T, AttributeValue> = AttributeV
 	}
 
 	/**
-	 * Serialises this Move into a plain {@link MovePrimitives} object.
+	 * Serializes this Move into a plain {@link MovePrimitives} object.
 	 */
 	toPrimitives(): MovePrimitives {
 		return {

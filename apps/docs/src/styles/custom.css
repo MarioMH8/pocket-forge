@@ -1,0 +1,223 @@
+/* ==========================================================================
+   Pocket Forge — Custom Starlight Theme
+   RPG-inspired palette with gold accents from the logo (#ffcc01)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Design tokens — override Starlight CSS custom properties
+   -------------------------------------------------------------------------- */
+
+:root,
+::backdrop {
+	/* Gold accent (from logo) replaces default blue */
+	--sl-hue-accent: 46;
+	--sl-color-accent-low: hsl(46, 39%, 18%);
+	--sl-color-accent: hsl(46, 100%, 50%);
+	--sl-color-accent-high: hsl(46, 100%, 80%);
+
+	--sl-color-text-accent: var(--sl-color-accent-high);
+
+	/* Softer background tones */
+	--sl-color-bg-nav: hsl(224, 12%, 12%);
+	--sl-color-bg-sidebar: hsl(224, 10%, 8%);
+
+	/* Inline code — subtle amber tint */
+	--sl-color-bg-inline-code: hsl(46, 15%, 12%);
+
+	/* Typography — system stack for body, Crimson Pro for headings */
+	--sl-font-mono: 'JetBrains Mono', var(--sl-font-system-mono);
+
+	/* Wider content area */
+	--sl-content-width: 50rem;
+
+	/* Sidebar */
+	--sl-sidebar-width: 16rem;
+}
+
+/* Light mode overrides */
+:root[data-theme='light'],
+[data-theme='light'] ::backdrop {
+	--sl-color-accent-low: hsl(46, 80%, 85%);
+	--sl-color-accent: hsl(46, 90%, 45%);
+	--sl-color-accent-high: hsl(46, 80%, 25%);
+
+	--sl-color-text-accent: var(--sl-color-accent-high);
+
+	--sl-color-bg-nav: hsl(46, 20%, 97%);
+	--sl-color-bg-sidebar: hsl(46, 15%, 98%);
+
+	--sl-color-bg-inline-code: hsl(46, 25%, 92%);
+}
+
+/* --------------------------------------------------------------------------
+   Headings — serif "grimoire" feel
+   -------------------------------------------------------------------------- */
+
+h1, h2, h3, h4, h5, h6,
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3,
+.sl-markdown-content h4,
+.sl-markdown-content h5,
+.sl-markdown-content h6 {
+	font-family: 'Crimson Pro', 'Georgia', var(--sl-font-system);
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+
+h1 {
+	font-size: var(--sl-text-5xl);
+}
+
+h2 {
+	font-size: var(--sl-text-3xl);
+	margin-top: 2.5rem;
+}
+
+h3 {
+	font-size: var(--sl-text-2xl);
+	margin-top: 2rem;
+}
+
+/* --------------------------------------------------------------------------
+   API Reference pages — cleaner, more scannable
+   -------------------------------------------------------------------------- */
+
+/* Section spacing between members */
+.sl-markdown-content h3 + p,
+.sl-markdown-content h4 + p {
+	margin-top: 0.25rem;
+}
+
+/* Code blocks — softer background, rounded corners */
+.sl-markdown-content pre,
+.sl-markdown-content pre.astro-code {
+	border-radius: 0.5rem;
+	border: 1px solid var(--sl-color-hairline-light);
+	box-shadow: var(--sl-shadow-sm);
+}
+
+/* Inline code — pill shape */
+.sl-markdown-content :not(pre) > code {
+	border-radius: 0.25rem;
+	padding: 0.125rem 0.375rem;
+	font-size: 0.875em;
+}
+
+/* "Defined in" links — muted, smaller */
+.sl-markdown-content em:has(a[href*="github.com"]) {
+	font-size: 0.8125rem;
+	opacity: 0.7;
+}
+
+/* Property/method lists — card-like separation */
+.sl-markdown-content h3[id] {
+	border-bottom: 1px solid var(--sl-color-hairline-light);
+	padding-bottom: 0.375rem;
+}
+
+/* Type parameter descriptions — subtle background */
+.sl-markdown-content h4 {
+	color: var(--sl-color-accent-high);
+	font-size: var(--sl-text-lg);
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar — cleaner navigation
+   -------------------------------------------------------------------------- */
+
+nav.sidebar {
+	font-size: var(--sl-text-sm);
+}
+
+nav.sidebar a[aria-current="page"] {
+	font-weight: 600;
+}
+
+/* Sidebar group labels */
+nav.sidebar summary,
+nav.sidebar .group-label {
+	font-family: 'Crimson Pro', 'Georgia', var(--sl-font-system);
+	font-weight: 600;
+	text-transform: none;
+	letter-spacing: 0;
+	font-size: var(--sl-text-xs);
+	color: var(--sl-color-accent-high);
+}
+
+/* --------------------------------------------------------------------------
+   Tables — cleaner, striped
+   -------------------------------------------------------------------------- */
+
+.sl-markdown-content table {
+	border-radius: 0.5rem;
+	overflow: hidden;
+	box-shadow: var(--sl-shadow-sm);
+}
+
+.sl-markdown-content thead th {
+	font-family: 'Crimson Pro', 'Georgia', var(--sl-font-system);
+	font-weight: 600;
+	font-size: var(--sl-text-sm);
+	background: var(--sl-color-bg-nav);
+}
+
+.sl-markdown-content tbody tr:nth-child(even) {
+	background: var(--sl-color-bg-nav);
+}
+
+/* --------------------------------------------------------------------------
+   Scrollbar — subtle, themed
+   -------------------------------------------------------------------------- */
+
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--sl-color-gray-4);
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: var(--sl-color-gray-3);
+}
+
+/* --------------------------------------------------------------------------
+   Homepage hero — custom spacing
+   -------------------------------------------------------------------------- */
+
+.hero {
+	padding: 3rem 0 2rem;
+}
+
+.hero img {
+	max-height: 200px;
+}
+
+/* --------------------------------------------------------------------------
+   Asides (callouts) — softer
+   -------------------------------------------------------------------------- */
+
+.starlight-aside {
+	border-radius: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Footer / prev-next links
+   -------------------------------------------------------------------------- */
+
+.pagination-links a {
+	border-radius: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Font loading
+   -------------------------------------------------------------------------- */
+
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');

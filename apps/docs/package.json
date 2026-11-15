@@ -1,0 +1,21 @@
+{
+	"name": "@pocket-forge/docs",
+	"description": "Pocket Forge documentation site built with Starlight",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"astro": "astro",
+		"build": "astro build",
+		"dev": "astro dev",
+		"preview": "astro preview",
+		"start": "astro dev"
+	},
+	"dependencies": {
+		"@astrojs/starlight": "0.43.1",
+		"astro": "7.4.12"
+	},
+	"devDependencies": {
+		"typedoc": "0.28.20",
+		"typedoc-plugin-markdown": "4.13.1"
+	}
+}

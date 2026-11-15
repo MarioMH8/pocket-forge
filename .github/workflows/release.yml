@@ -22,3 +22,43 @@ jobs:
     with:
       snapshot: ${{ github.ref == 'refs/heads/develop' }}
       concurrency-group: release-${{ github.ref_name }}
+
+  deploy-demo:
+    name: Deploy demo to GitHub Pages
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' && needs.publish.outputs.published == 'true' }}
+    needs: [ publish ]
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      pages: 'write'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build docs
+        run: bun run build
+        working-directory: apps/docs
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: apps/docs/dist
+
+      - name: Deploy Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v5
