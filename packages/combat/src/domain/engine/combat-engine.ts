@@ -126,6 +126,16 @@ class CombatEngine {
 
 		const outcome = this.completion.evaluate(successor);
 
+		if (outcome?.status === 'victory' && successor.groups.every(group => group.id !== outcome.winnerGroupId)) {
+			return Either.left([
+				new CombatEngineError(
+					'invalid-outcome',
+					`Completion rule returned unknown winning group "${outcome.winnerGroupId}"`,
+					'outcome.winnerGroupId'
+				),
+			]);
+		}
+
 		if (!outcome) {
 			return Either.right({ combat: successor, events: transition.events, outcome: undefined });
 		}

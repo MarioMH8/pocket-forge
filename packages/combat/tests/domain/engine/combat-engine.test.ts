@@ -70,6 +70,20 @@ describe('CombatEngine', () => {
 	});
 
 	describe('resolve', () => {
+		it('rejects an invalid current composition before resolving', () => {
+			const combat = CombatMother.create();
+			ruleset.validateWith = () =>
+				Either.left([new CombatRulesetError('invalid-constraints', 'Invalid current composition', 'groups')]);
+
+			const result = engine.resolve(combat, 'input');
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]).toBeInstanceOf(CombatRulesetError);
+			expect(result.getLeft()[0]?.reason).toBe('invalid-constraints');
+			expect(plugin.contexts).toHaveLength(0);
+			expect(completion.evaluated).toHaveLength(0);
+		});
+
 		it('returns the successor, its events, and no outcome while combat continues', () => {
 			const combat = CombatMother.create();
 			const successor = withAttributes(combat, { power: 7 });
@@ -119,6 +133,22 @@ describe('CombatEngine', () => {
 			});
 			expect(completion.evaluated).toHaveLength(1);
 			expect(completion.evaluated[0]).toBe(successor);
+		});
+
+		it('rejects a completion outcome with an unknown winning group', () => {
+			const combat = CombatMother.create();
+			const successor = withAttributes(combat, { power: 7 });
+
+			plugin.resolveWith = () => Either.right({ combat: successor, events: [] });
+			completion.outcome = { status: 'victory', winnerGroupId: 'missing-group' };
+
+			const result = engine.resolve(combat, 'input');
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]).toBeInstanceOf(CombatEngineError);
+			expect(result.getLeft()[0]?.reason).toBe('invalid-outcome');
+			expect(result.getLeft()[0]?.path).toBe('outcome.winnerGroupId');
+			expect(result.getLeft()[0]?.message).toMatch(/unknown winning group/);
 		});
 
 		it('serializes a draw completion with a stable sequence', () => {
