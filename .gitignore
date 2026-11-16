@@ -24,3 +24,4 @@ pnpm-debug.log*
 apps/docs/src/content/docs/guides/glossary.md
 apps/docs/src/content/docs/api/**/*.md
 !apps/docs/src/content/docs/api/index.md
+.archify/

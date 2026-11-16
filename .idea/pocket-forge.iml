@@ -8,6 +8,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/.impeccable" />
       <excludeFolder url="file://$MODULE_DIR$/apps/docs/.astro" />
+      <excludeFolder url="file://$MODULE_DIR$/.archify" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
