@@ -6,6 +6,6 @@ Terms specific to the `@pocket-forge/attribute` package.
 A catalog-owned declaration that defines the key, type, default value, and constraints for a reusable attribute.
 _Avoid_: Property schema, field definition
 
-**Attribute Assignment**:
-A validated current value for a specific attribute key, bound to a definition.
-_Avoid_: Property value, field value
+**Attribute Map**:
+An immutable, validated collection of attribute values keyed by Attribute Definition.
+_Avoid_: Attribute assignment, property bag

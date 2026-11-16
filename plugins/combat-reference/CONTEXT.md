@@ -11,7 +11,7 @@ A concrete Combat Ruleset owned by this package that fixes a combat format, its 
 _Avoid_: Core ruleset, built-in format
 
 **Reference Combat Action Plugin**:
-A concrete Combat Plugin owned by this package that registers the Modify Attribute Action and resolves it into a Combat Transition.
+A concrete Combat Action Plugin owned by this package that registers the Modify Attribute Action and resolves it into a Combat Transition.
 _Avoid_: Core action resolver, engine plugin
 
 **Modify Attribute Action**:
