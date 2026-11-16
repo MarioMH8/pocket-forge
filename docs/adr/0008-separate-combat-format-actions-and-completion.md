@@ -1,4 +1,4 @@
-# Separate combat format, action logic, and completion
+# Separate Combat format, action logic, and completion
 
 Combat must support customizable battle rules without embedding a particular format, Move implementation, or victory condition in the neutral core. We split the model into four collaborating pieces: `CombatRuleset` describes an abstract format (identity, `kind`, exact `contractVersion`, format attributes, and composition constraints) and contains no Move bindings, actions, or outcome logic; `CombatActionPlugin` registers and resolves Move-bound actions; `CombatActionSet` is authored Move-to-action data with serializable configuration; and `CombatCompletionRule` inspects a Combat snapshot and decides the outcome. `CombatEngine` composes those four pieces, validates their contracts, delegates resolution, and evaluates completion, while `Combat` remains a neutral immutable state holder. Concrete rulesets, action plugins, and completion rules live outside the core; `plugins/combat-reference` is the reference implementation.
 
