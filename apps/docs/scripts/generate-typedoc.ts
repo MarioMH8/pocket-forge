@@ -4,7 +4,7 @@ import path from 'node:path';
 
 const ROOT_DIR = path.join(import.meta.dirname, '..', '..', '..');
 const DOCS_DIR = path.join(ROOT_DIR, 'apps', 'docs');
-const PACKAGES_DIR = path.join(ROOT_DIR, 'packages');
+const SOURCE_DIRS = [path.join(ROOT_DIR, 'packages'), path.join(ROOT_DIR, 'plugins')];
 const API_OUTPUT_DIR = path.join(DOCS_DIR, 'src', 'content', 'docs', 'api');
 const TYPEDOC_BIN = path.join(DOCS_DIR, 'node_modules', '.bin', 'typedoc');
 
@@ -38,24 +38,26 @@ function processDirectory(directory: string): void {
 }
 
 function generateTypedoc(): void {
-	const packages = readdirSync(PACKAGES_DIR, { withFileTypes: true })
-		.filter(d => d.isDirectory())
-		.map(d => d.name);
+	const packages = SOURCE_DIRS.filter(existsSync).flatMap(directory =>
+		readdirSync(directory, { withFileTypes: true })
+			.filter(d => d.isDirectory())
+			.map(d => ({ name: d.name, path: path.join(directory, d.name) }))
+	);
 
-	for (const packageName of packages) {
-		const packageDirectory = path.join(PACKAGES_DIR, packageName);
+	for (const packageEntry of packages) {
+		const packageDirectory = packageEntry.path;
 		const typedocConfig = path.join(packageDirectory, 'typedoc.json');
-		const outputDirectory = path.join(API_OUTPUT_DIR, packageName);
+		const outputDirectory = path.join(API_OUTPUT_DIR, packageEntry.name);
 
 		if (!existsSync(typedocConfig)) {
 			if (import.meta.main) {
-				console.log(`Skipping ${packageName}: no typedoc.json`);
+				console.log(`Skipping ${packageEntry.name}: no typedoc.json`);
 			}
 			continue;
 		}
 
 		if (import.meta.main) {
-			console.log(`Generating API docs for @pocket-forge/${packageName}...`);
+			console.log(`Generating API docs for @pocket-forge/${packageEntry.name}...`);
 		}
 
 		const logLevel = import.meta.main ? 'Info' : 'Warn';

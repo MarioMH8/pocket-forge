@@ -1,7 +1,8 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-const PACKAGES_DIR = path.join(import.meta.dirname, '..', '..', '..', 'packages');
+const ROOT_DIR = path.join(import.meta.dirname, '..', '..', '..');
+const SOURCE_DIRS = [path.join(ROOT_DIR, 'packages'), path.join(ROOT_DIR, 'plugins')];
 const OUTPUT_FILE = path.join(import.meta.dirname, '..', 'src', 'content', 'docs', 'guides', 'glossary.md');
 
 interface GlossaryEntry {
@@ -42,16 +43,18 @@ function extractGlossary(packageName: string, contextPath: string): GlossaryEntr
 }
 
 function generateGlossary(): void {
-	const packages = readdirSync(PACKAGES_DIR, { withFileTypes: true })
-		.filter(d => d.isDirectory())
-		.map(d => d.name);
+	const packages = SOURCE_DIRS.filter(existsSync).flatMap(directory =>
+		readdirSync(directory, { withFileTypes: true })
+			.filter(d => d.isDirectory())
+			.map(d => ({ name: d.name, path: path.join(directory, d.name) }))
+	);
 
 	const allEntries: GlossaryEntry[] = [];
 
-	for (const packageName of packages) {
-		const contextPath = path.join(PACKAGES_DIR, packageName, 'CONTEXT.md');
+	for (const packageEntry of packages) {
+		const contextPath = path.join(packageEntry.path, 'CONTEXT.md');
 		if (existsSync(contextPath)) {
-			const entries = extractGlossary(packageName, contextPath);
+			const entries = extractGlossary(packageEntry.name, contextPath);
 			allEntries.push(...entries);
 		}
 	}
