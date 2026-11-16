@@ -16,3 +16,6 @@ through public extension contracts instead of importing implementation details.
   constraint checks.
 - `ReferenceCombatPlugin` resolves the `modifyAttribute` action.
 - `ReferenceCombatActionSet` validates authored Move-to-action bindings.
+- `ReferenceCombatCompletionRuleFactory` hydrates completion rules by `kind`,
+  and `ThresholdCombatCompletionRule` ends combat when a Combatant attribute
+  crosses an authored `completion.*` threshold.
