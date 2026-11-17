@@ -1,0 +1,64 @@
+{
+	"name": "@pocket-forge/pack",
+	"version": "0.0.0",
+	"description": "Neutral Pack resolver for Pocket Forge. Validates Pack manifests, merges content, bindings, extensions, overrides, and provenance into a Game Definition.",
+	"keywords": [
+		"pocket-forge",
+		"rpg",
+		"game-development",
+		"pack",
+		"resolver"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/MarioMH8/pocket-forge.git",
+		"directory": "packages/pack"
+	},
+	"homepage": "https://github.com/MarioMH8/pocket-forge",
+	"bugs": {
+		"url": "https://github.com/MarioMH8/pocket-forge/issues"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"type": "module",
+	"sideEffects": false,
+	"files": [
+		"dist"
+	],
+	"exports": {
+		"./domain": {
+			"development": "./src/domain/index.ts",
+			"types": "./dist/domain/index.d.mts",
+			"default": "./dist/domain/index.mjs"
+		},
+		"./infrastructure": {
+			"development": "./src/infrastructure/index.ts",
+			"types": "./dist/infrastructure/index.d.mts",
+			"default": "./dist/infrastructure/index.mjs"
+		},
+		"./mother/domain": {
+			"development": "./mother/domain/index.ts"
+		},
+		"./mock/domain": {
+			"development": "./mock/domain/index.ts"
+		}
+	},
+	"scripts": {
+		"build": "tsdown",
+		"prepublishOnly": "tsdown"
+	},
+	"peerDependencies": {
+		"@hexadrop/either": "^2.0.0",
+		"@hexadrop/error": "^2.0.0",
+		"@hexadrop/types": "^2.0.0"
+	},
+	"devDependencies": {
+		"@faker-js/faker": "10.6.0",
+		"@hexadrop/either": "2.0.1",
+		"@hexadrop/error": "2.0.0",
+		"@hexadrop/types": "2.0.0",
+		"tsdown": "0.23.7"
+	}
+}
