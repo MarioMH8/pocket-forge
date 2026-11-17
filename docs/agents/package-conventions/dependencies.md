@@ -13,6 +13,7 @@ The root `tsconfig.json` maps `@pocket-forge/*` paths for development resolution
   "@pocket-forge/*/application": ["./packages/*/src/application/index.ts"],
   "@pocket-forge/*/domain": ["./packages/*/src/domain/index.ts"],
   "@pocket-forge/*/infrastructure": ["./packages/*/src/infrastructure/index.ts"],
+  "@pocket-forge/*/pack": ["./packages/*/src/pack/index.ts", "./packs/*/src/pack/index.ts"],
   "@pocket-forge/*/mock/domain": ["./packages/*/mock/domain/index.ts"],
   "@pocket-forge/*/mother/domain": ["./packages/*/mother/domain/index.ts"],
   "@pocket-forge/*/mother/application": ["./packages/*/mother/application/index.ts"],
@@ -20,7 +21,7 @@ The root `tsconfig.json` maps `@pocket-forge/*` paths for development resolution
 }
 ```
 
-More specific paths must come **before** the catch-all `@pocket-forge/*`.
+More specific paths must come **before** the catch-all `@pocket-forge/*`. Packages published as Packs live under `packs/*` and resolve through the same map.
 
 ## package.json exports
 

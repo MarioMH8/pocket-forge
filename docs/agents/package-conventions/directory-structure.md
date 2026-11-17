@@ -31,3 +31,4 @@ packages/<name>/
 - `src/` contains **only production code** — no tests, no mothers, no mocks.
 - `tests/`, `mother/`, and `mock/` are **development-only** and excluded from the published `dist/`.
 - Every subdirectory has a barrel `index.ts` so imports work as `@pocket-forge/<package>/<layer>`.
+- A package published as a Pack also exposes `src/pack/index.ts` (neutral bindings) and a root `manifest.json`. They are package entrypoints, not a fourth layer.

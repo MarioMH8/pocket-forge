@@ -14,6 +14,7 @@ import ReferenceCombatPlugin from '../domain/action/reference-combat.plugin';
  *
  * @param content - Content index supplied by the resolver.
  * @returns The project attribute definitions.
+ * @throws {InvalidArgumentError} When a content entry is not a valid attribute definition.
  */
 function readAttributeDefinitions(content: ContentIndex): AttributeDefinition[] {
 	return content

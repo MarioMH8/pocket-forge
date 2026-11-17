@@ -12,7 +12,9 @@ The package only keeps package-exclusive scripts (`build`, `prepublishOnly`); ev
 
 ## Boundary
 
-This package is a reference implementation outside the neutral Combat core. It may import `@pocket-forge/combat/domain`, `@pocket-forge/combat/infrastructure`, and `@pocket-forge/attribute/domain`. `packages/combat` must never import it.
+This package is a reference implementation outside the neutral Combat core. It may import `@pocket-forge/combat/domain`, `@pocket-forge/combat/infrastructure`, `@pocket-forge/attribute/domain`, `@pocket-forge/pack/domain`, and `@hexadrop/types/primitives`. `packages/combat` must never import it.
+
+The `./pack` entrypoint exports neutral bindings only. It never imports a dependency-injection container or another subsystem.
 
 ## Conventions
 

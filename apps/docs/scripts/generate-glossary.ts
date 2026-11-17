@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 const ROOT_DIR = path.join(import.meta.dirname, '..', '..', '..');
-const SOURCE_DIRS = [path.join(ROOT_DIR, 'packages'), path.join(ROOT_DIR, 'plugins')];
+const SOURCE_DIRS = [path.join(ROOT_DIR, 'packages'), path.join(ROOT_DIR, 'packs')];
 const OUTPUT_FILE = path.join(import.meta.dirname, '..', 'src', 'content', 'docs', 'guides', 'glossary.md');
 
 interface GlossaryEntry {

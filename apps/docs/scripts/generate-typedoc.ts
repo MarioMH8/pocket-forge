@@ -4,7 +4,7 @@ import path from 'node:path';
 
 const ROOT_DIR = path.join(import.meta.dirname, '..', '..', '..');
 const DOCS_DIR = path.join(ROOT_DIR, 'apps', 'docs');
-const SOURCE_DIRS = [path.join(ROOT_DIR, 'packages'), path.join(ROOT_DIR, 'plugins')];
+const SOURCE_DIRS = [path.join(ROOT_DIR, 'packages'), path.join(ROOT_DIR, 'packs')];
 const API_OUTPUT_DIR = path.join(DOCS_DIR, 'src', 'content', 'docs', 'api');
 const TYPEDOC_BIN = path.join(DOCS_DIR, 'node_modules', '.bin', 'typedoc');
 
