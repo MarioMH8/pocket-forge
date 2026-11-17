@@ -3,6 +3,18 @@ import { PackManifestMother } from '@pocket-forge/pack/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
 describe('PackManifest', () => {
+	it('freezes its collections against later mutation of the input', () => {
+		const manifest = PackManifestMother.create({
+			contracts: { moves: 1 },
+			contributions: [{ kind: 'moves', path: 'content/moves.json' }],
+			extensions: [],
+		});
+
+		expect(Object.isFrozen(manifest.contracts)).toBe(true);
+		expect(Object.isFrozen(manifest.contributions)).toBe(true);
+		expect(Object.isFrozen(manifest.extensions)).toBe(true);
+	});
+
 	it('keeps every field and round-trips through toPrimitives', () => {
 		const primitives = PackManifestMother.primitives({
 			contracts: { moves: 1, species: 2 },

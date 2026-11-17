@@ -69,9 +69,9 @@ class PackManifest {
 	readonly version: string;
 
 	private constructor(primitives: PackManifestPrimitives) {
-		this.contracts = primitives.contracts;
-		this.contributions = primitives.contributions;
-		this.extensions = primitives.extensions;
+		this.contracts = Object.freeze({ ...primitives.contracts });
+		this.contributions = Object.freeze([...primitives.contributions]);
+		this.extensions = Object.freeze([...primitives.extensions]);
 		this.id = primitives.id;
 		this.version = primitives.version;
 	}
