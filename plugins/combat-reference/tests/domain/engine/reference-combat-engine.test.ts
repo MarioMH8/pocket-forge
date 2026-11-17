@@ -1,7 +1,7 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat, CombatCompletionRule } from '@pocket-forge/combat/domain';
-import { CombatEngine, CombatSetup } from '@pocket-forge/combat/domain';
-import { CombatRulesetMother } from '@pocket-forge/combat/mother/domain';
+import { CombatEngine } from '@pocket-forge/combat/domain';
+import { CombatRulesetMother, CombatSetupMother } from '@pocket-forge/combat/mother/domain';
 import { OneVersusOneCombatRuleset, ReferenceCombatActionSet } from '@pocket-forge/combat-reference/domain';
 import { ReferenceCombatActionSetMother } from '@pocket-forge/combat-reference/mother/domain';
 import { describe, expect, it } from 'bun:test';
@@ -45,9 +45,7 @@ describe('Reference combat through CombatEngine', () => {
 			evaluate: () => undefined,
 			kind: 'none',
 		};
-		const engine = new CombatEngine(
-			CombatSetup.create({ actions: plugin, actionSet, completion, ruleset }).getRight()
-		);
+		const engine = new CombatEngine(CombatSetupMother.create({ actions: plugin, actionSet, completion, ruleset }));
 		const combat = referenceCombat();
 		const before = combat.toPrimitives();
 
