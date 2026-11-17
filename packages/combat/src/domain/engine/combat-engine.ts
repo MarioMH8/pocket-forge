@@ -18,10 +18,10 @@ type CombatEngineFailure = CombatEngineError | CombatResolutionError | CombatRul
  * Pure orchestrator that composes a Combat Ruleset, an action plugin, an action
  * set, and a completion rule through a validated {@link CombatSetup}.
  *
- * The engine validates composition, delegates action resolution to the plugin,
- * validates the proposed successor, evaluates completion, and returns a
- * resolution. It performs no I/O, knows no concrete implementation, and never
- * mutates the input Combat.
+ * The engine validates each combat's composition, delegates action resolution
+ * to the setup's plugin, validates the proposed successor, evaluates the
+ * setup's completion rule, and returns a resolution. It performs no I/O, knows
+ * no concrete implementation, and never mutates the input Combat.
  */
 class CombatEngine {
 	private readonly setup: CombatSetup;
