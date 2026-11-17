@@ -4,7 +4,7 @@ Reference Combat rulesets, action plugin, and authored action set.
 
 - **Package manager:** Bun (`bun`)
 - **Build:** `bun run build` (at package folder)
-- **Test:** `bun test plugins/combat-reference --conditions=development` (at root)
+- **Test:** `bun test packs/combat-reference --conditions=development` (at root)
 - **Type-check:** `bun run typecheck` (at root)
 - **Lint:** `bun run lint:fix` (at root)
 

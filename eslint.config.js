@@ -55,7 +55,7 @@ export default hexadrop(
 						{
 							group: ['@pocket-forge/combat-reference', '@pocket-forge/combat-reference/*'],
 							message:
-								'The neutral Combat core cannot depend on reference implementations. Move this logic into plugins/combat-reference.',
+								'The neutral Combat core cannot depend on reference implementations. Move this logic into packs/combat-reference.',
 						},
 					],
 				},

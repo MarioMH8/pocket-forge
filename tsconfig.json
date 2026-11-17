@@ -5,29 +5,30 @@
 		"paths": {
 			"@pocket-forge/*/mock/application": [
 				"./packages/*/mock/application/index.ts",
-				"./plugins/*/mock/application/index.ts"
+				"./packs/*/mock/application/index.ts"
 			],
-			"@pocket-forge/*/mock/domain": ["./packages/*/mock/domain/index.ts", "./plugins/*/mock/domain/index.ts"],
+			"@pocket-forge/*/mock/domain": ["./packages/*/mock/domain/index.ts", "./packs/*/mock/domain/index.ts"],
 			"@pocket-forge/*/mock/infrastructure": [
 				"./packages/*/mock/infrastructure/index.ts",
-				"./plugins/*/mock/infrastructure/index.ts"
+				"./packs/*/mock/infrastructure/index.ts"
 			],
 			"@pocket-forge/*/mother/application": [
 				"./packages/*/mother/application/index.ts",
-				"./plugins/*/mother/application/index.ts"
+				"./packs/*/mother/application/index.ts"
 			],
 			"@pocket-forge/*/mother/domain": [
 				"./packages/*/mother/domain/index.ts",
-				"./plugins/*/mother/domain/index.ts"
+				"./packs/*/mother/domain/index.ts"
 			],
 			"@pocket-forge/*/application": [
 				"./packages/*/src/application/index.ts",
-				"./plugins/*/src/application/index.ts"
+				"./packs/*/src/application/index.ts"
 			],
-			"@pocket-forge/*/domain": ["./packages/*/src/domain/index.ts", "./plugins/*/src/domain/index.ts"],
+			"@pocket-forge/*/domain": ["./packages/*/src/domain/index.ts", "./packs/*/src/domain/index.ts"],
+			"@pocket-forge/*/pack": ["./packages/*/src/pack/index.ts", "./packs/*/src/pack/index.ts"],
 			"@pocket-forge/*/infrastructure": [
 				"./packages/*/src/infrastructure/index.ts",
-				"./plugins/*/src/infrastructure/index.ts"
+				"./packs/*/src/infrastructure/index.ts"
 			]
 		},
 		"types": ["bun"]

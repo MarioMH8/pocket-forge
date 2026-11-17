@@ -24,7 +24,7 @@
 	"private": true,
 	"workspaces": [
 		"packages/*",
-		"plugins/*",
+		"packs/*",
 		"apps/*"
 	],
 	"type": "module",
