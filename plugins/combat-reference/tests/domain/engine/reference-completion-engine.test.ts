@@ -1,6 +1,7 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
 import { CombatEngine } from '@pocket-forge/combat/domain';
+import { CombatSetupMother } from '@pocket-forge/combat/mother/domain';
 import {
 	MODIFY_ATTRIBUTE_ACTION_ID,
 	REFERENCE_CONFIG_KEYS,
@@ -45,7 +46,7 @@ describe('Reference completion through CombatEngine', () => {
 			VERSION_VALIDATOR
 		).getRight();
 		const completion = ThresholdCombatCompletionRule.create(ruleset, ATTRIBUTE_DEFINITIONS).getRight();
-		const engine = new CombatEngine(ruleset, plugin, actionSet, completion);
+		const engine = new CombatEngine(CombatSetupMother.create({ actions: plugin, actionSet, completion, ruleset }));
 		const combat = referenceCombat();
 		const input = {
 			actorId: 'combatant-a',

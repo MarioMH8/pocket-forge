@@ -17,15 +17,15 @@ This project uses GitFlow with Changesets for versioning and npm publication.
 Branch names **must** match this pattern:
 
 ```
-^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert|release|hotfix)\/[a-z0-9._-]+$
+^(feat|feature|fix|chore|docs|style|refactor|perf|test|build|ci|revert|release|hotfix)\/[A-Za-z0-9._-]+$
 ```
 
 **Rules:**
-- All lowercase
-- Use hyphens, dots, or underscores as separators (no spaces, no uppercase)
+- Lowercase for the description; issue keys may use uppercase (e.g. `GH-71`)
+- Use hyphens, dots, or underscores as separators (no spaces)
 - Description must be short and descriptive
 
-**Examples:** `feat/user-login`, `fix/crash-on-startup`, `docs/api-reference`, `release/0.2.0`, `hotfix/fix-publish`
+**Examples:** `feat/user-login`, `feature/GH-71`, `fix/crash-on-startup`, `docs/api-reference`, `release/0.2.0`, `hotfix/fix-publish`
 
 ## Commit convention
 

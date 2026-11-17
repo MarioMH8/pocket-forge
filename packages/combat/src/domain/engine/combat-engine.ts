@@ -1,16 +1,13 @@
 import Either from '@hexadrop/either';
 
-import type { CombatActionPlugin } from '../action/combat-action-plugin';
-import type CombatActionSet from '../action/combat-action-set';
 import Combat from '../combat';
 import type CombatEvent from '../combat-event';
 import type CombatResolutionError from '../combat-resolution.error';
 import type CombatTransitionError from '../combat-transition.error';
-import type CombatCompletionRule from '../completion/combat-completion-rule';
-import type CombatRuleset from '../ruleset/combat-ruleset';
 import type CombatRulesetError from '../ruleset/combat-ruleset.error';
 import CombatEngineError from './combat-engine.error';
 import type CombatResolution from './combat-resolution';
+import type CombatSetup from './combat-setup';
 
 /**
  * Every rejection the Combat Engine can return.
@@ -19,29 +16,18 @@ type CombatEngineFailure = CombatEngineError | CombatResolutionError | CombatRul
 
 /**
  * Pure orchestrator that composes a Combat Ruleset, an action plugin, an action
- * set, and a completion rule.
+ * set, and a completion rule through a validated {@link CombatSetup}.
  *
- * The engine validates composition, delegates action resolution to the plugin,
- * validates the proposed successor, evaluates completion, and returns a
- * resolution. It performs no I/O, knows no concrete implementation, and never
- * mutates the input Combat.
+ * The engine validates each combat's composition, delegates action resolution
+ * to the setup's plugin, validates the proposed successor, evaluates the
+ * setup's completion rule, and returns a resolution. It performs no I/O, knows
+ * no concrete implementation, and never mutates the input Combat.
  */
 class CombatEngine {
-	private readonly actionSet: CombatActionSet;
-	private readonly actions: CombatActionPlugin;
-	private readonly completion: CombatCompletionRule;
-	private readonly ruleset: CombatRuleset;
+	private readonly setup: CombatSetup;
 
-	constructor(
-		ruleset: CombatRuleset,
-		actions: CombatActionPlugin,
-		actionSet: CombatActionSet,
-		completion: CombatCompletionRule
-	) {
-		this.ruleset = ruleset;
-		this.actions = actions;
-		this.actionSet = actionSet;
-		this.completion = completion;
+	constructor(setup: CombatSetup) {
+		this.setup = setup;
 	}
 
 	private static nextSequence(events: readonly CombatEvent[]): number {
@@ -73,17 +59,7 @@ class CombatEngine {
 			return Either.left(composition.getLeft());
 		}
 
-		if (!this.actions.supports(this.actionSet)) {
-			return Either.left([
-				new CombatEngineError(
-					'incompatible-action-set',
-					`Action plugin "${this.actions.id}" does not support the configured action set`,
-					'actionSet'
-				),
-			]);
-		}
-
-		const resolved = this.actions.resolve({ actionSet: this.actionSet, combat, input });
+		const resolved = this.setup.actions.resolve({ actionSet: this.setup.actionSet, combat, input });
 
 		if (resolved.isLeft()) {
 			return Either.left(resolved.getLeft());
@@ -124,7 +100,7 @@ class CombatEngine {
 			return Either.left(successorComposition.getLeft());
 		}
 
-		const outcome = this.completion.evaluate(successor);
+		const outcome = this.setup.completion.evaluate(successor);
 
 		if (outcome?.status === 'victory' && successor.groups.every(group => group.id !== outcome.winnerGroupId)) {
 			return Either.left([
@@ -173,7 +149,7 @@ class CombatEngine {
 	 * @returns No value on success, or every ruleset rejection.
 	 */
 	validateComposition(combat: Combat): Either<CombatRulesetError[], void> {
-		return this.ruleset.validateGroups(combat.groups);
+		return this.setup.ruleset.validateGroups(combat.groups);
 	}
 }
 

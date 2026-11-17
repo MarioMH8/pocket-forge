@@ -4,8 +4,7 @@ import DomainError from '@hexadrop/error';
  * Reasons the Combat Engine can reject a resolution before or after the
  * action plugin runs.
  */
-type CombatEngineErrorReason =
-	'combat-not-active' | 'incompatible-action-set' | 'invalid-outcome' | 'invalid-transition';
+type CombatEngineErrorReason = 'combat-not-active' | 'invalid-outcome' | 'invalid-transition';
 
 /**
  * Structured rejection produced by the Combat Engine.

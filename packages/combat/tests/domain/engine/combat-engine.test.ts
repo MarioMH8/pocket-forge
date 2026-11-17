@@ -9,7 +9,7 @@ import {
 	CombatRulesetError,
 	CombatTransitionError,
 } from '@pocket-forge/combat/domain';
-import { CombatantMother, CombatMother } from '@pocket-forge/combat/mother/domain';
+import { CombatantMother, CombatMother, CombatSetupMother } from '@pocket-forge/combat/mother/domain';
 import { beforeEach, describe, expect, it } from 'bun:test';
 
 import { actionSet, FakeActionPlugin, FakeCombatRuleset, FakeCompletionRule } from './engine.fakes';
@@ -51,7 +51,9 @@ describe('CombatEngine', () => {
 		ruleset = new FakeCombatRuleset();
 		plugin = new FakeActionPlugin();
 		completion = new FakeCompletionRule();
-		engine = new CombatEngine(ruleset, plugin, actionSet(), completion);
+		engine = new CombatEngine(
+			CombatSetupMother.create({ actions: plugin, actionSet: actionSet(), completion, ruleset })
+		);
 	});
 
 	describe('validateComposition', () => {
@@ -177,18 +179,6 @@ describe('CombatEngine', () => {
 			expect(plugin.contexts).toHaveLength(0);
 			expect(completion.evaluated).toHaveLength(0);
 			expect(combat.toPrimitives()).toEqual(before);
-		});
-
-		it('rejects an action set the plugin does not support', () => {
-			const combat = CombatMother.create();
-			plugin.supported = false;
-
-			const result = engine.resolve(combat, 'input');
-
-			expect(result.isLeft()).toBe(true);
-			expect(result.getLeft()[0]?.reason).toBe('incompatible-action-set');
-			expect(plugin.contexts).toHaveLength(0);
-			expect(completion.evaluated).toHaveLength(0);
 		});
 
 		it('propagates plugin rejections without producing a successor', () => {

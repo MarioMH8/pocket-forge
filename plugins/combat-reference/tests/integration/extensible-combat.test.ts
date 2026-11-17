@@ -6,6 +6,7 @@ import type {
 	CombatRulesetPrimitives,
 } from '@pocket-forge/combat/domain';
 import { CombatEngine } from '@pocket-forge/combat/domain';
+import { CombatSetupMother } from '@pocket-forge/combat/mother/domain';
 import {
 	MODIFY_ATTRIBUTE_ACTION_ID,
 	OneVersusOneCombatRuleset,
@@ -76,7 +77,7 @@ function compose() {
 	return {
 		actionSet,
 		completion,
-		engine: new CombatEngine(ruleset, plugin, actionSet, completion),
+		engine: new CombatEngine(CombatSetupMother.create({ actions: plugin, actionSet, completion, ruleset })),
 		plugin,
 		ruleset,
 	};
