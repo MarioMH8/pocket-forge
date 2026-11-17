@@ -13,7 +13,7 @@
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/MarioMH8/pocket-forge.git",
-		"directory": "plugins/combat-reference"
+		"directory": "packs/combat-reference"
 	},
 	"homepage": "https://github.com/MarioMH8/pocket-forge",
 	"bugs": {
@@ -26,13 +26,20 @@
 	"type": "module",
 	"sideEffects": false,
 	"files": [
-		"dist"
+		"dist",
+		"manifest.json"
 	],
 	"exports": {
 		"./domain": {
 			"development": "./src/domain/index.ts",
 			"types": "./dist/domain/index.d.mts",
 			"default": "./dist/domain/index.mjs"
+		},
+		"./manifest.json": "./manifest.json",
+		"./pack": {
+			"development": "./src/pack/index.ts",
+			"types": "./dist/pack/index.d.mts",
+			"default": "./dist/pack/index.mjs"
 		},
 		"./mother/domain": {
 			"development": "./mother/domain/index.ts"
@@ -45,15 +52,22 @@
 	"peerDependencies": {
 		"@hexadrop/either": "^2.0.0",
 		"@hexadrop/error": "^2.0.0",
+		"@hexadrop/types": "^2.0.0",
 		"@pocket-forge/attribute": "workspace:*",
-		"@pocket-forge/combat": "workspace:*"
+		"@pocket-forge/combat": "workspace:*",
+		"@pocket-forge/pack": "workspace:*",
+		"semver": "^7.0.0"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "10.6.0",
 		"@hexadrop/either": "2.0.1",
 		"@hexadrop/error": "2.0.0",
+		"@hexadrop/types": "2.0.0",
 		"@pocket-forge/attribute": "0.0.0",
 		"@pocket-forge/combat": "0.0.0",
+		"@pocket-forge/pack": "0.0.0",
+		"@types/semver": "7.8.0",
+		"semver": "7.8.6",
 		"tsdown": "0.23.7"
 	}
 }

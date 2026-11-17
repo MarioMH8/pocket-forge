@@ -73,6 +73,7 @@
         "@hexadrop/value-object": "2.0.1",
         "@pocket-forge/attribute": "0.0.0",
         "@pocket-forge/creature": "0.0.0",
+        "@pocket-forge/pack": "0.0.0",
         "@pocket-forge/rng": "0.0.0",
         "@types/semver": "7.8.0",
         "semver": "7.8.6",
@@ -85,6 +86,7 @@
         "@hexadrop/value-object": "^2.0.0",
         "@pocket-forge/attribute": "workspace:*",
         "@pocket-forge/creature": "workspace:*",
+        "@pocket-forge/pack": "workspace:*",
         "@pocket-forge/rng": "workspace:*",
         "semver": "^7.0.0",
       },
@@ -208,22 +210,29 @@
         "zod": "^3.0.0",
       },
     },
-    "plugins/combat-reference": {
+    "packs/combat-reference": {
       "name": "@pocket-forge/combat-reference",
       "version": "0.0.0",
       "devDependencies": {
         "@faker-js/faker": "10.6.0",
         "@hexadrop/either": "2.0.1",
         "@hexadrop/error": "2.0.0",
+        "@hexadrop/types": "2.0.0",
         "@pocket-forge/attribute": "0.0.0",
         "@pocket-forge/combat": "0.0.0",
+        "@pocket-forge/pack": "0.0.0",
+        "@types/semver": "7.8.0",
+        "semver": "7.8.6",
         "tsdown": "0.23.7",
       },
       "peerDependencies": {
         "@hexadrop/either": "^2.0.0",
         "@hexadrop/error": "^2.0.0",
+        "@hexadrop/types": "^2.0.0",
         "@pocket-forge/attribute": "workspace:*",
         "@pocket-forge/combat": "workspace:*",
+        "@pocket-forge/pack": "workspace:*",
+        "semver": "^7.0.0",
       },
     },
   },
@@ -642,7 +651,7 @@
 
     "@pocket-forge/combat": ["@pocket-forge/combat@workspace:packages/combat"],
 
-    "@pocket-forge/combat-reference": ["@pocket-forge/combat-reference@workspace:plugins/combat-reference"],
+    "@pocket-forge/combat-reference": ["@pocket-forge/combat-reference@workspace:packs/combat-reference"],
 
     "@pocket-forge/creature": ["@pocket-forge/creature@workspace:packages/creature"],
 

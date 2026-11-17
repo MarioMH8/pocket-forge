@@ -1,0 +1,14 @@
+{
+	"id": "@pocket-forge/combat-reference",
+	"version": "0.0.0",
+	"contributions": [],
+	"contracts": {},
+	"extensions": [
+		{
+			"point": "combat.action-plugin",
+			"id": "pocket-forge.reference",
+			"contractVersion": "1.0.0",
+			"module": "./domain"
+		}
+	]
+}
