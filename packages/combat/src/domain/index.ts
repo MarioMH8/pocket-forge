@@ -1,5 +1,6 @@
 export type { CombatActionCatalog, CombatActionDescriptor } from './action/combat-action';
 export type { CombatActionContext, CombatActionPlugin } from './action/combat-action-plugin';
+export { default as COMBAT_ACTION_PLUGIN } from './action/combat-action-plugin.token';
 export type {
 	CombatActionSetPlugin,
 	CombatActionSetPrimitives,
@@ -22,6 +23,7 @@ export { default as Combatant } from './combatant';
 export type { CombatantGroupPrimitives } from './combatant-group';
 export { default as CombatantGroup } from './combatant-group';
 export type { default as CombatCompletionRule } from './completion/combat-completion-rule';
+export { default as COMBAT_COMPLETION_RULE } from './completion/combat-completion-rule.token';
 export type { CombatEngineFailure } from './engine/combat-engine';
 export { default as CombatEngine } from './engine/combat-engine';
 export type { CombatEngineErrorReason } from './engine/combat-engine.error';
