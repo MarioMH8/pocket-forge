@@ -7,14 +7,11 @@ import type {
 } from '@pocket-forge/combat/domain';
 import { CombatEngine } from '@pocket-forge/combat/domain';
 import { CombatSetupMother } from '@pocket-forge/combat/mother/domain';
+import { OneVersusOneCombatRuleset, ThresholdCombatCompletionRule } from '@pocket-forge/combat/rulesets';
 import {
 	MODIFY_ATTRIBUTE_ACTION_ID,
-	OneVersusOneCombatRuleset,
 	REFERENCE_CONFIG_KEYS,
 	ReferenceCombatActionSet,
-	ReferenceCombatCompletionRuleFactory,
-	ReferenceCombatRulesetFactory,
-	ThresholdCombatCompletionRule,
 } from '@pocket-forge/combat-reference/domain';
 import { describe, expect, it } from 'bun:test';
 
@@ -29,10 +26,8 @@ import {
 
 const RULESET_PRIMITIVES: CombatRulesetPrimitives = {
 	attributes: { ...DEFAULT_COMPLETION_ATTRIBUTES },
-	contractVersion: OneVersusOneCombatRuleset.VERSION,
 	groupConstraints: { ...OneVersusOneCombatRuleset.CONSTRAINTS },
 	id: 'extensible-1v1',
-	kind: OneVersusOneCombatRuleset.KIND,
 	name: 'Extensible 1v1',
 };
 
@@ -61,18 +56,14 @@ const BINDINGS: readonly CombatMoveBindingPrimitives[] = [
 ];
 
 function createRuleset(): CombatRuleset {
-	return new ReferenceCombatRulesetFactory(VERSION_VALIDATOR)
-		.create(RULESET_PRIMITIVES, [...COMPLETION_ATTRIBUTE_DEFINITIONS])
-		.getRight();
+	return OneVersusOneCombatRuleset.create(RULESET_PRIMITIVES, [...COMPLETION_ATTRIBUTE_DEFINITIONS]).getRight();
 }
 
 function compose() {
 	const ruleset = createRuleset();
 	const plugin = referencePlugin();
 	const actionSet = ReferenceCombatActionSet.create(BINDINGS, plugin.actions, VERSION_VALIDATOR).getRight();
-	const completion = new ReferenceCombatCompletionRuleFactory(ATTRIBUTE_DEFINITIONS)
-		.create(ThresholdCombatCompletionRule.KIND, ruleset)
-		.getRight();
+	const completion = ThresholdCombatCompletionRule.create(ruleset, ATTRIBUTE_DEFINITIONS).getRight();
 
 	return {
 		actionSet,
@@ -111,11 +102,10 @@ const MOVE_1_INPUT = {
 } as const;
 
 describe('Extensible combat scenario', () => {
-	it('hydrates the authored ruleset, action set, and completion rule through their factories', () => {
+	it('hydrates the authored ruleset and builds the action set and completion rule', () => {
 		const ruleset = createRuleset();
 
 		expect(ruleset).toBeInstanceOf(OneVersusOneCombatRuleset);
-		expect(ruleset.kind).toBe(OneVersusOneCombatRuleset.KIND);
 		expect(ruleset.groupConstraints).toEqual(OneVersusOneCombatRuleset.CONSTRAINTS);
 
 		const plugin = referencePlugin();
@@ -131,10 +121,7 @@ describe('Extensible combat scenario', () => {
 		expect(actionSet.find('move-2')?.config.toPrimitives()[REFERENCE_CONFIG_KEYS.scope]).toBe('group');
 		expect(actionSet.find('move-2')?.config.toPrimitives()[REFERENCE_CONFIG_KEYS.probability]).toBe(1);
 
-		const completion = new ReferenceCombatCompletionRuleFactory(ATTRIBUTE_DEFINITIONS).create(
-			ThresholdCombatCompletionRule.KIND,
-			ruleset
-		);
+		const completion = ThresholdCombatCompletionRule.create(ruleset, ATTRIBUTE_DEFINITIONS);
 
 		expect(completion.isRight()).toBe(true);
 		expect(completion.getRight()).toBeInstanceOf(ThresholdCombatCompletionRule);

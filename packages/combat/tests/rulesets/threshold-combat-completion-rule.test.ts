@@ -1,16 +1,16 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
-import type { ThresholdCompletionConfig } from '@pocket-forge/combat-reference/domain';
-import { COMPLETION_CONFIG_KEYS, ThresholdCombatCompletionRule } from '@pocket-forge/combat-reference/domain';
+import type { ThresholdCompletionConfig } from '@pocket-forge/combat/rulesets';
+import { COMPLETION_CONFIG_KEYS, ThresholdCombatCompletionRule } from '@pocket-forge/combat/rulesets';
 import { describe, expect, it } from 'bun:test';
 
 import {
 	ATTRIBUTE_DEFINITIONS,
+	builtInCombat,
 	completionRuleset,
 	DEFAULT_COMPLETION_ATTRIBUTES,
-	referenceCombat,
-} from '../support/reference.fixtures';
+} from './rulesets.fixtures';
 
 const BOUNDARY = 30;
 
@@ -59,7 +59,7 @@ function withCombatantPower(
 
 describe('ThresholdCombatCompletionRule.evaluate', () => {
 	it('returns no outcome before the boundary', () => {
-		const outcome = rule({ comparison: 'lt', threshold: BOUNDARY }).evaluate(referenceCombat());
+		const outcome = rule({ comparison: 'lt', threshold: BOUNDARY }).evaluate(builtInCombat());
 
 		expect(outcome).toBeUndefined();
 	});
@@ -69,7 +69,7 @@ describe('ThresholdCombatCompletionRule.evaluate', () => {
 			comparison: 'lte',
 			threshold: BOUNDARY,
 			winnerPolicy: 'threshold-group',
-		}).evaluate(referenceCombat());
+		}).evaluate(builtInCombat());
 
 		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-a' });
 	});
@@ -79,7 +79,7 @@ describe('ThresholdCombatCompletionRule.evaluate', () => {
 			comparison: 'lte',
 			threshold: BOUNDARY,
 			winnerPolicy: 'opposing-group',
-		}).evaluate(referenceCombat());
+		}).evaluate(builtInCombat());
 
 		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-b' });
 	});
@@ -89,7 +89,7 @@ describe('ThresholdCombatCompletionRule.evaluate', () => {
 			comparison: 'gt',
 			threshold: BOUNDARY,
 			winnerPolicy: 'threshold-group',
-		}).evaluate(referenceCombat());
+		}).evaluate(builtInCombat());
 
 		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-b' });
 	});
@@ -99,13 +99,13 @@ describe('ThresholdCombatCompletionRule.evaluate', () => {
 			comparison: 'gt',
 			threshold: BOUNDARY,
 			winnerPolicy: 'opposing-group',
-		}).evaluate(referenceCombat());
+		}).evaluate(builtInCombat());
 
 		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-a' });
 	});
 
 	it('draws when both groups satisfy an inclusive boundary', () => {
-		const combat = referenceCombat();
+		const combat = builtInCombat();
 
 		expect(
 			rule({ comparison: 'gte', threshold: BOUNDARY, winnerPolicy: 'threshold-group' }).evaluate(combat)
@@ -116,21 +116,21 @@ describe('ThresholdCombatCompletionRule.evaluate', () => {
 	});
 
 	it('skips a combatant without the observed attribute', () => {
-		const combat = withCombatantPower(referenceCombat(), { 'combatant-a': 5 }, 'combatant-b');
+		const combat = withCombatantPower(builtInCombat(), { 'combatant-a': 5 }, 'combatant-b');
 		const outcome = rule({ comparison: 'lte', threshold: 10 }).evaluate(combat);
 
 		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-a' });
 	});
 
 	it('skips a non-numeric observed attribute value', () => {
-		const combat = withCombatantPower(referenceCombat(), { 'combatant-a': 'high', 'combatant-b': 5 });
+		const combat = withCombatantPower(builtInCombat(), { 'combatant-a': 'high', 'combatant-b': 5 });
 		const outcome = rule({ comparison: 'lte', threshold: 10 }).evaluate(combat);
 
 		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-b' });
 	});
 
 	it('does not mutate the evaluated combat', () => {
-		const combat = referenceCombat();
+		const combat = builtInCombat();
 		const before = combat.toPrimitives();
 
 		rule({ comparison: 'lte', threshold: BOUNDARY }).evaluate(combat);

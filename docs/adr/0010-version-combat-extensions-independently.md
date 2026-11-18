@@ -1,5 +1,7 @@
 # Version Combat extensions independently
 
+> **Superseded in part by [ADR-0013](./0013-built-in-combat-rules-without-kinds.md): the ruleset and completion-rule parts no longer apply. Action plugin and action set versioning stays.**
+
 Combat must accept third-party rulesets, action plugins, action sets, and completion rules that evolve on their own schedules. Each ruleset and completion rule declares a `kind` plus an exact `contractVersion`; each action plugin declares an `id` plus an exact `contractVersion`; authored action sets declare a semver range of plugin versions they accept. Factories reject unknown kinds, incompatible versions, and serialized data that does not match the declared constraints. The domain depends on `ContractVersionValidator` as a port, while semver lives only in infrastructure (`SemverContractVersionValidator`); `semver` is an optional peer dependency of the core package, and the reference package only consumes the port.
 
 ## Considered Options

@@ -3,10 +3,10 @@ import {
 	COMPLETION_CONFIG_KEYS,
 	readThresholdCompletionConfig,
 	ThresholdCombatCompletionRule,
-} from '@pocket-forge/combat-reference/domain';
+} from '@pocket-forge/combat/rulesets';
 import { describe, expect, it } from 'bun:test';
 
-import { ATTRIBUTE_DEFINITIONS, completionRuleset, DEFAULT_COMPLETION_ATTRIBUTES } from '../support/reference.fixtures';
+import { ATTRIBUTE_DEFINITIONS, completionRuleset, DEFAULT_COMPLETION_ATTRIBUTES } from './rulesets.fixtures';
 
 function attributes(overrides?: AttributeValues): AttributeValues {
 	return { ...DEFAULT_COMPLETION_ATTRIBUTES, ...overrides };
@@ -65,7 +65,8 @@ describe('readThresholdCompletionConfig', () => {
 		const result = readThresholdCompletionConfig(attributes({ [COMPLETION_CONFIG_KEYS.comparison]: 'eq' }));
 
 		expect(result.isLeft()).toBe(true);
-		expect(result.getLeft()[0]?.reason).toBe('invalid-comparison');
+		expect(result.getLeft()[0]?.reason).toBe('invalid-config');
+		expect(result.getLeft()[0]?.path).toBe(`attributes.${COMPLETION_CONFIG_KEYS.comparison}`);
 	});
 
 	it('rejects an invalid winner policy', () => {
@@ -74,21 +75,24 @@ describe('readThresholdCompletionConfig', () => {
 		);
 
 		expect(result.isLeft()).toBe(true);
-		expect(result.getLeft()[0]?.reason).toBe('invalid-winner-policy');
+		expect(result.getLeft()[0]?.reason).toBe('invalid-config');
+		expect(result.getLeft()[0]?.path).toBe(`attributes.${COMPLETION_CONFIG_KEYS.winnerPolicy}`);
 	});
 
 	it('rejects an infinite threshold', () => {
 		const result = readThresholdCompletionConfig(attributes({ [COMPLETION_CONFIG_KEYS.threshold]: Infinity }));
 
 		expect(result.isLeft()).toBe(true);
-		expect(result.getLeft()[0]?.reason).toBe('invalid-threshold');
+		expect(result.getLeft()[0]?.reason).toBe('invalid-config');
+		expect(result.getLeft()[0]?.path).toBe(`attributes.${COMPLETION_CONFIG_KEYS.threshold}`);
 	});
 
 	it('rejects a NaN threshold', () => {
 		const result = readThresholdCompletionConfig(attributes({ [COMPLETION_CONFIG_KEYS.threshold]: NaN }));
 
 		expect(result.isLeft()).toBe(true);
-		expect(result.getLeft()[0]?.reason).toBe('invalid-threshold');
+		expect(result.getLeft()[0]?.reason).toBe('invalid-config');
+		expect(result.getLeft()[0]?.path).toBe(`attributes.${COMPLETION_CONFIG_KEYS.threshold}`);
 	});
 
 	it('aggregates every invalid completion value', () => {
@@ -100,30 +104,21 @@ describe('readThresholdCompletionConfig', () => {
 		});
 
 		expect(result.isLeft()).toBe(true);
-		expect(result.getLeft().map(error => error.reason)).toEqual([
-			'invalid-attribute',
-			'invalid-comparison',
-			'invalid-threshold',
-			'invalid-winner-policy',
+		expect(result.getLeft().map(error => error.path)).toEqual([
+			`attributes.${COMPLETION_CONFIG_KEYS.attributeKey}`,
+			`attributes.${COMPLETION_CONFIG_KEYS.comparison}`,
+			`attributes.${COMPLETION_CONFIG_KEYS.threshold}`,
+			`attributes.${COMPLETION_CONFIG_KEYS.winnerPolicy}`,
 		]);
 	});
 });
 
 describe('ThresholdCombatCompletionRule.create', () => {
-	it('declares its kind and contract version', () => {
-		expect(ThresholdCombatCompletionRule.KIND).toBe('threshold');
-		expect(ThresholdCombatCompletionRule.VERSION).toBe('1.0.0');
-	});
-
 	it('produces a rule from valid ruleset attributes', () => {
 		const result = ThresholdCombatCompletionRule.create(completionRuleset(), ATTRIBUTE_DEFINITIONS);
 
 		expect(result.isRight()).toBe(true);
-
-		const rule = result.getRight();
-		expect(rule).toBeInstanceOf(ThresholdCombatCompletionRule);
-		expect(rule.kind).toBe('threshold');
-		expect(rule.contractVersion).toBe('1.0.0');
+		expect(result.getRight()).toBeInstanceOf(ThresholdCombatCompletionRule);
 	});
 
 	it('rejects an unknown observed attribute key', () => {

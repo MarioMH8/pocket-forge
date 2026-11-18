@@ -21,12 +21,12 @@ Reusable external logic that registers actions and resolves Move-bound actions i
 _Avoid_: Combat Plugin, rules engine, embedded move logic
 
 **Combat Ruleset**:
-A concrete combat format that declares its `kind`, `contractVersion`, format attributes, and composition constraints. It does not contain Move bindings, action logic, or victory logic.
+A concrete combat format that declares format attributes and composition constraints. It does not contain Move bindings, action logic, or victory logic.
 _Avoid_: Plugin, battle configuration, embedded ruleset
 
-**Combat Ruleset Kind**:
-The stable identifier of a concrete Combat Ruleset implementation.
-_Avoid_: Format name, ruleset class
+**Built-in Combat Rules**:
+The ruleset and completion-rule implementations shipped by `@pocket-forge/combat` under `./rulesets`. Authors import them directly or extend `CombatRuleset` with their own format.
+_Avoid_: Reference rules, default plugin
 
 **Combat Action**:
 Plugin-registered executable logic selected by a Combat Action Set for a Move; it receives an immutable context and returns a Combat Transition.
@@ -39,6 +39,10 @@ _Avoid_: Core binding, hardcoded move
 **Combat Completion Rule**:
 An external rule that inspects a Combat snapshot and returns a Combat Outcome when combat should end.
 _Avoid_: Core victory check, turn resolver
+
+**Threshold Combat Completion Rule**:
+The built-in completion rule that ends Combat when a Combatant attribute satisfies a configured comparison against a threshold, under a configured winner policy.
+_Avoid_: Hit-point check, knockout rule
 
 **Combat Engine**:
 A pure orchestrator that composes a ruleset, action plugin, action set, and completion rule; it validates composition, delegates resolution, and evaluates completion.

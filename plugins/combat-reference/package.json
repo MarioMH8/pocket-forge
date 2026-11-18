@@ -1,7 +1,7 @@
 {
 	"name": "@pocket-forge/combat-reference",
 	"version": "0.0.0",
-	"description": "Reference Combat formats, action plugin, and authored action set for Pocket Forge. Proves format, move logic, and authored bindings live outside the neutral core.",
+	"description": "Reference Combat action plugin and authored action set for Pocket Forge. Proves move logic and authored bindings live outside the neutral core.",
 	"keywords": [
 		"pocket-forge",
 		"rpg",

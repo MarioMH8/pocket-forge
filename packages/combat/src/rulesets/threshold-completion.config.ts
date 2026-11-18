@@ -2,8 +2,7 @@ import Either from '@hexadrop/either';
 import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeDefinition } from '@pocket-forge/attribute/domain';
 
-import type { ReferenceCombatCompletionRuleErrorReason } from './reference-completion-rule.error';
-import ReferenceCombatCompletionRuleError from './reference-completion-rule.error';
+import ThresholdCombatCompletionRuleError from './threshold-combat-completion-rule.error';
 
 /**
  * Configuration keys authored on a threshold completion rule.
@@ -25,13 +24,34 @@ const COMPLETION_COMPARISONS = ['lt', 'lte', 'gt', 'gte'] as const;
  */
 const COMPLETION_WINNER_POLICIES = ['threshold-group', 'opposing-group'] as const;
 
+/**
+ * Comparison operators supported by the threshold completion rule.
+ */
 type CompletionComparison = (typeof COMPLETION_COMPARISONS)[number];
+/**
+ * Winner policies supported by the threshold completion rule.
+ */
 type CompletionWinnerPolicy = (typeof COMPLETION_WINNER_POLICIES)[number];
 
+/**
+ * Validated threshold completion configuration.
+ */
 interface ThresholdCompletionConfig {
+	/**
+	 * Combatant attribute observed by the rule.
+	 */
 	readonly attributeKey: string;
+	/**
+	 * Comparison applied between the observed value and the threshold.
+	 */
 	readonly comparison: CompletionComparison;
+	/**
+	 * Numeric boundary that triggers completion.
+	 */
 	readonly threshold: number;
+	/**
+	 * Group that wins when the threshold is satisfied.
+	 */
 	readonly winnerPolicy: CompletionWinnerPolicy;
 }
 
@@ -73,13 +93,6 @@ const COMPLETION_CONFIG_DEFINITIONS: readonly AttributeDefinition[] = [
 	COMPLETION_WINNER_POLICY_DEFINITION,
 ];
 
-const COMPLETION_CONFIG_REASONS: Record<string, ReferenceCombatCompletionRuleErrorReason> = {
-	[COMPLETION_CONFIG_KEYS.attributeKey]: 'invalid-attribute',
-	[COMPLETION_CONFIG_KEYS.comparison]: 'invalid-comparison',
-	[COMPLETION_CONFIG_KEYS.threshold]: 'invalid-threshold',
-	[COMPLETION_CONFIG_KEYS.winnerPolicy]: 'invalid-winner-policy',
-};
-
 function completionConfigPath(key: string): string {
 	return `attributes.${key}`;
 }
@@ -90,10 +103,6 @@ function isCompletionComparison(value: unknown): value is CompletionComparison {
 
 function isCompletionWinnerPolicy(value: unknown): value is CompletionWinnerPolicy {
 	return typeof value === 'string' && (COMPLETION_WINNER_POLICIES as readonly string[]).includes(value);
-}
-
-function reasonFor(key: string): ReferenceCombatCompletionRuleErrorReason {
-	return COMPLETION_CONFIG_REASONS[key] ?? 'invalid-config';
 }
 
 /**
@@ -110,14 +119,14 @@ function reasonFor(key: string): ReferenceCombatCompletionRuleErrorReason {
 function validateCompletionValue(
 	attributes: AttributeValues,
 	definition: AttributeDefinition
-): ReferenceCombatCompletionRuleError[] {
+): ThresholdCombatCompletionRuleError[] {
 	const raw = attributes[definition.key];
 	const path = completionConfigPath(definition.key);
 
 	if (raw === undefined) {
 		return definition.required
 			? [
-					new ReferenceCombatCompletionRuleError(
+					new ThresholdCombatCompletionRuleError(
 						'invalid-config',
 						`Attribute "${definition.key}" is required`,
 						path
@@ -130,8 +139,8 @@ function validateCompletionValue(
 
 	if (error) {
 		return [
-			new ReferenceCombatCompletionRuleError(
-				reasonFor(definition.key),
+			new ThresholdCombatCompletionRuleError(
+				'invalid-config',
 				`Invalid value for attribute "${definition.key}": ${error.message}`,
 				path
 			),
@@ -140,8 +149,8 @@ function validateCompletionValue(
 
 	if (typeof raw === 'number' && !Number.isFinite(raw)) {
 		return [
-			new ReferenceCombatCompletionRuleError(
-				'invalid-threshold',
+			new ThresholdCombatCompletionRuleError(
+				'invalid-config',
 				`Attribute "${definition.key}" must be a finite number`,
 				path
 			),
@@ -164,7 +173,7 @@ function validateCompletionValue(
  */
 function readThresholdCompletionConfig(
 	attributes: AttributeValues
-): Either<ReferenceCombatCompletionRuleError[], ThresholdCompletionConfig> {
+): Either<ThresholdCombatCompletionRuleError[], ThresholdCompletionConfig> {
 	const errors = COMPLETION_CONFIG_DEFINITIONS.flatMap(definition => validateCompletionValue(attributes, definition));
 
 	if (errors.length > 0) {
@@ -184,7 +193,7 @@ function readThresholdCompletionConfig(
 		!isCompletionWinnerPolicy(winnerPolicy)
 	) {
 		return Either.left([
-			new ReferenceCombatCompletionRuleError(
+			new ThresholdCombatCompletionRuleError(
 				'invalid-config',
 				'Completion configuration is incomplete',
 				'attributes'

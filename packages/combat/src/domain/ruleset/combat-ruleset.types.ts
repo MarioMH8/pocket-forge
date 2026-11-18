@@ -15,10 +15,6 @@ interface CombatRulesetPrimitives {
 	 */
 	readonly attributes: AttributeValues;
 	/**
-	 * Exact contract version of the concrete ruleset implementation.
-	 */
-	readonly contractVersion: string;
-	/**
 	 * Composition constraints declared by the concrete format.
 	 */
 	readonly groupConstraints: CombatGroupConstraints;
@@ -26,10 +22,6 @@ interface CombatRulesetPrimitives {
 	 * Unique ruleset identifier.
 	 */
 	readonly id: string;
-	/**
-	 * Concrete format identifier.
-	 */
-	readonly kind: string;
 	/**
 	 * Human-readable ruleset name.
 	 */

@@ -2,12 +2,12 @@ import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat, CombatCompletionRule, CombatOutcome, CombatRuleset } from '@pocket-forge/combat/domain';
 
-import ReferenceCombatCompletionRuleError from './reference-completion-rule.error';
+import ThresholdCombatCompletionRuleError from './threshold-combat-completion-rule.error';
 import type { ThresholdCompletionConfig } from './threshold-completion.config';
 import { COMPLETION_CONFIG_KEYS, readThresholdCompletionConfig } from './threshold-completion.config';
 
 /**
- * Reference completion rule that ends Combat from a Combatant attribute
+ * Built-in completion rule that ends Combat from a Combatant attribute
  * threshold.
  *
  * It evaluates the injected project attribute catalog, returns a declarative
@@ -15,23 +15,6 @@ import { COMPLETION_CONFIG_KEYS, readThresholdCompletionConfig } from './thresho
  * `completed` transition and its completion event.
  */
 class ThresholdCombatCompletionRule implements CombatCompletionRule {
-	/**
-	 * Stable completion-rule kind identifier.
-	 */
-	static readonly KIND = 'threshold';
-	/**
-	 * Exact contract version of this completion rule.
-	 */
-	static readonly VERSION = '1.0.0';
-
-	/**
-	 * Exact contract version declared by this completion rule.
-	 */
-	readonly contractVersion = ThresholdCombatCompletionRule.VERSION;
-	/**
-	 * Stable completion-rule kind identifier.
-	 */
-	readonly kind = ThresholdCombatCompletionRule.KIND;
 	private readonly config: ThresholdCompletionConfig;
 
 	private constructor(config: ThresholdCompletionConfig) {
@@ -45,11 +28,19 @@ class ThresholdCombatCompletionRule implements CombatCompletionRule {
 	 * @param ruleset - Ruleset that carries the authored completion attributes.
 	 * @param attributeDefinitions - Project attribute catalog.
 	 * @returns The configured rule, or every validation failure.
+	 * @example
+	 * ```ts
+	 * const result = ThresholdCombatCompletionRule.create(ruleset, definitions);
+	 *
+	 * if (result.isLeft()) {
+	 *   console.error(result.getLeft());
+	 * }
+	 * ```
 	 */
 	static create(
 		ruleset: CombatRuleset,
 		attributeDefinitions: readonly AttributeDefinition[]
-	): Either<ReferenceCombatCompletionRuleError[], ThresholdCombatCompletionRule> {
+	): Either<ThresholdCombatCompletionRuleError[], ThresholdCombatCompletionRule> {
 		const config = readThresholdCompletionConfig(ruleset.attributes.toPrimitives());
 
 		if (config.isLeft()) {
@@ -61,7 +52,7 @@ class ThresholdCombatCompletionRule implements CombatCompletionRule {
 
 		if (!definition) {
 			return Either.left([
-				new ReferenceCombatCompletionRuleError(
+				new ThresholdCombatCompletionRuleError(
 					'invalid-attribute',
 					`Unknown combatant attribute "${parsed.attributeKey}"`,
 					`attributes.${COMPLETION_CONFIG_KEYS.attributeKey}`
@@ -71,7 +62,7 @@ class ThresholdCombatCompletionRule implements CombatCompletionRule {
 
 		if (definition.type !== 'number') {
 			return Either.left([
-				new ReferenceCombatCompletionRuleError(
+				new ThresholdCombatCompletionRuleError(
 					'invalid-attribute',
 					`Combatant attribute "${parsed.attributeKey}" must be numeric`,
 					`attributes.${COMPLETION_CONFIG_KEYS.attributeKey}`

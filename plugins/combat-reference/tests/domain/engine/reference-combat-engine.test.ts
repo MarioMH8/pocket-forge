@@ -2,7 +2,8 @@ import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat, CombatCompletionRule } from '@pocket-forge/combat/domain';
 import { CombatEngine } from '@pocket-forge/combat/domain';
 import { CombatRulesetMother, CombatSetupMother } from '@pocket-forge/combat/mother/domain';
-import { OneVersusOneCombatRuleset, ReferenceCombatActionSet } from '@pocket-forge/combat-reference/domain';
+import { OneVersusOneCombatRuleset } from '@pocket-forge/combat/rulesets';
+import { ReferenceCombatActionSet } from '@pocket-forge/combat-reference/domain';
 import { ReferenceCombatActionSetMother } from '@pocket-forge/combat-reference/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
@@ -24,14 +25,11 @@ describe('Reference combat through CombatEngine', () => {
 	it('preserves a modifyAttribute successor across the full composition', () => {
 		const ruleset = OneVersusOneCombatRuleset.create(
 			CombatRulesetMother.primitives({
-				contractVersion: OneVersusOneCombatRuleset.VERSION,
 				groupConstraints: { ...OneVersusOneCombatRuleset.CONSTRAINTS },
 				id: 'reference-1v1',
-				kind: OneVersusOneCombatRuleset.KIND,
 				name: 'Reference 1v1',
 			}),
-			[...ATTRIBUTE_DEFINITIONS],
-			VERSION_VALIDATOR
+			[...ATTRIBUTE_DEFINITIONS]
 		).getRight();
 		const plugin = referencePlugin();
 		const actionSet = ReferenceCombatActionSet.create(
@@ -40,10 +38,8 @@ describe('Reference combat through CombatEngine', () => {
 			VERSION_VALIDATOR
 		).getRight();
 		const completion: CombatCompletionRule = {
-			contractVersion: '1.0.0',
 			// eslint-disable-next-line unicorn/no-useless-undefined
 			evaluate: () => undefined,
-			kind: 'none',
 		};
 		const engine = new CombatEngine(CombatSetupMother.create({ actions: plugin, actionSet, completion, ruleset }));
 		const combat = referenceCombat();
