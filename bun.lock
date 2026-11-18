@@ -160,22 +160,6 @@
         "@pocket-forge/attribute": "workspace:*",
       },
     },
-    "packages/pack": {
-      "name": "@pocket-forge/pack",
-      "version": "0.0.0",
-      "devDependencies": {
-        "@faker-js/faker": "10.6.0",
-        "@hexadrop/either": "2.0.1",
-        "@hexadrop/error": "2.0.0",
-        "@hexadrop/types": "2.0.0",
-        "tsdown": "0.23.7",
-      },
-      "peerDependencies": {
-        "@hexadrop/either": "^2.0.0",
-        "@hexadrop/error": "^2.0.0",
-        "@hexadrop/types": "^2.0.0",
-      },
-    },
     "packages/rng": {
       "name": "@pocket-forge/rng",
       "version": "0.0.0",
@@ -651,8 +635,6 @@
     "@pocket-forge/game-session": ["@pocket-forge/game-session@workspace:packages/game-session"],
 
     "@pocket-forge/move": ["@pocket-forge/move@workspace:packages/move"],
-
-    "@pocket-forge/pack": ["@pocket-forge/pack@workspace:packages/pack"],
 
     "@pocket-forge/rng": ["@pocket-forge/rng@workspace:packages/rng"],
 
