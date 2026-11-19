@@ -52,12 +52,12 @@ class AlphaOnlyRuleset extends TestCombatRuleset {
 		}
 
 		const errors = groups
-			.filter(group => !group.id.startsWith('Alpha'))
+			.filter(group => !group.id.startsWith('alpha'))
 			.map(
 				group =>
 					new CombatRulesetError(
 						'invalid-constraints',
-						`Group "${group.id}" must start with "Alpha"`,
+						`Group "${group.id}" must start with "alpha"`,
 						'groups'
 					)
 			);
@@ -186,7 +186,7 @@ describe('CombatRuleset', () => {
 			expect(messages).toContain('minCombatantsPerGroup 2 cannot exceed maxCombatantsPerGroup 1');
 		});
 
-		it('rejects every identity failure', () => {
+		it('rejects an empty id', () => {
 			const result = create({ id: '' });
 
 			expect(result.isLeft()).toBe(true);
@@ -343,12 +343,12 @@ describe('CombatRuleset', () => {
 		it('can be overridden by a concrete ruleset', () => {
 			const ruleset = AlphaOnlyRuleset.create(primitives(), []).getRight();
 
-			const valid = ruleset.validateGroups([group('Alpha One', 2), group('Alpha Two', 2)]);
-			const invalid = ruleset.validateGroups([group('Alpha One', 2), group('Beta Two', 2)]);
+			const valid = ruleset.validateGroups([group('alpha-1', 2), group('alpha-2', 2)]);
+			const invalid = ruleset.validateGroups([group('alpha-1', 2), group('beta-2', 2)]);
 
 			expect(valid.isRight()).toBe(true);
 			expect(invalid.isLeft()).toBe(true);
-			expect(invalid.getLeft()[0]?.message).toContain('must start with "Alpha"');
+			expect(invalid.getLeft()[0]?.message).toContain('must start with "alpha"');
 		});
 	});
 
