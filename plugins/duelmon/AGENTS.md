@@ -1,18 +1,24 @@
 # @pocket-forge/duelmon agent guide
 
-Duelmon Combat action plugin and authored action set.
+Duelmon Combat action plugin, authored action set, and a private dataset
+extractor for the Pokémon Showdown Gen 1 tables.
 
 - **Package manager:** Bun (`bun`)
 - **Build:** `bun run build` (at package folder)
 - **Test:** `bun test plugins/duelmon --conditions=development` (at root)
 - **Type-check:** `bun run typecheck` (at root)
 - **Lint:** `bun run lint:fix` (at root)
+- **Extract dataset:** `bun run extract --source <showdown-checkout>` (at package folder)
 
-The package only keeps package-exclusive scripts (`build`, `prepublishOnly`); everything else runs from the repo root.
+The package only keeps package-exclusive scripts (`build`, `prepublishOnly`, `extract`); everything else runs from the repo root.
 
 ## Boundary
 
 This package is a private implementation outside the neutral Combat core. It may import `@pocket-forge/combat/domain` and `@pocket-forge/attribute/domain`. `packages/combat` must never import it.
+
+## Dataset
+
+The generated Pokémon dataset is not committed. See the [README](./README.md) for the pinned Showdown commit and the local extraction workflow.
 
 ## Conventions
 
