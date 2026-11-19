@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker';
 import type { CombatGroupConstraints, CombatRulesetPrimitives } from '@pocket-forge/combat/domain';
 
 /**
@@ -18,7 +17,6 @@ export default class CombatRulesetMother {
 		return {
 			attributes: {},
 			groupConstraints: { ...TEST_GROUP_CONSTRAINTS },
-			id: faker.string.uuid(),
 			...overrides,
 		};
 	}

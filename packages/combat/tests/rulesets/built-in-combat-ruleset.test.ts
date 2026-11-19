@@ -11,7 +11,6 @@ function primitives(
 ): CombatRulesetPrimitives {
 	return CombatRulesetMother.primitives({
 		groupConstraints: { ...groupConstraints },
-		id: 'built-in-ruleset',
 		...overrides,
 	});
 }

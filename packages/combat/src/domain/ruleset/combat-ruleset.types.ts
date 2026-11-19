@@ -5,7 +5,7 @@ import type CombatGroupConstraints from './combat-group-constraints';
 /**
  * Plain, serializable representation of an authored Combat Ruleset.
  *
- * It carries format identity and generic composition constraints only. Move
+ * It carries format attributes and generic composition constraints only. Move
  * bindings, action configuration, and plugin references belong to other
  * models.
  */
@@ -18,10 +18,6 @@ interface CombatRulesetPrimitives {
 	 * Composition constraints declared by the concrete format.
 	 */
 	readonly groupConstraints: CombatGroupConstraints;
-	/**
-	 * Unique ruleset identifier.
-	 */
-	readonly id: string;
 }
 
 /**
@@ -43,10 +39,6 @@ interface CombatRulesetData {
 	 * Validated composition constraints.
 	 */
 	readonly groupConstraints: CombatGroupConstraints;
-	/**
-	 * Unique ruleset identifier.
-	 */
-	readonly id: string;
 }
 
 export type { CombatRulesetData, CombatRulesetPrimitives };

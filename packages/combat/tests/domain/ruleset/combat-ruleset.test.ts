@@ -67,7 +67,7 @@ class AlphaOnlyRuleset extends TestCombatRuleset {
 }
 
 function primitives(overrides?: Partial<CombatRulesetPrimitives>): CombatRulesetPrimitives {
-	return CombatRulesetMother.primitives({ id: 'ruleset-1', ...overrides });
+	return CombatRulesetMother.primitives(overrides);
 }
 
 function create(
@@ -88,7 +88,7 @@ function group(id: string, combatants: number): CombatantGroupType {
 
 describe('CombatRuleset', () => {
 	describe('create', () => {
-		it('stores identity, attributes, definitions, and constraints', () => {
+		it('stores attributes, definitions, and constraints', () => {
 			const definition = AttributeDefinitionMother.number({
 				constraints: { max: 10, min: 1 },
 				defaultValue: 5,
@@ -100,7 +100,6 @@ describe('CombatRuleset', () => {
 			expect(result.isRight()).toBe(true);
 
 			const ruleset = result.getRight();
-			expect(ruleset.id).toBe('ruleset-1');
 			expect(ruleset.groupConstraints).toEqual(TEST_GROUP_CONSTRAINTS);
 			expect(ruleset.attributes.value['bonusHp']).toBe(7);
 			expect(ruleset.definitions).toEqual([definition]);
@@ -112,15 +111,6 @@ describe('CombatRuleset', () => {
 			expect(result.isLeft()).toBe(true);
 			expect(result.getLeft()[0]?.reason).toBe('invalid-constraints');
 			expect(result.getLeft()[0]?.path).toBe('groupConstraints.maxGroups');
-		});
-
-		it('rejects an empty id', () => {
-			const result = create({ id: '' });
-
-			expect(result.isLeft()).toBe(true);
-			expect(result.getLeft()).toHaveLength(1);
-			expect(result.getLeft()[0]?.reason).toBe('invalid-id');
-			expect(result.getLeft()[0]?.path).toBe('id');
 		});
 
 		it('rejects every group constraint that differs from the concrete implementation', () => {
@@ -184,13 +174,6 @@ describe('CombatRuleset', () => {
 			const messages = result.getLeft().map(error => error.message);
 			expect(messages).toContain('minGroups 2 cannot exceed maxGroups 1');
 			expect(messages).toContain('minCombatantsPerGroup 2 cannot exceed maxCombatantsPerGroup 1');
-		});
-
-		it('rejects an empty id', () => {
-			const result = create({ id: '' });
-
-			expect(result.isLeft()).toBe(true);
-			expect(result.getLeft().map(error => error.reason)).toEqual(['invalid-id']);
 		});
 	});
 

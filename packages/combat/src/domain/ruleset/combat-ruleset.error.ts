@@ -3,7 +3,7 @@ import DomainError from '@hexadrop/error';
 /**
  * Reasons a Combat Ruleset can fail validation.
  */
-type CombatRulesetErrorReason = 'invalid-attribute' | 'invalid-constraints' | 'invalid-id';
+type CombatRulesetErrorReason = 'invalid-attribute' | 'invalid-constraints';
 
 /**
  * Structured validation failure for an authored Combat Ruleset.

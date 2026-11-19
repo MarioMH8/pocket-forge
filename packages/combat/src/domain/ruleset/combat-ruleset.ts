@@ -19,9 +19,9 @@ const CONSTRAINT_FIELDS = ['maxCombatantsPerGroup', 'maxGroups', 'minCombatantsP
 /**
  * Abstract, authored Combat Ruleset.
  *
- * A ruleset describes a combat *format*: its identity, optional format
- * attributes, and generic composition constraints. It knows nothing about
- * Moves, actions, completion rules, or victory.
+ * A ruleset describes a combat *format*: optional format attributes and
+ * generic composition constraints. The concrete class is the identity. It
+ * knows nothing about Moves, actions, completion rules, or victory.
  *
  * Concrete formats (`1v1`, `2v2`, …) declare their own composition constraints
  * and expose an own `static create` that delegates to
@@ -41,16 +41,11 @@ abstract class CombatRuleset {
 	 * Composition constraints declared by the concrete format.
 	 */
 	readonly groupConstraints: CombatGroupConstraints;
-	/**
-	 * Unique ruleset identifier.
-	 */
-	readonly id: string;
 
 	protected constructor(data: CombatRulesetData) {
 		this.attributes = data.attributes;
 		this.definitions = data.definitions;
 		this.groupConstraints = data.groupConstraints;
-		this.id = data.id;
 	}
 
 	/**
@@ -71,7 +66,6 @@ abstract class CombatRuleset {
 	): Either<CombatRulesetError[], CombatRulesetData> {
 		const errors: CombatRulesetError[] = [];
 
-		this.validateIdentity(primitives, errors);
 		this.validateConstraints(primitives.groupConstraints, expected.groupConstraints, errors);
 		errors.push(...this.validateAttributes(primitives.attributes, definitions));
 
@@ -83,12 +77,7 @@ abstract class CombatRuleset {
 			attributes: AttributeMap.create(primitives.attributes, definitions, 'CombatRuleset'),
 			definitions: Object.freeze([...definitions]),
 			groupConstraints: Object.freeze({ ...primitives.groupConstraints }),
-			id: primitives.id,
 		});
-	}
-
-	private static isNonEmpty(value: string): boolean {
-		return typeof value === 'string' && value.trim().length > 0;
 	}
 
 	private static validateAttributes(
@@ -215,12 +204,6 @@ abstract class CombatRuleset {
 		}
 	}
 
-	private static validateIdentity(primitives: CombatRulesetPrimitives, errors: CombatRulesetError[]): void {
-		if (!this.isNonEmpty(primitives.id)) {
-			errors.push(new CombatRulesetError('invalid-id', 'Combat ruleset id is required', 'id'));
-		}
-	}
-
 	/**
 	 * Serializes this ruleset into its primitive representation.
 	 *
@@ -233,7 +216,6 @@ abstract class CombatRuleset {
 		return {
 			attributes: this.attributes.toPrimitives(),
 			groupConstraints: { ...this.groupConstraints },
-			id: this.id,
 		};
 	}
 

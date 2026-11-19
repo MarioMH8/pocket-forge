@@ -84,7 +84,6 @@ function completionRuleset(attributes: AttributeValues = DEFAULT_COMPLETION_ATTR
 		CombatRulesetMother.primitives({
 			attributes: { ...attributes },
 			groupConstraints: { ...OneVersusOneCombatRuleset.CONSTRAINTS },
-			id: 'completion-ruleset',
 		}),
 		[...COMPLETION_ATTRIBUTE_DEFINITIONS]
 	).getRight();

@@ -27,7 +27,6 @@ const RULESET_DATA: CombatRulesetData = {
 	attributes: AttributeMap.fromPrimitives({}),
 	definitions: [],
 	groupConstraints: GROUP_CONSTRAINTS,
-	id: 'fake-ruleset',
 };
 
 const TACKLE: CombatActionDescriptor = {

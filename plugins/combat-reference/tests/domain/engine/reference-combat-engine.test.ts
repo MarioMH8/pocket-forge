@@ -21,7 +21,6 @@ describe('Reference combat through CombatEngine', () => {
 		const ruleset = OneVersusOneCombatRuleset.create(
 			CombatRulesetMother.primitives({
 				groupConstraints: { ...OneVersusOneCombatRuleset.CONSTRAINTS },
-				id: 'reference-1v1',
 			}),
 			[...ATTRIBUTE_DEFINITIONS]
 		).getRight();
