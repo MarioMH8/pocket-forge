@@ -1,7 +1,7 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
-import { CombatEngine, CombatSetup } from '@pocket-forge/combat/domain';
-import { ThresholdCombatCompletionRule } from '@pocket-forge/combat/rulesets';
+import { CombatEngine, CombatSetup } from '@pocket-forge/combat-engine/domain';
+import { ThresholdCombatCompletionRule } from '@pocket-forge/combat-engine/rulesets';
 import { ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';

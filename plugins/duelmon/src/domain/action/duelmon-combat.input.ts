@@ -1,5 +1,5 @@
 import Either from '@hexadrop/either';
-import type { CombatResolutionError } from '@pocket-forge/combat/domain';
+import type { CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 
 import { DuelmonErrors } from './duelmon.errors';
 import type { DuelmonTarget } from './duelmon-target';

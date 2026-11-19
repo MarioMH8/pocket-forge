@@ -1,5 +1,6 @@
 import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValue, AttributeValues } from '@pocket-forge/attribute/domain';
+import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import type {
 	CombatActionContext,
 	CombatActionDescriptor,
@@ -7,8 +8,7 @@ import type {
 	CombatMoveBinding,
 	CombatResolutionError,
 	CombatTransition,
-} from '@pocket-forge/combat/domain';
-import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
+} from '@pocket-forge/combat-engine/domain';
 
 import { DuelmonCombatAttributes } from '../combat-attributes';
 import { DuelmonErrors } from '../duelmon.errors';

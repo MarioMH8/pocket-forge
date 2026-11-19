@@ -70,7 +70,6 @@
         "@hexadrop/either": "2.0.1",
         "@hexadrop/error": "2.0.0",
         "@hexadrop/types": "2.0.0",
-        "@hexadrop/value-object": "2.0.1",
         "@pocket-forge/attribute": "0.0.0",
         "@pocket-forge/creature": "0.0.0",
         "@pocket-forge/rng": "0.0.0",
@@ -80,10 +79,26 @@
         "@hexadrop/either": "^2.0.0",
         "@hexadrop/error": "^2.0.0",
         "@hexadrop/types": "^2.0.0",
-        "@hexadrop/value-object": "^2.0.0",
         "@pocket-forge/attribute": "workspace:*",
         "@pocket-forge/creature": "workspace:*",
         "@pocket-forge/rng": "workspace:*",
+      },
+    },
+    "packages/combat-engine": {
+      "name": "@pocket-forge/combat-engine",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@hexadrop/either": "2.0.1",
+        "@hexadrop/error": "2.0.0",
+        "@pocket-forge/attribute": "0.0.0",
+        "@pocket-forge/combat": "0.0.0",
+        "tsdown": "0.23.7",
+      },
+      "peerDependencies": {
+        "@hexadrop/either": "^2.0.0",
+        "@hexadrop/error": "^2.0.0",
+        "@pocket-forge/attribute": "workspace:*",
+        "@pocket-forge/combat": "workspace:*",
       },
     },
     "packages/creature": {
@@ -195,6 +210,7 @@
         "@hexadrop/error": "2.0.0",
         "@pocket-forge/attribute": "0.0.0",
         "@pocket-forge/combat": "0.0.0",
+        "@pocket-forge/combat-engine": "0.0.0",
         "@pocket-forge/move": "0.0.0",
         "@pocket-forge/species": "0.0.0",
         "tsdown": "0.23.7",
@@ -204,6 +220,7 @@
         "@hexadrop/error": "^2.0.0",
         "@pocket-forge/attribute": "workspace:*",
         "@pocket-forge/combat": "workspace:*",
+        "@pocket-forge/combat-engine": "workspace:*",
         "@pocket-forge/move": "workspace:*",
         "@pocket-forge/species": "workspace:*",
       },
@@ -623,6 +640,8 @@
     "@pocket-forge/attribute": ["@pocket-forge/attribute@workspace:packages/attribute"],
 
     "@pocket-forge/combat": ["@pocket-forge/combat@workspace:packages/combat"],
+
+    "@pocket-forge/combat-engine": ["@pocket-forge/combat-engine@workspace:packages/combat-engine"],
 
     "@pocket-forge/creature": ["@pocket-forge/creature@workspace:packages/creature"],
 

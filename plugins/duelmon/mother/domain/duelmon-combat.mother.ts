@@ -1,20 +1,16 @@
 import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
-import type {
-	Combat,
-	CombatActionSet,
-	CombatantPrimitives,
-	CombatMoveBindingPrimitives,
-	CombatPrimitives,
-	CombatRuleset,
-} from '@pocket-forge/combat/domain';
-import { Combat as CombatEntity, CombatActionSet as CombatActionSetEntity } from '@pocket-forge/combat/domain';
-import { CombatantGroupMother, CombatantMother, CombatRulesetMother } from '@pocket-forge/combat/mother/domain';
+import type { Combat, CombatantPrimitives, CombatPrimitives } from '@pocket-forge/combat/domain';
+import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
+import { CombatantGroupMother, CombatantMother } from '@pocket-forge/combat/mother/domain';
+import type { CombatActionSet, CombatMoveBindingPrimitives, CombatRuleset } from '@pocket-forge/combat-engine/domain';
+import { CombatActionSet as CombatActionSetEntity } from '@pocket-forge/combat-engine/domain';
+import { CombatRulesetMother } from '@pocket-forge/combat-engine/mother/domain';
 import {
 	COMPLETION_CONFIG_DEFINITIONS,
 	COMPLETION_CONFIG_KEYS,
 	OneVersusOneCombatRuleset,
-} from '@pocket-forge/combat/rulesets';
+} from '@pocket-forge/combat-engine/rulesets';
 import { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import {
 	DuelmonCombatPlugin,

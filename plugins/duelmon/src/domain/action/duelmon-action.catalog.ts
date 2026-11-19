@@ -1,4 +1,4 @@
-import type { CombatActionCatalog, CombatActionDescriptor } from '@pocket-forge/combat/domain';
+import type { CombatActionCatalog, CombatActionDescriptor } from '@pocket-forge/combat-engine/domain';
 
 import type DuelmonAction from './duelmon-action';
 

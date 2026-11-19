@@ -5,7 +5,7 @@ import type {
 	CombatActionPlugin,
 	CombatResolutionError,
 	CombatTransition,
-} from '@pocket-forge/combat/domain';
+} from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 
 import { DuelmonErrors } from './duelmon.errors';

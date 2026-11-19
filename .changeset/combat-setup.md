@@ -1,5 +1,5 @@
 ---
-'@pocket-forge/combat': minor
+'@pocket-forge/combat-engine': minor
 ---
 
 Group the Combat Engine collaborators in one `CombatSetup`.

@@ -1,15 +1,15 @@
 import Either from '@hexadrop/either';
 import type { AttributeDefinition } from '@pocket-forge/attribute/domain';
+import type { Combat } from '@pocket-forge/combat/domain';
+import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import type {
-	Combat,
 	CombatActionContext,
 	CombatActionDescriptor,
 	CombatEvent,
 	CombatMoveBinding,
 	CombatResolutionError,
 	CombatTransition,
-} from '@pocket-forge/combat/domain';
-import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
+} from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type RandomPocket from '@pocket-forge/rng/domain';
 

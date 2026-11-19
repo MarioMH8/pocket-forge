@@ -1,5 +1,5 @@
 ---
-'@pocket-forge/combat': minor
+'@pocket-forge/combat-engine': minor
 ---
 
 Define pure Combat extension contracts.

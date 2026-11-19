@@ -1,5 +1,5 @@
 ---
-'@pocket-forge/combat': minor
+'@pocket-forge/combat-engine': minor
 ---
 
 Remove the remaining metadata ids and the setup wiring check.

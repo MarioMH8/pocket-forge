@@ -1,12 +1,7 @@
 import Either from '@hexadrop/either';
 import type { AttributeValue, AttributeValues } from '@pocket-forge/attribute/domain';
-import type {
-	Combat,
-	Combatant,
-	CombatantGroup,
-	CombatPrimitives,
-	CombatResolutionError,
-} from '@pocket-forge/combat/domain';
+import type { Combat, Combatant, CombatantGroup, CombatPrimitives } from '@pocket-forge/combat/domain';
+import type { CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 
 import { DuelmonErrors } from './duelmon.errors';
 

@@ -1,5 +1,5 @@
-import type { CombatMoveBindingPrimitives } from '@pocket-forge/combat/domain';
-import { CombatActionSet } from '@pocket-forge/combat/domain';
+import type { CombatMoveBindingPrimitives } from '@pocket-forge/combat-engine/domain';
+import { CombatActionSet } from '@pocket-forge/combat-engine/domain';
 import { ModifyAttributeAction, ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';

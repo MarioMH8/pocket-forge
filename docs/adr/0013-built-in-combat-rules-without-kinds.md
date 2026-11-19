@@ -1,5 +1,7 @@
 # Built-in Combat rules without kinds
 
+> **Superseded in part by [ADR-0014](./0014-split-combat-state-and-engine-packages.md): the engine and the built-in rulesets now live in `@pocket-forge/combat-engine`; `@pocket-forge/combat/rulesets` no longer exists.**
+
 The built-in combat formats (`1v1`, `2v2`) and the threshold completion rule are Pocket Forge implementations, not authored content. They live in `@pocket-forge/combat` under a dedicated `./rulesets` entrypoint, so authors can import them directly or extend `CombatRuleset` without depending on a reference plugin. `./domain` stays format-free.
 
 Rulesets and completion rules no longer declare a `kind` or an exact `contractVersion`, and there is no factory that dispatches by kind. A consumer imports the concrete class and calls its own `create`, which validates composition constraints and authored attributes against that class. This removes ceremony that had no consumer: static dispatch can be replaced by an import, and a ruleset version only mattered for hydrating serialized content whose kind was already known to the caller.

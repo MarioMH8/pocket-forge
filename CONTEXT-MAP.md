@@ -7,7 +7,7 @@ This repo uses a multi-context domain layout. Each context has its own `CONTEXT.
 - **Ability** — `packages/ability/CONTEXT.md`. Covers Ability terminology.
 - **Attribute** — `packages/attribute/CONTEXT.md`. Covers Attribute terminology.
 - **Creature** — `packages/creature/CONTEXT.md`. Covers Creature terminology.
-- **Combat** — `packages/combat/CONTEXT.md`. Covers Combat terminology.
+- **Combat** — `packages/combat/CONTEXT.md`. Covers Combat terminology across `@pocket-forge/combat` (state) and `@pocket-forge/combat-engine` (engine and extension contracts).
 - **Duelmon** — `plugins/duelmon/CONTEXT.md`. Covers the private Duelmon action plugin, action set, and dataset.
 - **Game Session** — `packages/game-session/CONTEXT.md`. Covers Game Session terminology.
 - **Move** — `packages/move/CONTEXT.md`. Covers Move terminology.

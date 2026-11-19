@@ -1,4 +1,4 @@
-import type { CombatActionDescriptor } from '@pocket-forge/combat/domain';
+import type { CombatActionDescriptor } from '@pocket-forge/combat-engine/domain';
 
 import type DuelmonActionResolver from './duelmon-action.resolver';
 

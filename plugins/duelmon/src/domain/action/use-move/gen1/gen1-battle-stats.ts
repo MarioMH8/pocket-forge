@@ -1,8 +1,9 @@
 import Either from '@hexadrop/either';
 import type { AttributeDefinition } from '@pocket-forge/attribute/domain';
 import { AttributeDefinition as AttributeDefinitionEntity } from '@pocket-forge/attribute/domain';
-import type { Combatant, CombatResolutionError, CombatResolutionErrorReason } from '@pocket-forge/combat/domain';
-import { CombatResolutionError as CombatResolutionErrorValue } from '@pocket-forge/combat/domain';
+import type { Combatant } from '@pocket-forge/combat/domain';
+import type { CombatResolutionError, CombatResolutionErrorReason } from '@pocket-forge/combat-engine/domain';
+import { CombatResolutionError as CombatResolutionErrorValue } from '@pocket-forge/combat-engine/domain';
 
 import { DuelmonCombatAttributes } from '../../combat-attributes';
 

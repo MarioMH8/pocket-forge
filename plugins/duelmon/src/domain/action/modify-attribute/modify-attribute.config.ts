@@ -1,7 +1,7 @@
 import Either from '@hexadrop/either';
 import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeDefinition } from '@pocket-forge/attribute/domain';
-import type { CombatMoveBinding, CombatResolutionError } from '@pocket-forge/combat/domain';
+import type { CombatMoveBinding, CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 
 import { DuelmonErrors } from '../duelmon.errors';
 import type { DuelmonTargetScope } from '../duelmon-target';

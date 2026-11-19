@@ -12,7 +12,7 @@ contracts instead of importing implementation details.
 
 - `DuelmonCombatPlugin` resolves the `modifyAttribute` and `useMove` actions.
 - Authored Move-to-action bindings are validated by `CombatActionSet.create`
-  from `@pocket-forge/combat/domain` against the plugin catalog.
+  from `@pocket-forge/combat-engine/domain` against the plugin catalog.
 - `DuelmonDatasetBuilder.build` turns the pinned Showdown tables into a
   curated, serializable Gen 1 dataset.
 - `DuelmonCatalog.fromDataset` bridges that dataset to neutral `Species` and

@@ -1,5 +1,6 @@
 import type Either from '@hexadrop/either';
-import type { Combatant, CombatResolutionError } from '@pocket-forge/combat/domain';
+import type { Combatant } from '@pocket-forge/combat/domain';
+import type { CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 import type RandomPocket from '@pocket-forge/rng/domain';
 
 import type { DuelmonMoveCategory, DuelmonType } from '../../../duelmon.types';

@@ -1,8 +1,9 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
-import type { Combat, CombatCompletionRule } from '@pocket-forge/combat/domain';
-import { CombatActionSet, CombatEngine, CombatSetup } from '@pocket-forge/combat/domain';
-import { CombatRulesetMother } from '@pocket-forge/combat/mother/domain';
-import { OneVersusOneCombatRuleset } from '@pocket-forge/combat/rulesets';
+import type { Combat } from '@pocket-forge/combat/domain';
+import type { CombatCompletionRule } from '@pocket-forge/combat-engine/domain';
+import { CombatActionSet, CombatEngine, CombatSetup } from '@pocket-forge/combat-engine/domain';
+import { CombatRulesetMother } from '@pocket-forge/combat-engine/mother/domain';
+import { OneVersusOneCombatRuleset } from '@pocket-forge/combat-engine/rulesets';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
 

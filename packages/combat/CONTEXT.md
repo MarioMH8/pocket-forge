@@ -2,6 +2,8 @@
 
 Defines the neutral combat session model and the vocabulary through which authored rules and external resolution logic interact.
 
+The context spans two packages: `@pocket-forge/combat` holds the neutral state (Combat, Combatant, Combatant Group), and `@pocket-forge/combat-engine` holds the Combat Engine and the extension contracts (action plugin, action set, ruleset, completion rule, transition, event, outcome).
+
 ## Language
 
 **Combat**:
@@ -25,7 +27,7 @@ A concrete combat format that declares format attributes and composition constra
 _Avoid_: Plugin, battle configuration, embedded ruleset
 
 **Built-in Combat Rules**:
-The ruleset and completion-rule implementations shipped by `@pocket-forge/combat` under `./rulesets`. Authors import them directly or extend `CombatRuleset` with their own format.
+The ruleset and completion-rule implementations shipped by `@pocket-forge/combat-engine` under `./rulesets`. Authors import them directly or extend `CombatRuleset` with their own format.
 _Avoid_: Reference rules, default plugin
 
 **Combat Action**:
@@ -45,7 +47,7 @@ The built-in completion rule that ends Combat when a Combatant attribute satisfi
 _Avoid_: Hit-point check, knockout rule
 
 **Combat Engine**:
-A pure orchestrator that composes a ruleset, action plugin, action set, and completion rule; it validates composition, delegates resolution, and evaluates completion.
+A pure orchestrator that composes a ruleset, action plugin, action set, and completion rule; it validates composition, delegates resolution, and evaluates completion. It lives in `@pocket-forge/combat-engine`.
 _Avoid_: Game loop, battle manager
 
 **Combat Transition**:

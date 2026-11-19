@@ -1,6 +1,6 @@
 import Either from '@hexadrop/either';
-import type { CombatResolutionErrorReason } from '@pocket-forge/combat/domain';
-import { CombatResolutionError } from '@pocket-forge/combat/domain';
+import type { CombatResolutionErrorReason } from '@pocket-forge/combat-engine/domain';
+import { CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 
 /**
  * Result helpers for Duelmon action resolutions.

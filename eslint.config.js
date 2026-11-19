@@ -53,9 +53,31 @@ export default hexadrop(
 				{
 					patterns: [
 						{
+							group: ['@pocket-forge/combat-engine', '@pocket-forge/combat-engine/*'],
+							message:
+								'Combat state cannot depend on the Combat Engine. The engine depends on combat, never the reverse.',
+						},
+						{
 							group: ['@pocket-forge/duelmon', '@pocket-forge/duelmon/*'],
 							message:
 								'The neutral Combat core cannot depend on Duelmon implementations. Move this logic into plugins/duelmon.',
+						},
+					],
+				},
+			],
+		},
+	},
+	{
+		files: ['packages/combat-engine/**/*.ts'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: [
+						{
+							group: ['@pocket-forge/duelmon', '@pocket-forge/duelmon/*'],
+							message:
+								'The neutral Combat Engine cannot depend on Duelmon implementations. Move this logic into plugins/duelmon.',
 						},
 					],
 				},

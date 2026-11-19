@@ -4,7 +4,7 @@ import type {
 	CombatMoveBinding,
 	CombatResolutionError,
 	CombatTransition,
-} from '@pocket-forge/combat/domain';
+} from '@pocket-forge/combat-engine/domain';
 
 import type { DuelmonCombatInput } from './duelmon-combat.input';
 

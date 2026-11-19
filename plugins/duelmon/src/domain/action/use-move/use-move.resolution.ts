@@ -1,5 +1,6 @@
 import Either from '@hexadrop/either';
-import type { Combat, Combatant, CombatResolutionError } from '@pocket-forge/combat/domain';
+import type { Combat, Combatant } from '@pocket-forge/combat/domain';
+import type { CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type { Move } from '@pocket-forge/move/domain';
 import type { Species } from '@pocket-forge/species/domain';

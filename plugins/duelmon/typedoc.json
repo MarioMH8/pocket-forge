@@ -27,12 +27,19 @@
 		},
 		"@pocket-forge/combat": {
 			"Combat": "/api/combat/",
-			"CombatActionPlugin": "/api/combat/",
-			"CombatActionSet": "/api/combat/",
-			"CombatActionSet.create": "/api/combat/",
-			"CombatRuleset": "/api/combat/",
-			"CombatRulesetPrimitives": "/api/combat/",
+			"Combatant": "/api/combat/",
+			"CombatantGroup": "/api/combat/",
+			"CombatPrimitives": "/api/combat/",
+			"CombatTransitionError": "/api/combat/",
 			"default": "/api/combat/"
+		},
+		"@pocket-forge/combat-engine": {
+			"CombatActionPlugin": "/api/combat-engine/",
+			"CombatActionSet": "/api/combat-engine/",
+			"CombatActionSet.create": "/api/combat-engine/",
+			"CombatRuleset": "/api/combat-engine/",
+			"CombatRulesetPrimitives": "/api/combat-engine/",
+			"default": "/api/combat-engine/"
 		},
 		"@pocket-forge/creature": {
 			"CreaturePrimitives": "/api/creature/"
