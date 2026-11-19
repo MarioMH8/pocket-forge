@@ -11,24 +11,24 @@ import type {
 } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity, CombatResolutionError } from '@pocket-forge/combat/domain';
 
-import type { ReferenceOperation, ReferenceTargetScope } from './modify-attribute.config';
-import { isReferenceOperation, isReferenceTargetScope, REFERENCE_CONFIG_KEYS } from './modify-attribute.config';
-import ReferenceCombatActionCatalog from './reference-combat.catalog';
-import { MODIFY_ATTRIBUTE_ACTION_ID } from './reference-combat.constants';
-import type { ReferenceCombatInput, ReferenceCombatTarget } from './reference-combat.input';
-import { parseReferenceCombatInput } from './reference-combat.input';
+import { MODIFY_ATTRIBUTE_ACTION_ID } from './duelmon.constants';
+import DuelmonActionCatalog from './duelmon-action.catalog';
+import type { DuelmonCombatInput, DuelmonCombatTarget } from './duelmon-combat.input';
+import { parseDuelmonCombatInput } from './duelmon-combat.input';
+import type { DuelmonOperation, DuelmonTargetScope } from './modify-attribute.config';
+import { DUELMON_CONFIG_KEYS, isDuelmonOperation, isDuelmonTargetScope } from './modify-attribute.config';
 
 interface ModifyAttributeConfig {
 	readonly amount: number;
 	readonly attributeKey: string;
-	readonly operation: ReferenceOperation;
+	readonly operation: DuelmonOperation;
 	readonly probability: number | undefined;
-	readonly scope: ReferenceTargetScope;
+	readonly scope: DuelmonTargetScope;
 }
 
 interface ResolvedTarget {
 	readonly id: string | undefined;
-	readonly scope: ReferenceTargetScope;
+	readonly scope: DuelmonTargetScope;
 	readonly values: AttributeValues;
 }
 
@@ -46,26 +46,26 @@ function findCombatant(combat: Combat, combatantId: string) {
 
 function readModifyAttributeConfig(binding: CombatMoveBinding): ModifyAttributeConfig | undefined {
 	const config = binding.config.toPrimitives();
-	const amount = config[REFERENCE_CONFIG_KEYS.amount];
+	const amount = config[DUELMON_CONFIG_KEYS.amount];
 
 	if (typeof amount !== 'number' || !Number.isFinite(amount)) {
 		return undefined;
 	}
 
-	const attributeKey = config[REFERENCE_CONFIG_KEYS.attributeKey];
+	const attributeKey = config[DUELMON_CONFIG_KEYS.attributeKey];
 
 	if (typeof attributeKey !== 'string' || attributeKey.trim().length === 0) {
 		return undefined;
 	}
 
-	const operation = config[REFERENCE_CONFIG_KEYS.operation];
-	const scope = config[REFERENCE_CONFIG_KEYS.scope];
+	const operation = config[DUELMON_CONFIG_KEYS.operation];
+	const scope = config[DUELMON_CONFIG_KEYS.scope];
 
-	if (!isReferenceOperation(operation) || !isReferenceTargetScope(scope)) {
+	if (!isDuelmonOperation(operation) || !isDuelmonTargetScope(scope)) {
 		return undefined;
 	}
 
-	const probability = config[REFERENCE_CONFIG_KEYS.probability];
+	const probability = config[DUELMON_CONFIG_KEYS.probability];
 
 	if (probability !== undefined && (typeof probability !== 'number' || !Number.isFinite(probability))) {
 		return undefined;
@@ -74,10 +74,10 @@ function readModifyAttributeConfig(binding: CombatMoveBinding): ModifyAttributeC
 	return { amount, attributeKey, operation, probability, scope };
 }
 
-function resolveReferenceTarget(
+function resolveDuelmonTarget(
 	combat: Combat,
-	target: ReferenceCombatTarget,
-	expectedScope: ReferenceTargetScope
+	target: DuelmonCombatTarget,
+	expectedScope: DuelmonTargetScope
 ): Either<CombatResolutionError[], ResolvedTarget> {
 	if (target.scope !== expectedScope) {
 		return Either.left([
@@ -241,22 +241,22 @@ function buildEvent({ after, before, config, succeeded, target }: EventData): Co
 }
 
 /**
- * Reference Combat plugin.
+ * Duelmon Combat plugin.
  *
  * It owns its action catalog, its input shape, and the `modifyAttribute`
  * resolution rules. Attribute Definitions are injected by the composition edge
  * so the plugin validates and saturates against the project attribute catalog.
  */
-class ReferenceCombatPlugin implements CombatActionPlugin {
+class DuelmonCombatPlugin implements CombatActionPlugin {
 	/**
 	 * Actions registered by this plugin.
 	 */
-	readonly actions: ReferenceCombatActionCatalog;
+	readonly actions: DuelmonActionCatalog;
 	private readonly attributeDefinitions: readonly AttributeDefinition[];
 
 	constructor(attributeDefinitions: readonly AttributeDefinition[]) {
 		this.attributeDefinitions = attributeDefinitions;
-		this.actions = new ReferenceCombatActionCatalog();
+		this.actions = new DuelmonActionCatalog();
 	}
 
 	/**
@@ -269,13 +269,13 @@ class ReferenceCombatPlugin implements CombatActionPlugin {
 	 * @returns The resulting transition, or every resolution failure.
 	 */
 	resolve(context: CombatActionContext): Either<CombatResolutionError[], CombatTransition> {
-		const parsedInput = parseReferenceCombatInput(context.input);
+		const parsedInput = parseDuelmonCombatInput(context.input);
 
 		if (parsedInput.isLeft()) {
 			return Either.left(parsedInput.getLeft());
 		}
 
-		const input: ReferenceCombatInput = parsedInput.getRight();
+		const input: DuelmonCombatInput = parsedInput.getRight();
 		const binding = context.actionSet.find(input.moveId);
 
 		if (!binding) {
@@ -320,7 +320,7 @@ class ReferenceCombatPlugin implements CombatActionPlugin {
 			]);
 		}
 
-		const resolvedTarget = resolveReferenceTarget(context.combat, input.target, config.scope);
+		const resolvedTarget = resolveDuelmonTarget(context.combat, input.target, config.scope);
 
 		if (resolvedTarget.isLeft()) {
 			return Either.left(resolvedTarget.getLeft());
@@ -334,7 +334,7 @@ class ReferenceCombatPlugin implements CombatActionPlugin {
 				new CombatResolutionError(
 					'invalid-target',
 					`Attribute "${config.attributeKey}" is not defined for scope "${config.scope}"`,
-					`config.${REFERENCE_CONFIG_KEYS.attributeKey}`
+					`config.${DUELMON_CONFIG_KEYS.attributeKey}`
 				),
 			]);
 		}
@@ -344,7 +344,7 @@ class ReferenceCombatPlugin implements CombatActionPlugin {
 				new CombatResolutionError(
 					'invalid-target',
 					`Attribute "${config.attributeKey}" must be numeric for the "${config.operation}" operation`,
-					`config.${REFERENCE_CONFIG_KEYS.operation}`
+					`config.${DUELMON_CONFIG_KEYS.operation}`
 				),
 			]);
 		}
@@ -365,7 +365,7 @@ class ReferenceCombatPlugin implements CombatActionPlugin {
 				new CombatResolutionError(
 					'rejected',
 					`Invalid value for attribute "${config.attributeKey}": ${validationError.message}`,
-					`config.${REFERENCE_CONFIG_KEYS.amount}`
+					`config.${DUELMON_CONFIG_KEYS.amount}`
 				),
 			]);
 		}
@@ -396,4 +396,4 @@ class ReferenceCombatPlugin implements CombatActionPlugin {
 	}
 }
 
-export default ReferenceCombatPlugin;
+export default DuelmonCombatPlugin;

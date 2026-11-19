@@ -8,11 +8,7 @@ import {
 	COMPLETION_CONFIG_KEYS,
 	OneVersusOneCombatRuleset,
 } from '@pocket-forge/combat/rulesets';
-import {
-	MODIFY_ATTRIBUTE_ACTION_ID,
-	REFERENCE_CONFIG_KEYS,
-	ReferenceCombatPlugin,
-} from '@pocket-forge/combat-reference/domain';
+import { DUELMON_CONFIG_KEYS, DuelmonCombatPlugin, MODIFY_ATTRIBUTE_ACTION_ID } from '@pocket-forge/duelmon/domain';
 
 const POWER = AttributeDefinitionMother.number({
 	constraints: { max: 100, min: 0 },
@@ -80,46 +76,46 @@ function combatPrimitives(overrides?: Partial<CombatPrimitives>, powers?: PowerO
 	};
 }
 
-function referenceCombat(overrides?: Partial<CombatPrimitives>, powers?: PowerOverrides): Combat {
+function duelmonCombat(overrides?: Partial<CombatPrimitives>, powers?: PowerOverrides): Combat {
 	return CombatEntity.fromPrimitives(combatPrimitives(overrides, powers));
 }
 
-function referencePlugin(): ReferenceCombatPlugin {
-	return new ReferenceCombatPlugin(ATTRIBUTE_DEFINITIONS);
+function duelmonPlugin(): DuelmonCombatPlugin {
+	return new DuelmonCombatPlugin(ATTRIBUTE_DEFINITIONS);
 }
 
-const REFERENCE_BINDINGS: readonly CombatMoveBindingPrimitives[] = [
+const DUELMON_BINDINGS: readonly CombatMoveBindingPrimitives[] = [
 	{
 		actionId: MODIFY_ATTRIBUTE_ACTION_ID,
 		config: {
-			[REFERENCE_CONFIG_KEYS.amount]: 5,
-			[REFERENCE_CONFIG_KEYS.attributeKey]: 'power',
-			[REFERENCE_CONFIG_KEYS.operation]: 'add',
-			[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+			[DUELMON_CONFIG_KEYS.amount]: 5,
+			[DUELMON_CONFIG_KEYS.attributeKey]: 'power',
+			[DUELMON_CONFIG_KEYS.operation]: 'add',
+			[DUELMON_CONFIG_KEYS.scope]: 'combatant',
 		},
 		moveId: 'move-1',
 	},
 	{
 		actionId: MODIFY_ATTRIBUTE_ACTION_ID,
 		config: {
-			[REFERENCE_CONFIG_KEYS.amount]: 25,
-			[REFERENCE_CONFIG_KEYS.attributeKey]: 'power',
-			[REFERENCE_CONFIG_KEYS.operation]: 'set',
-			[REFERENCE_CONFIG_KEYS.probability]: 0.5,
-			[REFERENCE_CONFIG_KEYS.scope]: 'group',
+			[DUELMON_CONFIG_KEYS.amount]: 25,
+			[DUELMON_CONFIG_KEYS.attributeKey]: 'power',
+			[DUELMON_CONFIG_KEYS.operation]: 'set',
+			[DUELMON_CONFIG_KEYS.probability]: 0.5,
+			[DUELMON_CONFIG_KEYS.scope]: 'group',
 		},
 		moveId: 'move-2',
 	},
 ];
 
-function referenceBindings(): CombatMoveBindingPrimitives[] {
-	return REFERENCE_BINDINGS.map(binding => ({ ...binding, config: { ...binding.config } }));
+function duelmonBindings(): CombatMoveBindingPrimitives[] {
+	return DUELMON_BINDINGS.map(binding => ({ ...binding, config: { ...binding.config } }));
 }
 
-function referenceActionSet(config: AttributeValues, moveId = 'move-1'): CombatActionSet {
+function duelmonActionSet(config: AttributeValues, moveId = 'move-1'): CombatActionSet {
 	return CombatActionSet.create(
 		{ bindings: [{ actionId: MODIFY_ATTRIBUTE_ACTION_ID, config, moveId }] },
-		referencePlugin().actions
+		duelmonPlugin().actions
 	).getRight();
 }
 
@@ -138,8 +134,8 @@ export {
 	COMPLETION_ATTRIBUTE_DEFINITIONS,
 	completionRuleset,
 	DEFAULT_COMPLETION_ATTRIBUTES,
-	referenceActionSet,
-	referenceBindings,
-	referenceCombat,
-	referencePlugin,
+	duelmonActionSet,
+	duelmonBindings,
+	duelmonCombat,
+	duelmonPlugin,
 };

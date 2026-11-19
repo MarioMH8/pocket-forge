@@ -44,7 +44,7 @@ export default defineConfig({
 						{ autogenerate: { directory: 'api/ability' } },
 						{ autogenerate: { directory: 'api/attribute' } },
 						{ autogenerate: { directory: 'api/combat' } },
-						{ autogenerate: { directory: 'api/combat-reference' } },
+						{ autogenerate: { directory: 'api/duelmon' } },
 						{ autogenerate: { directory: 'api/creature' } },
 						{ autogenerate: { directory: 'api/game-session' } },
 						{ autogenerate: { directory: 'api/move' } },

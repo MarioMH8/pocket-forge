@@ -2,16 +2,16 @@ import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
 import { CombatEngine, CombatSetup } from '@pocket-forge/combat/domain';
 import { ThresholdCombatCompletionRule } from '@pocket-forge/combat/rulesets';
-import { REFERENCE_CONFIG_KEYS } from '@pocket-forge/combat-reference/domain';
+import { DUELMON_CONFIG_KEYS } from '@pocket-forge/duelmon/domain';
 import { describe, expect, it } from 'bun:test';
 
 import {
 	ATTRIBUTE_DEFINITIONS,
 	completionRuleset,
-	referenceActionSet,
-	referenceCombat,
-	referencePlugin,
-} from '../support/reference.fixtures';
+	duelmonActionSet,
+	duelmonCombat,
+	duelmonPlugin,
+} from '../support/duelmon.fixtures';
 
 function combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
 	return combat.groups
@@ -20,19 +20,19 @@ function combatantPower(combat: Combat, combatantId: string): AttributeValue | u
 		?.attributes.toPrimitives()['power'];
 }
 
-describe('Reference completion through CombatEngine', () => {
+describe('Duelmon completion through CombatEngine', () => {
 	it('completes combat when the threshold rule is reached', () => {
 		const ruleset = completionRuleset();
-		const plugin = referencePlugin();
-		const actionSet = referenceActionSet({
-			[REFERENCE_CONFIG_KEYS.amount]: 25,
-			[REFERENCE_CONFIG_KEYS.attributeKey]: 'power',
-			[REFERENCE_CONFIG_KEYS.operation]: 'subtract',
-			[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+		const plugin = duelmonPlugin();
+		const actionSet = duelmonActionSet({
+			[DUELMON_CONFIG_KEYS.amount]: 25,
+			[DUELMON_CONFIG_KEYS.attributeKey]: 'power',
+			[DUELMON_CONFIG_KEYS.operation]: 'subtract',
+			[DUELMON_CONFIG_KEYS.scope]: 'combatant',
 		});
 		const completion = ThresholdCombatCompletionRule.create(ruleset, ATTRIBUTE_DEFINITIONS).getRight();
 		const engine = new CombatEngine(CombatSetup.create({ actions: plugin, actionSet, completion, ruleset }));
-		const combat = referenceCombat();
+		const combat = duelmonCombat();
 		const input = {
 			actorId: 'combatant-a',
 			moveId: 'move-1',

@@ -7,16 +7,16 @@ import type {
 } from '@pocket-forge/combat/domain';
 import { CombatActionSet, CombatEngine, CombatSetup } from '@pocket-forge/combat/domain';
 import { OneVersusOneCombatRuleset, ThresholdCombatCompletionRule } from '@pocket-forge/combat/rulesets';
-import { MODIFY_ATTRIBUTE_ACTION_ID, REFERENCE_CONFIG_KEYS } from '@pocket-forge/combat-reference/domain';
+import { DUELMON_CONFIG_KEYS, MODIFY_ATTRIBUTE_ACTION_ID } from '@pocket-forge/duelmon/domain';
 import { describe, expect, it } from 'bun:test';
 
 import {
 	ATTRIBUTE_DEFINITIONS,
 	COMPLETION_ATTRIBUTE_DEFINITIONS,
 	DEFAULT_COMPLETION_ATTRIBUTES,
-	referenceCombat,
-	referencePlugin,
-} from '../domain/support/reference.fixtures';
+	duelmonCombat,
+	duelmonPlugin,
+} from '../domain/support/duelmon.fixtures';
 
 const RULESET_PRIMITIVES: CombatRulesetPrimitives = {
 	attributes: { ...DEFAULT_COMPLETION_ATTRIBUTES },
@@ -27,21 +27,21 @@ const BINDINGS: readonly CombatMoveBindingPrimitives[] = [
 	{
 		actionId: MODIFY_ATTRIBUTE_ACTION_ID,
 		config: {
-			[REFERENCE_CONFIG_KEYS.amount]: 25,
-			[REFERENCE_CONFIG_KEYS.attributeKey]: 'power',
-			[REFERENCE_CONFIG_KEYS.operation]: 'subtract',
-			[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+			[DUELMON_CONFIG_KEYS.amount]: 25,
+			[DUELMON_CONFIG_KEYS.attributeKey]: 'power',
+			[DUELMON_CONFIG_KEYS.operation]: 'subtract',
+			[DUELMON_CONFIG_KEYS.scope]: 'combatant',
 		},
 		moveId: 'move-1',
 	},
 	{
 		actionId: MODIFY_ATTRIBUTE_ACTION_ID,
 		config: {
-			[REFERENCE_CONFIG_KEYS.amount]: 45,
-			[REFERENCE_CONFIG_KEYS.attributeKey]: 'power',
-			[REFERENCE_CONFIG_KEYS.operation]: 'set',
-			[REFERENCE_CONFIG_KEYS.probability]: 1,
-			[REFERENCE_CONFIG_KEYS.scope]: 'group',
+			[DUELMON_CONFIG_KEYS.amount]: 45,
+			[DUELMON_CONFIG_KEYS.attributeKey]: 'power',
+			[DUELMON_CONFIG_KEYS.operation]: 'set',
+			[DUELMON_CONFIG_KEYS.probability]: 1,
+			[DUELMON_CONFIG_KEYS.scope]: 'group',
 		},
 		moveId: 'move-2',
 	},
@@ -53,7 +53,7 @@ function createRuleset(): CombatRuleset {
 
 function compose() {
 	const ruleset = createRuleset();
-	const plugin = referencePlugin();
+	const plugin = duelmonPlugin();
 	const actionSet = CombatActionSet.create({ bindings: BINDINGS }, plugin.actions).getRight();
 	const completion = ThresholdCombatCompletionRule.create(ruleset, ATTRIBUTE_DEFINITIONS).getRight();
 
@@ -100,7 +100,7 @@ describe('Extensible combat scenario', () => {
 		expect(ruleset).toBeInstanceOf(OneVersusOneCombatRuleset);
 		expect(ruleset.groupConstraints).toEqual(OneVersusOneCombatRuleset.CONSTRAINTS);
 
-		const plugin = referencePlugin();
+		const plugin = duelmonPlugin();
 		const actionSetResult = CombatActionSet.create({ bindings: BINDINGS }, plugin.actions);
 
 		expect(actionSetResult.isRight()).toBe(true);
@@ -109,9 +109,9 @@ describe('Extensible combat scenario', () => {
 
 		expect(actionSet.bindings).toHaveLength(2);
 		expect(actionSet.find('move-1')?.actionId).toBe(MODIFY_ATTRIBUTE_ACTION_ID);
-		expect(actionSet.find('move-1')?.config.toPrimitives()[REFERENCE_CONFIG_KEYS.scope]).toBe('combatant');
-		expect(actionSet.find('move-2')?.config.toPrimitives()[REFERENCE_CONFIG_KEYS.scope]).toBe('group');
-		expect(actionSet.find('move-2')?.config.toPrimitives()[REFERENCE_CONFIG_KEYS.probability]).toBe(1);
+		expect(actionSet.find('move-1')?.config.toPrimitives()[DUELMON_CONFIG_KEYS.scope]).toBe('combatant');
+		expect(actionSet.find('move-2')?.config.toPrimitives()[DUELMON_CONFIG_KEYS.scope]).toBe('group');
+		expect(actionSet.find('move-2')?.config.toPrimitives()[DUELMON_CONFIG_KEYS.probability]).toBe(1);
 
 		const completion = ThresholdCombatCompletionRule.create(ruleset, ATTRIBUTE_DEFINITIONS);
 
@@ -121,7 +121,7 @@ describe('Extensible combat scenario', () => {
 
 	it('rejects an unknown target without mutating the initial combat', () => {
 		const { engine } = compose();
-		const combat = referenceCombat();
+		const combat = duelmonCombat();
 		const before = combat.toPrimitives();
 
 		const result = engine.resolve(combat, {
@@ -137,7 +137,7 @@ describe('Extensible combat scenario', () => {
 
 	it('replays a probabilistic modification from the same combat and RandomPocket state', () => {
 		const { engine } = compose();
-		const combat = referenceCombat();
+		const combat = duelmonCombat();
 		const initialRandomPocket = combat.randomPocket.toPrimitives();
 
 		const first = engine.resolve(combat, MOVE_2_INPUT);
@@ -160,7 +160,7 @@ describe('Extensible combat scenario', () => {
 
 	it('crosses the completion threshold with attributes at combat, group, and combatant level', () => {
 		const { engine } = compose();
-		const combat = referenceCombat();
+		const combat = duelmonCombat();
 
 		const moved = engine.resolve(combat, MOVE_2_INPUT);
 
@@ -188,7 +188,7 @@ describe('Extensible combat scenario', () => {
 
 	it('rejects a resolution after completion without producing a successor or events', () => {
 		const { engine } = compose();
-		const moved = engine.resolve(referenceCombat(), MOVE_2_INPUT).getRight();
+		const moved = engine.resolve(duelmonCombat(), MOVE_2_INPUT).getRight();
 		const completed = engine.resolve(moved.combat, MOVE_1_INPUT).getRight();
 		const before = completed.combat.toPrimitives();
 

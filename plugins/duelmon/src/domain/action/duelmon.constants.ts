@@ -1,5 +1,5 @@
 /**
- * Identifier of the reference attribute-modification action.
+ * Identifier of the Duelmon attribute-modification action.
  */
 const MODIFY_ATTRIBUTE_ACTION_ID = 'modifyAttribute';
 

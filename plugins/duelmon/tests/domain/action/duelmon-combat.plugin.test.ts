@@ -1,26 +1,26 @@
 import type { AttributeValue, AttributeValues } from '@pocket-forge/attribute/domain';
 import type { Combat, CombatActionSet } from '@pocket-forge/combat/domain';
 import { CombatActionSet as CombatActionSetEntity } from '@pocket-forge/combat/domain';
-import { MODIFY_ATTRIBUTE_ACTION_ID, REFERENCE_CONFIG_KEYS } from '@pocket-forge/combat-reference/domain';
+import { DUELMON_CONFIG_KEYS, MODIFY_ATTRIBUTE_ACTION_ID } from '@pocket-forge/duelmon/domain';
 import { describe, expect, it } from 'bun:test';
 
-import { referenceActionSet, referenceCombat, referencePlugin } from '../support/reference.fixtures';
+import { duelmonActionSet, duelmonCombat, duelmonPlugin } from '../support/duelmon.fixtures';
 
-const PLUGIN = referencePlugin();
+const PLUGIN = duelmonPlugin();
 const ACTOR_ID = 'combatant-a';
 const MOVE_ID = 'move-1';
 
 function config(overrides: AttributeValues): AttributeValues {
 	return {
-		[REFERENCE_CONFIG_KEYS.attributeKey]: 'power',
-		[REFERENCE_CONFIG_KEYS.operation]: 'set',
-		[REFERENCE_CONFIG_KEYS.scope]: 'combat',
+		[DUELMON_CONFIG_KEYS.attributeKey]: 'power',
+		[DUELMON_CONFIG_KEYS.operation]: 'set',
+		[DUELMON_CONFIG_KEYS.scope]: 'combat',
 		...overrides,
 	};
 }
 
 function actionSet(overrides: AttributeValues, moveId = MOVE_ID): CombatActionSet {
-	return referenceActionSet(config(overrides), moveId);
+	return duelmonActionSet(config(overrides), moveId);
 }
 
 function combatPower(combat: Combat): AttributeValue | undefined {
@@ -38,12 +38,12 @@ function combatantPower(combat: Combat, combatantId: string): AttributeValue | u
 		?.attributes.toPrimitives()['power'];
 }
 
-describe('ReferenceCombatPlugin', () => {
+describe('DuelmonCombatPlugin', () => {
 	describe('modifyAttribute set', () => {
 		it('sets a combat attribute and emits a serializable success event', () => {
-			const combat = referenceCombat();
+			const combat = duelmonCombat();
 			const before = combat.toPrimitives();
-			const set = actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 75 });
+			const set = actionSet({ [DUELMON_CONFIG_KEYS.amount]: 75 });
 
 			const result = PLUGIN.resolve({
 				actionSet: set,
@@ -76,10 +76,10 @@ describe('ReferenceCombatPlugin', () => {
 		});
 
 		it('sets a group attribute', () => {
-			const combat = referenceCombat();
+			const combat = duelmonCombat();
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 55,
-				[REFERENCE_CONFIG_KEYS.scope]: 'group',
+				[DUELMON_CONFIG_KEYS.amount]: 55,
+				[DUELMON_CONFIG_KEYS.scope]: 'group',
 			});
 
 			const result = PLUGIN.resolve({
@@ -97,10 +97,10 @@ describe('ReferenceCombatPlugin', () => {
 		});
 
 		it('sets a combatant attribute', () => {
-			const combat = referenceCombat();
+			const combat = duelmonCombat();
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 15,
-				[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+				[DUELMON_CONFIG_KEYS.amount]: 15,
+				[DUELMON_CONFIG_KEYS.scope]: 'combatant',
 			});
 
 			const result = PLUGIN.resolve({
@@ -114,9 +114,9 @@ describe('ReferenceCombatPlugin', () => {
 		});
 
 		it('rejects a set value outside the definition constraints', () => {
-			const combat = referenceCombat();
+			const combat = duelmonCombat();
 			const before = combat.toPrimitives();
-			const set = actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 200 });
+			const set = actionSet({ [DUELMON_CONFIG_KEYS.amount]: 200 });
 
 			const result = PLUGIN.resolve({
 				actionSet: set,
@@ -126,18 +126,18 @@ describe('ReferenceCombatPlugin', () => {
 
 			expect(result.isLeft()).toBe(true);
 			expect(result.getLeft()[0]?.reason).toBe('rejected');
-			expect(result.getLeft()[0]?.path).toBe(`config.${REFERENCE_CONFIG_KEYS.amount}`);
+			expect(result.getLeft()[0]?.path).toBe(`config.${DUELMON_CONFIG_KEYS.amount}`);
 			expect(combat.toPrimitives()).toEqual(before);
 		});
 	});
 
 	describe('modifyAttribute add and subtract', () => {
 		it('adds to a group attribute', () => {
-			const combat = referenceCombat();
+			const combat = duelmonCombat();
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 15,
-				[REFERENCE_CONFIG_KEYS.operation]: 'add',
-				[REFERENCE_CONFIG_KEYS.scope]: 'group',
+				[DUELMON_CONFIG_KEYS.amount]: 15,
+				[DUELMON_CONFIG_KEYS.operation]: 'add',
+				[DUELMON_CONFIG_KEYS.scope]: 'group',
 			});
 
 			const result = PLUGIN.resolve({
@@ -152,11 +152,11 @@ describe('ReferenceCombatPlugin', () => {
 		});
 
 		it('subtracts from a combatant attribute', () => {
-			const combat = referenceCombat();
+			const combat = duelmonCombat();
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 12,
-				[REFERENCE_CONFIG_KEYS.operation]: 'subtract',
-				[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+				[DUELMON_CONFIG_KEYS.amount]: 12,
+				[DUELMON_CONFIG_KEYS.operation]: 'subtract',
+				[DUELMON_CONFIG_KEYS.scope]: 'combatant',
 			});
 
 			const result = PLUGIN.resolve({
@@ -170,11 +170,11 @@ describe('ReferenceCombatPlugin', () => {
 		});
 
 		it('saturates an add at the definition maximum', () => {
-			const combat = referenceCombat(undefined, { group: 95 });
+			const combat = duelmonCombat(undefined, { group: 95 });
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 20,
-				[REFERENCE_CONFIG_KEYS.operation]: 'add',
-				[REFERENCE_CONFIG_KEYS.scope]: 'group',
+				[DUELMON_CONFIG_KEYS.amount]: 20,
+				[DUELMON_CONFIG_KEYS.operation]: 'add',
+				[DUELMON_CONFIG_KEYS.scope]: 'group',
 			});
 
 			const result = PLUGIN.resolve({
@@ -188,11 +188,11 @@ describe('ReferenceCombatPlugin', () => {
 		});
 
 		it('saturates a subtract at the definition minimum', () => {
-			const combat = referenceCombat(undefined, { combatant: 5 });
+			const combat = duelmonCombat(undefined, { combatant: 5 });
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 20,
-				[REFERENCE_CONFIG_KEYS.operation]: 'subtract',
-				[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+				[DUELMON_CONFIG_KEYS.amount]: 20,
+				[DUELMON_CONFIG_KEYS.operation]: 'subtract',
+				[DUELMON_CONFIG_KEYS.scope]: 'combatant',
 			});
 
 			const result = PLUGIN.resolve({
@@ -206,14 +206,14 @@ describe('ReferenceCombatPlugin', () => {
 		});
 
 		it('rejects add and subtract on a non-numeric attribute', () => {
-			const combat = referenceCombat();
+			const combat = duelmonCombat();
 
 			for (const operation of ['add', 'subtract'] as const) {
 				const set = actionSet({
-					[REFERENCE_CONFIG_KEYS.amount]: 1,
-					[REFERENCE_CONFIG_KEYS.attributeKey]: 'banner',
-					[REFERENCE_CONFIG_KEYS.operation]: operation,
-					[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+					[DUELMON_CONFIG_KEYS.amount]: 1,
+					[DUELMON_CONFIG_KEYS.attributeKey]: 'banner',
+					[DUELMON_CONFIG_KEYS.operation]: operation,
+					[DUELMON_CONFIG_KEYS.scope]: 'combatant',
 				});
 
 				const result = PLUGIN.resolve({
@@ -230,11 +230,11 @@ describe('ReferenceCombatPlugin', () => {
 
 	describe('targeting and binding validation', () => {
 		it('rejects an unknown Move binding', () => {
-			const set = actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 1 });
+			const set = actionSet({ [DUELMON_CONFIG_KEYS.amount]: 1 });
 
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, moveId: 'missing-move', target: { scope: 'combat' } },
 			});
 
@@ -250,7 +250,7 @@ describe('ReferenceCombatPlugin', () => {
 
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combat' } },
 			});
 
@@ -261,8 +261,8 @@ describe('ReferenceCombatPlugin', () => {
 
 		it('rejects an unknown actor', () => {
 			const result = PLUGIN.resolve({
-				actionSet: actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 1 }),
-				combat: referenceCombat(),
+				actionSet: actionSet({ [DUELMON_CONFIG_KEYS.amount]: 1 }),
+				combat: duelmonCombat(),
 				input: { actorId: 'missing-actor', moveId: MOVE_ID, target: { scope: 'combat' } },
 			});
 
@@ -273,13 +273,13 @@ describe('ReferenceCombatPlugin', () => {
 
 		it('rejects a target scope that does not match the binding', () => {
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 1,
-				[REFERENCE_CONFIG_KEYS.scope]: 'group',
+				[DUELMON_CONFIG_KEYS.amount]: 1,
+				[DUELMON_CONFIG_KEYS.scope]: 'group',
 			});
 
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combat' } },
 			});
 
@@ -290,13 +290,13 @@ describe('ReferenceCombatPlugin', () => {
 
 		it('rejects a missing group target id', () => {
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 1,
-				[REFERENCE_CONFIG_KEYS.scope]: 'group',
+				[DUELMON_CONFIG_KEYS.amount]: 1,
+				[DUELMON_CONFIG_KEYS.scope]: 'group',
 			});
 
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'group' } },
 			});
 
@@ -307,13 +307,13 @@ describe('ReferenceCombatPlugin', () => {
 
 		it('rejects an unknown group target id', () => {
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 1,
-				[REFERENCE_CONFIG_KEYS.scope]: 'group',
+				[DUELMON_CONFIG_KEYS.amount]: 1,
+				[DUELMON_CONFIG_KEYS.scope]: 'group',
 			});
 
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'missing-group', scope: 'group' } },
 			});
 
@@ -322,13 +322,13 @@ describe('ReferenceCombatPlugin', () => {
 
 		it('rejects a missing combatant target id', () => {
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 1,
-				[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+				[DUELMON_CONFIG_KEYS.amount]: 1,
+				[DUELMON_CONFIG_KEYS.scope]: 'combatant',
 			});
 
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combatant' } },
 			});
 
@@ -337,13 +337,13 @@ describe('ReferenceCombatPlugin', () => {
 
 		it('rejects an unknown combatant target id', () => {
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 1,
-				[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+				[DUELMON_CONFIG_KEYS.amount]: 1,
+				[DUELMON_CONFIG_KEYS.scope]: 'combatant',
 			});
 
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'missing-combatant', scope: 'combatant' } },
 			});
 
@@ -352,8 +352,8 @@ describe('ReferenceCombatPlugin', () => {
 
 		it('ignores a combat target id', () => {
 			const result = PLUGIN.resolve({
-				actionSet: actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 60 }),
-				combat: referenceCombat(),
+				actionSet: actionSet({ [DUELMON_CONFIG_KEYS.amount]: 60 }),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'ignored', scope: 'combat' } },
 			});
 
@@ -363,27 +363,27 @@ describe('ReferenceCombatPlugin', () => {
 
 		it('rejects an unknown attribute key', () => {
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 1,
-				[REFERENCE_CONFIG_KEYS.attributeKey]: 'missing',
+				[DUELMON_CONFIG_KEYS.amount]: 1,
+				[DUELMON_CONFIG_KEYS.attributeKey]: 'missing',
 			});
 
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combat' } },
 			});
 
 			expect(result.isLeft()).toBe(true);
 			expect(result.getLeft()[0]?.reason).toBe('invalid-target');
-			expect(result.getLeft()[0]?.path).toBe(`config.${REFERENCE_CONFIG_KEYS.attributeKey}`);
+			expect(result.getLeft()[0]?.path).toBe(`config.${DUELMON_CONFIG_KEYS.attributeKey}`);
 		});
 	});
 
 	describe('input validation', () => {
-		const set = actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 1 });
+		const set = actionSet({ [DUELMON_CONFIG_KEYS.amount]: 1 });
 
 		it('rejects a non-object input', () => {
-			const result = PLUGIN.resolve({ actionSet: set, combat: referenceCombat(), input: 'nope' });
+			const result = PLUGIN.resolve({ actionSet: set, combat: duelmonCombat(), input: 'nope' });
 
 			expect(result.getLeft()[0]?.reason).toBe('invalid-input');
 			expect(result.getLeft()[0]?.path).toBe('input');
@@ -392,7 +392,7 @@ describe('ReferenceCombatPlugin', () => {
 		it('rejects a missing actor id', () => {
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { moveId: MOVE_ID, target: { scope: 'combat' } },
 			});
 
@@ -403,7 +403,7 @@ describe('ReferenceCombatPlugin', () => {
 		it('rejects a missing move id', () => {
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, target: { scope: 'combat' } },
 			});
 
@@ -414,7 +414,7 @@ describe('ReferenceCombatPlugin', () => {
 		it('rejects a target without an object shape', () => {
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: 'combat' },
 			});
 
@@ -425,7 +425,7 @@ describe('ReferenceCombatPlugin', () => {
 		it('rejects an unknown target scope', () => {
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'team' } },
 			});
 
@@ -436,7 +436,7 @@ describe('ReferenceCombatPlugin', () => {
 		it('rejects an empty target id', () => {
 			const result = PLUGIN.resolve({
 				actionSet: set,
-				combat: referenceCombat(),
+				combat: duelmonCombat(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: ' ', scope: 'group' } },
 			});
 
@@ -447,11 +447,11 @@ describe('ReferenceCombatPlugin', () => {
 
 	describe('probability', () => {
 		it('applies the change and advances the RandomPocket exactly once on success', () => {
-			const combat = referenceCombat();
+			const combat = duelmonCombat();
 			const [draw, expectedRandomPocket] = combat.randomPocket.chance(1);
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 75,
-				[REFERENCE_CONFIG_KEYS.probability]: 1,
+				[DUELMON_CONFIG_KEYS.amount]: 75,
+				[DUELMON_CONFIG_KEYS.probability]: 1,
 			});
 
 			const result = PLUGIN.resolve({
@@ -471,12 +471,12 @@ describe('ReferenceCombatPlugin', () => {
 		});
 
 		it('keeps attributes but advances the RandomPocket on failure', () => {
-			const combat = referenceCombat();
+			const combat = duelmonCombat();
 			const before = combat.toPrimitives();
 			const [, expectedRandomPocket] = combat.randomPocket.chance(0);
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 75,
-				[REFERENCE_CONFIG_KEYS.probability]: 0,
+				[DUELMON_CONFIG_KEYS.amount]: 75,
+				[DUELMON_CONFIG_KEYS.probability]: 0,
 			});
 
 			const result = PLUGIN.resolve({
@@ -505,8 +505,8 @@ describe('ReferenceCombatPlugin', () => {
 		});
 
 		it('does not draw when probability is absent', () => {
-			const combat = referenceCombat();
-			const set = actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 75 });
+			const combat = duelmonCombat();
+			const set = actionSet({ [DUELMON_CONFIG_KEYS.amount]: 75 });
 
 			const result = PLUGIN.resolve({
 				actionSet: set,
@@ -520,11 +520,11 @@ describe('ReferenceCombatPlugin', () => {
 		});
 
 		it('replays deterministically from the same Combat and RandomPocket state', () => {
-			const combat = referenceCombat();
+			const combat = duelmonCombat();
 			const set = actionSet({
-				[REFERENCE_CONFIG_KEYS.amount]: 10,
-				[REFERENCE_CONFIG_KEYS.operation]: 'add',
-				[REFERENCE_CONFIG_KEYS.probability]: 0.5,
+				[DUELMON_CONFIG_KEYS.amount]: 10,
+				[DUELMON_CONFIG_KEYS.operation]: 'add',
+				[DUELMON_CONFIG_KEYS.probability]: 0.5,
 			});
 			const context = {
 				actionSet: set,

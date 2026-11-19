@@ -1,10 +1,10 @@
-# @pocket-forge/combat-reference agent guide
+# @pocket-forge/duelmon agent guide
 
-Reference Combat rulesets, action plugin, and authored action set.
+Duelmon Combat action plugin and authored action set.
 
 - **Package manager:** Bun (`bun`)
 - **Build:** `bun run build` (at package folder)
-- **Test:** `bun test plugins/combat-reference --conditions=development` (at root)
+- **Test:** `bun test plugins/duelmon --conditions=development` (at root)
 - **Type-check:** `bun run typecheck` (at root)
 - **Lint:** `bun run lint:fix` (at root)
 
@@ -12,7 +12,7 @@ The package only keeps package-exclusive scripts (`build`, `prepublishOnly`); ev
 
 ## Boundary
 
-This package is a reference implementation outside the neutral Combat core. It may import `@pocket-forge/combat/domain` and `@pocket-forge/attribute/domain`. `packages/combat` must never import it.
+This package is a private implementation outside the neutral Combat core. It may import `@pocket-forge/combat/domain` and `@pocket-forge/attribute/domain`. `packages/combat` must never import it.
 
 ## Conventions
 

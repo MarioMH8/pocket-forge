@@ -1,10 +1,10 @@
 import type { CombatActionCatalog, CombatActionDescriptor } from '@pocket-forge/combat/domain';
 
+import { MODIFY_ATTRIBUTE_ACTION_ID } from './duelmon.constants';
 import { MODIFY_ATTRIBUTE_CONFIG_DEFINITIONS, validateModifyAttributeConfig } from './modify-attribute.config';
-import { MODIFY_ATTRIBUTE_ACTION_ID } from './reference-combat.constants';
 
 /**
- * Declares the reference attribute-modification action.
+ * Declares the Duelmon attribute-modification action.
  */
 const MODIFY_ATTRIBUTE_DESCRIPTOR: CombatActionDescriptor = {
 	configDefinitions: MODIFY_ATTRIBUTE_CONFIG_DEFINITIONS,
@@ -13,9 +13,9 @@ const MODIFY_ATTRIBUTE_DESCRIPTOR: CombatActionDescriptor = {
 };
 
 /**
- * Catalog of actions registered by the reference Combat plugin.
+ * Catalog of actions registered by the Duelmon Combat plugin.
  */
-class ReferenceCombatActionCatalog implements CombatActionCatalog {
+class DuelmonActionCatalog implements CombatActionCatalog {
 	private readonly descriptors: readonly CombatActionDescriptor[];
 
 	constructor(descriptors: readonly CombatActionDescriptor[] = [MODIFY_ATTRIBUTE_DESCRIPTOR]) {
@@ -34,4 +34,4 @@ class ReferenceCombatActionCatalog implements CombatActionCatalog {
 }
 
 export { MODIFY_ATTRIBUTE_DESCRIPTOR };
-export default ReferenceCombatActionCatalog;
+export default DuelmonActionCatalog;

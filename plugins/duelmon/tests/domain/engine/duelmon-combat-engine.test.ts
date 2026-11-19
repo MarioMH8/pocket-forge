@@ -5,12 +5,7 @@ import { CombatRulesetMother } from '@pocket-forge/combat/mother/domain';
 import { OneVersusOneCombatRuleset } from '@pocket-forge/combat/rulesets';
 import { describe, expect, it } from 'bun:test';
 
-import {
-	ATTRIBUTE_DEFINITIONS,
-	referenceBindings,
-	referenceCombat,
-	referencePlugin,
-} from '../support/reference.fixtures';
+import { ATTRIBUTE_DEFINITIONS, duelmonBindings, duelmonCombat, duelmonPlugin } from '../support/duelmon.fixtures';
 
 function combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
 	return combat.groups
@@ -19,7 +14,7 @@ function combatantPower(combat: Combat, combatantId: string): AttributeValue | u
 		?.attributes.toPrimitives()['power'];
 }
 
-describe('Reference combat through CombatEngine', () => {
+describe('Duelmon combat through CombatEngine', () => {
 	it('preserves a modifyAttribute successor across the full composition', () => {
 		const ruleset = OneVersusOneCombatRuleset.create(
 			CombatRulesetMother.primitives({
@@ -27,14 +22,14 @@ describe('Reference combat through CombatEngine', () => {
 			}),
 			[...ATTRIBUTE_DEFINITIONS]
 		).getRight();
-		const plugin = referencePlugin();
-		const actionSet = CombatActionSet.create({ bindings: referenceBindings() }, plugin.actions).getRight();
+		const plugin = duelmonPlugin();
+		const actionSet = CombatActionSet.create({ bindings: duelmonBindings() }, plugin.actions).getRight();
 		const completion: CombatCompletionRule = {
 			// eslint-disable-next-line unicorn/no-useless-undefined
 			evaluate: () => undefined,
 		};
 		const engine = new CombatEngine(CombatSetup.create({ actions: plugin, actionSet, completion, ruleset }));
-		const combat = referenceCombat();
+		const combat = duelmonCombat();
 		const before = combat.toPrimitives();
 
 		expect(engine.validateComposition(combat).isRight()).toBe(true);

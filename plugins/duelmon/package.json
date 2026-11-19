@@ -1,28 +1,28 @@
 {
-	"name": "@pocket-forge/combat-reference",
+	"name": "@pocket-forge/duelmon",
 	"version": "0.0.0",
-	"description": "Reference Combat action plugin and authored action set for Pocket Forge. Proves move logic and authored bindings live outside the neutral core.",
+	"description": "Duelmon Combat action plugin, authored action set, and private Pokémon Showdown Gen 1 dataset extractor for Pocket Forge.",
 	"keywords": [
 		"pocket-forge",
 		"rpg",
 		"game-development",
 		"combat",
 		"plugin",
-		"reference"
+		"duelmon",
+		"pokemon",
+		"dataset"
 	],
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/MarioMH8/pocket-forge.git",
-		"directory": "plugins/combat-reference"
+		"directory": "plugins/duelmon"
 	},
 	"homepage": "https://github.com/MarioMH8/pocket-forge",
 	"bugs": {
 		"url": "https://github.com/MarioMH8/pocket-forge/issues"
 	},
 	"license": "MIT",
-	"publishConfig": {
-		"access": "public"
-	},
+	"private": true,
 	"type": "module",
 	"sideEffects": false,
 	"files": [

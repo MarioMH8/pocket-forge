@@ -186,8 +186,8 @@
         "zod": "^3.0.0",
       },
     },
-    "plugins/combat-reference": {
-      "name": "@pocket-forge/combat-reference",
+    "plugins/duelmon": {
+      "name": "@pocket-forge/duelmon",
       "version": "0.0.0",
       "devDependencies": {
         "@faker-js/faker": "10.6.0",
@@ -620,11 +620,11 @@
 
     "@pocket-forge/combat": ["@pocket-forge/combat@workspace:packages/combat"],
 
-    "@pocket-forge/combat-reference": ["@pocket-forge/combat-reference@workspace:plugins/combat-reference"],
-
     "@pocket-forge/creature": ["@pocket-forge/creature@workspace:packages/creature"],
 
     "@pocket-forge/docs": ["@pocket-forge/docs@workspace:apps/docs"],
+
+    "@pocket-forge/duelmon": ["@pocket-forge/duelmon@workspace:plugins/duelmon"],
 
     "@pocket-forge/game-session": ["@pocket-forge/game-session@workspace:packages/game-session"],
 

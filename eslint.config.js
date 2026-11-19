@@ -53,9 +53,9 @@ export default hexadrop(
 				{
 					patterns: [
 						{
-							group: ['@pocket-forge/combat-reference', '@pocket-forge/combat-reference/*'],
+							group: ['@pocket-forge/duelmon', '@pocket-forge/duelmon/*'],
 							message:
-								'The neutral Combat core cannot depend on reference implementations. Move this logic into plugins/combat-reference.',
+								'The neutral Combat core cannot depend on Duelmon implementations. Move this logic into plugins/duelmon.',
 						},
 					],
 				},
