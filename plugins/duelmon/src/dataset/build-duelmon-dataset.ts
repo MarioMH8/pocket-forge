@@ -1,4 +1,10 @@
-import type { DuelmonDataset, DuelmonMove, DuelmonSpecies } from './duelmon-dataset.types';
+import type {
+	DuelmonAbility,
+	DuelmonDataset,
+	DuelmonMove,
+	DuelmonMoveSecondary,
+	DuelmonSpecies,
+} from './duelmon-dataset.types';
 
 type ShowdownTable = Record<string, unknown>;
 type UnknownRecord = Record<string, unknown>;
@@ -43,7 +49,6 @@ const GEN1_TYPES = [
 	'Dragon',
 ] as const;
 const GEN1_TYPE_SET = new Set<string>(GEN1_TYPES);
-const EXCLUDED_TYPES = new Set(['dark', 'fairy', 'steel', 'stellar']);
 const PHYSICAL_TYPES = new Set(['Bug', 'Fighting', 'Flying', 'Ghost', 'Ground', 'Normal', 'Poison', 'Rock']);
 
 function isRecord(value: unknown): value is UnknownRecord {
@@ -52,7 +57,7 @@ function isRecord(value: unknown): value is UnknownRecord {
 
 function requireRecord(value: unknown, path: string): UnknownRecord {
 	if (!isRecord(value)) {
-		throw new Error(`${path} must be an object`);
+		throw new TypeError(`${path} must be an object`);
 	}
 
 	return value;
@@ -100,14 +105,22 @@ function optionalString(entry: UnknownRecord, key: string): string | undefined {
 	return typeof value === 'string' ? value : undefined;
 }
 
-function readNumericRecord(value: unknown): Readonly<Record<string, number>> {
+function readNumericRecord(value: unknown, path: string): Readonly<Record<string, number>> {
 	if (!isRecord(value)) {
 		return {};
 	}
 
-	const entries = Object.entries(value).filter(([, item]) => typeof item === 'number' && Number.isFinite(item));
+	const result: Record<string, number> = {};
 
-	return Object.fromEntries(entries) as Record<string, number>;
+	for (const [key, item] of Object.entries(value)) {
+		if (typeof item !== 'number' || !Number.isFinite(item)) {
+			throw new TypeError(`${path}.${key} must be a finite number`);
+		}
+
+		result[key] = item;
+	}
+
+	return result;
 }
 
 function optionalMultihit(entry: UnknownRecord): number | readonly number[] | undefined {
@@ -124,28 +137,80 @@ function optionalMultihit(entry: UnknownRecord): number | readonly number[] | un
 	return undefined;
 }
 
+function optionalFraction(entry: UnknownRecord, key: string, path: string): readonly [number, number] | undefined {
+	const value = entry[key];
+
+	if (value === undefined) {
+		return undefined;
+	}
+
+	if (typeof value === 'number' && Number.isFinite(value)) {
+		return [value, 1];
+	}
+
+	if (Array.isArray(value) && value.length === 2) {
+		const numerator: unknown = value[0];
+		const denominator: unknown = value[1];
+
+		if (
+			typeof numerator === 'number' &&
+			typeof denominator === 'number' &&
+			Number.isFinite(numerator) &&
+			Number.isFinite(denominator)
+		) {
+			return [numerator, denominator];
+		}
+	}
+
+	throw new TypeError(`${path}.${key} must be a [numerator, denominator] pair`);
+}
+
+function readSecondary(value: unknown, path: string): DuelmonMoveSecondary | undefined {
+	if (!isRecord(value)) {
+		return undefined;
+	}
+
+	const chance = optionalNumber(value, 'chance');
+	const status = optionalString(value, 'status');
+	const volatileStatus = optionalString(value, 'volatileStatus');
+	const boosts = isRecord(value['boosts']) ? readNumericRecord(value['boosts'], `${path}.boosts`) : undefined;
+	const selfBoosts =
+		isRecord(value['self']) && isRecord(value['self']['boosts'])
+			? readNumericRecord(value['self']['boosts'], `${path}.self.boosts`)
+			: undefined;
+
+	const secondary: DuelmonMoveSecondary = {
+		...(chance !== undefined && { chance }),
+		...(boosts !== undefined && { boosts }),
+		...(status !== undefined && { status }),
+		...(volatileStatus !== undefined && { volatileStatus }),
+		...(selfBoosts !== undefined && { self: { boosts: selfBoosts } }),
+	};
+
+	return Object.keys(secondary).length > 0 ? secondary : undefined;
+}
+
 /**
  * Merges a Gen 1 override onto its base entry.
  *
  * An override that inherits keeps the base data and drops the marker. Any
  * other override replaces the entry entirely, matching Showdown's mod rules.
  */
-function mergeEntry(base: unknown, module_: unknown): UnknownRecord {
+function mergeEntry(base: unknown, overrideEntry: unknown): UnknownRecord {
 	const baseEntry = isRecord(base) ? base : {};
-	const moduleEntry = isRecord(module_) ? module_ : {};
 
-	if (!isRecord(module_)) {
+	if (!isRecord(overrideEntry)) {
 		return baseEntry;
 	}
 
-	if (moduleEntry['inherit'] === true) {
-		const merged = { ...baseEntry, ...moduleEntry };
+	if (overrideEntry['inherit'] === true) {
+		const merged = { ...baseEntry, ...overrideEntry };
 		delete merged['inherit'];
 
 		return merged;
 	}
 
-	return moduleEntry;
+	return overrideEntry;
 }
 
 function readBaseStats(entry: UnknownRecord, path: string): DuelmonSpecies['baseStats'] {
@@ -164,14 +229,20 @@ function readBaseStats(entry: UnknownRecord, path: string): DuelmonSpecies['base
 function buildSpecies(pokedex: ShowdownTable, gen1Pokedex: ShowdownTable): readonly DuelmonSpecies[] {
 	const species: DuelmonSpecies[] = [];
 
-	for (const [id, gen1Entry] of Object.entries(gen1Pokedex)) {
-		const entry = mergeEntry(pokedex[id], gen1Entry);
-		const speciesNumber = entry['num'];
+	for (const [id, baseEntry] of Object.entries(pokedex)) {
+		const base = requireRecord(baseEntry, `pokedex.${id}`);
+		const speciesNumber = base['num'];
 
-		if (typeof speciesNumber !== 'number' || speciesNumber < 1 || speciesNumber > GEN1_SPECIES_MAX) {
+		if (
+			typeof speciesNumber !== 'number' ||
+			speciesNumber < 1 ||
+			speciesNumber > GEN1_SPECIES_MAX ||
+			base['forme'] !== undefined
+		) {
 			continue;
 		}
 
+		const entry = mergeEntry(base, gen1Pokedex[id]);
 		const path = `species.${id}`;
 
 		species.push({
@@ -186,8 +257,8 @@ function buildSpecies(pokedex: ShowdownTable, gen1Pokedex: ShowdownTable): reado
 	return species.toSorted((first, second) => first.num - second.num);
 }
 
-function deriveCategory(baseCategory: string, type: string): DuelmonMove['category'] {
-	if (baseCategory === 'Status') {
+function deriveCategory(category: string, type: string): DuelmonMove['category'] {
+	if (category === 'Status') {
 		return 'Status';
 	}
 
@@ -208,21 +279,22 @@ function buildMove(id: string, baseEntry: UnknownRecord, gen1Entry: unknown): Du
 	const merged = mergeEntry(baseEntry, gen1Entry);
 	const path = `moves.${id}`;
 	const type = readString(merged, 'type', path);
-	const secondary = merged['secondary'];
+	const category = readString(merged, 'category', path);
+	const secondary = readSecondary(merged['secondary'], `${path}.secondary`);
 	const status = optionalString(merged, 'status');
 	const volatileStatus = optionalString(merged, 'volatileStatus');
-	const drain = optionalNumber(merged, 'drain');
-	const recoil = optionalNumber(merged, 'recoil');
+	const drain = optionalFraction(merged, 'drain', path);
+	const recoil = optionalFraction(merged, 'recoil', path);
 	const multihit = optionalMultihit(merged);
 	const critRatio = optionalNumber(merged, 'critRatio');
-	const boosts = isRecord(merged['boosts']) ? readNumericRecord(merged['boosts']) : undefined;
+	const boosts = isRecord(merged['boosts']) ? readNumericRecord(merged['boosts'], `${path}.boosts`) : undefined;
 
 	return {
 		accuracy: readAccuracy(merged),
-		category: deriveCategory(readString(baseEntry, 'category', path), type),
+		category: deriveCategory(category, type),
 		...(critRatio !== undefined && { critRatio }),
 		...(drain !== undefined && { drain }),
-		flags: readNumericRecord(merged['flags']),
+		flags: readNumericRecord(merged['flags'], `${path}.flags`),
 		...(boosts !== undefined && { boosts }),
 		...(multihit !== undefined && { multihit }),
 		id,
@@ -256,19 +328,14 @@ function buildMoves(moves: ShowdownTable, gen1Moves: ShowdownTable): readonly Du
 	return result.toSorted((first, second) => first.num - second.num).map(entry => entry.move);
 }
 
-function buildDamageTaken(baseEntry: UnknownRecord, gen1Entry: unknown): Readonly<Record<string, number>> {
-	const baseDamage = isRecord(baseEntry['damageTaken']) ? baseEntry['damageTaken'] : {};
-	const gen1Record = isRecord(gen1Entry) ? gen1Entry : {};
-	const gen1Damage = isRecord(gen1Record['damageTaken']) ? gen1Record['damageTaken'] : {};
-	const damage: Record<string, unknown> = { ...baseDamage, ...gen1Damage };
+function readDamageTaken(merged: UnknownRecord): Readonly<Record<string, number>> {
+	const damage = isRecord(merged['damageTaken']) ? merged['damageTaken'] : {};
 	const damageTaken: Record<string, number> = {};
 
 	for (const [attackType, value] of Object.entries(damage)) {
-		if (typeof value !== 'number' || !Number.isFinite(value) || !GEN1_TYPE_SET.has(attackType)) {
-			continue;
+		if (typeof value === 'number' && Number.isFinite(value) && GEN1_TYPE_SET.has(attackType)) {
+			damageTaken[attackType] = value;
 		}
-
-		damageTaken[attackType] = value;
 	}
 
 	return damageTaken;
@@ -280,14 +347,11 @@ function buildTypechart(
 ): Readonly<Record<string, Readonly<Record<string, number>>>> {
 	const result: Record<string, Readonly<Record<string, number>>> = {};
 
-	for (const [type, baseEntry] of Object.entries(typechart)) {
+	for (const type of GEN1_TYPES) {
 		const key = type.toLowerCase();
+		const merged = mergeEntry(requireRecord(typechart[key], `typechart.${key}`), gen1Typechart[key]);
 
-		if (EXCLUDED_TYPES.has(key)) {
-			continue;
-		}
-
-		result[key] = buildDamageTaken(requireRecord(baseEntry, `typechart.${type}`), gen1Typechart[type]);
+		result[type] = readDamageTaken(merged);
 	}
 
 	return result;
@@ -307,8 +371,10 @@ function buildDuelmonDataset({ commit, tables }: BuildDuelmonDatasetOptions): Du
 		throw new Error('A Showdown commit is required');
 	}
 
+	const abilities: readonly DuelmonAbility[] = [];
+
 	return {
-		abilities: [],
+		abilities,
 		generation: 1,
 		moves: buildMoves(tables.moves, tables.gen1Moves),
 		source: { commit, repository: 'smogon/pokemon-showdown' },

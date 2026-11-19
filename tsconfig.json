@@ -25,6 +25,7 @@
 				"./plugins/*/src/application/index.ts"
 			],
 			"@pocket-forge/*/domain": ["./packages/*/src/domain/index.ts", "./plugins/*/src/domain/index.ts"],
+			"@pocket-forge/*/dataset": ["./packages/*/src/dataset/index.ts", "./plugins/*/src/dataset/index.ts"],
 			"@pocket-forge/*/infrastructure": [
 				"./packages/*/src/infrastructure/index.ts",
 				"./plugins/*/src/infrastructure/index.ts"

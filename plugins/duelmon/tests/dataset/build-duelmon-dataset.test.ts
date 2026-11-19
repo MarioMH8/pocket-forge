@@ -1,8 +1,6 @@
+import type { DuelmonSpecies, ShowdownTables } from '@pocket-forge/duelmon/dataset';
+import { buildDuelmonDataset } from '@pocket-forge/duelmon/dataset';
 import { describe, expect, it } from 'bun:test';
-
-import type { ShowdownTables } from '../../src/dataset/build-duelmon-dataset';
-import buildDuelmonDataset from '../../src/dataset/build-duelmon-dataset';
-import type { DuelmonSpecies } from '../../src/dataset/duelmon-dataset.types';
 
 const GEN1_ATTACK_TYPES = [
 	'Normal',
@@ -139,14 +137,14 @@ function tables(): ShowdownTables {
 				boosts: { def: -1 },
 				category: 'Physical',
 				critRatio: 2,
-				drain: 50,
+				drain: [1, 2],
 				flags: { contact: 1 },
 				multihit: [2, 5],
 				name: 'Strike',
 				num: 1,
 				pp: 35,
 				priority: 0,
-				recoil: 25,
+				recoil: [33, 100],
 				secondary: { chance: 10, status: 'burn' },
 				status: 'paralysis',
 				target: 'normal',
@@ -250,11 +248,11 @@ describe('buildDuelmonDataset', () => {
 			boosts: { def: -1 },
 			category: 'Physical',
 			critRatio: 2,
-			drain: 50,
+			drain: [1, 2],
 			flags: { contact: 1 },
 			multihit: [2, 5],
 			power: 40,
-			recoil: 25,
+			recoil: [33, 100],
 			secondary: { chance: 10, status: 'burn' },
 			status: 'paralysis',
 			volatileStatus: 'struck',
@@ -285,9 +283,9 @@ describe('buildDuelmonDataset', () => {
 		expect(dataset.typechart).not.toHaveProperty('dark');
 		expect(dataset.typechart).not.toHaveProperty('fairy');
 		expect(dataset.typechart).not.toHaveProperty('steel');
-		expect(Object.keys(dataset.typechart['bug'] ?? {})).toHaveLength(15);
-		expect(dataset.typechart['bug']).toEqual(gen1Damage({ Bug: 2, Ghost: 3, Poison: 1 }));
-		expect(dataset.typechart['fire']).toEqual(gen1Damage({ Fire: 2, Water: 1 }));
+		expect(Object.keys(dataset.typechart['Bug'] ?? {})).toHaveLength(15);
+		expect(dataset.typechart['Bug']).toEqual(gen1Damage({ Bug: 2, Ghost: 3, Poison: 1 }));
+		expect(dataset.typechart['Fire']).toEqual(gen1Damage({ Fire: 2, Water: 1 }));
 	});
 
 	it('pins the source and omits Gen 1 abilities', () => {
