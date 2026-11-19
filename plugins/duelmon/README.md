@@ -29,12 +29,15 @@ c23d2e942c9c0daadb13a7162a385bf78e3c9353
 Run the extractor from the package folder:
 
 ```bash
-bun run extract --source /path/to/pokemon-showdown
+bun run extract --source /path/to/pokemon-showdown [--commit <sha>]
 ```
 
 `--source` points at a checkout or extracted tarball that contains `data/` and
 `data/mods/gen1/`. `--out` is optional and defaults to
-`plugins/duelmon/data/generated/dataset.json`.
+`plugins/duelmon/data/generated/dataset.json`. `--commit` defaults to the
+pinned commit; when `--source` is a git checkout, the extractor verifies that
+its `HEAD` matches the requested commit. An extracted tarball has no git
+metadata, so the requested commit is recorded as-is with a warning.
 
 The default output path is ignored by git. The extractor prints the resulting
 counts; a healthy Gen 1 extraction has 151 species, 165 moves, 15 types, and 0
@@ -45,9 +48,20 @@ The generated file contains:
 - `species` — curated species entries filtered to national numbers 1–151.
 - `moves` — curated move entries filtered to numbers 1–165, with Gen 1
   overrides merged and the Gen 1 category derived from the base category and
-  merged type.
-- `typechart` — the 15 Gen 1 types with only Gen 1 damage relations.
+  merged type. Fractions such as `drain` and `recoil` are `[numerator,
+  denominator]` pairs; `secondary` is sanitized to serializable fields.
+- `typechart` — the 15 Gen 1 types, keyed by capitalized type name (`Bug`,
+  `Fire`, …), with only Gen 1 damage relations.
 - `abilities` — always empty, because Gen 1 has no abilities.
 
 The tests build a small original fixture, so they never need a Showdown
 checkout or the generated file.
+
+## Data and licensing
+
+The plugin code follows the repository license. Pokémon Showdown's data files
+are MIT-licensed, but the Pokémon names, stats, moves, and abilities they
+describe are intellectual property of Nintendo, Game Freak, and The Pokémon
+Company. This package is private, the dataset is never committed, and the
+repository's neutral core and public packages remain free of third-party game
+content. Generate the dataset locally and do not redistribute it.
