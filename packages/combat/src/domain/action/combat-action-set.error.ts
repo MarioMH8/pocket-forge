@@ -9,7 +9,6 @@ type CombatActionSetErrorReason =
 	| 'invalid-config'
 	| 'invalid-move-id'
 	| 'invalid-plugin-id'
-	| 'invalid-version-range'
 	| 'unknown-action';
 
 /**

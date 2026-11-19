@@ -2,21 +2,13 @@ import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeMap } from '@pocket-forge/attribute/domain';
 
-import type ContractVersionValidator from '../ruleset/contract-version.validator';
 import type { CombatActionCatalog } from './combat-action';
 import CombatActionSetError from './combat-action-set.error';
 
 /**
  * Plugin reference declared by a Combat Action Set.
- *
- * `contractVersion` is a version **range** the action set accepts; the
- * compatible exact version is declared by the plugin itself.
  */
 interface CombatActionSetPlugin {
-	/**
-	 * Semver range the action set accepts from the plugin.
-	 */
-	readonly contractVersion: string;
 	/**
 	 * Stable plugin identifier.
 	 */
@@ -144,22 +136,20 @@ class CombatActionSet {
 	 * Validates primitives and builds an immutable action set.
 	 *
 	 * Validation failures are aggregated instead of thrown: empty plugin and
-	 * binding ids, an invalid version range, duplicated Move ids, unknown
-	 * actions, and invalid action configurations.
+	 * binding ids, duplicated Move ids, unknown actions, and invalid action
+	 * configurations.
 	 *
 	 * @param primitives - Serialized action set data.
 	 * @param catalog - Plugin-owned action catalog.
-	 * @param versionValidator - Domain port that validates version ranges.
 	 * @returns A validated action set, or every validation failure.
 	 */
 	static create(
 		primitives: CombatActionSetPrimitives,
-		catalog: CombatActionCatalog,
-		versionValidator: ContractVersionValidator
+		catalog: CombatActionCatalog
 	): Either<CombatActionSetError[], CombatActionSet> {
 		const errors: CombatActionSetError[] = [];
 
-		this.validatePlugin(primitives.plugin, versionValidator, errors);
+		this.validatePlugin(primitives.plugin, errors);
 
 		const bindings: CombatMoveBinding[] = [];
 		const seenMoveIds = new Set<string>();
@@ -315,32 +305,10 @@ class CombatActionSet {
 		return errors;
 	}
 
-	private static validatePlugin(
-		plugin: CombatActionSetPlugin,
-		versionValidator: ContractVersionValidator,
-		errors: CombatActionSetError[]
-	): void {
+	private static validatePlugin(plugin: CombatActionSetPlugin, errors: CombatActionSetError[]): void {
 		if (!this.isNonEmpty(plugin.id)) {
 			errors.push(
 				new CombatActionSetError('invalid-plugin-id', 'Combat action set plugin id is required', 'plugin.id')
-			);
-		}
-
-		if (!this.isNonEmpty(plugin.contractVersion)) {
-			errors.push(
-				new CombatActionSetError(
-					'invalid-version-range',
-					'Combat action set plugin contract version range is required',
-					'plugin.contractVersion'
-				)
-			);
-		} else if (!versionValidator.isValidRange(plugin.contractVersion)) {
-			errors.push(
-				new CombatActionSetError(
-					'invalid-version-range',
-					`Combat action set plugin contract version range "${plugin.contractVersion}" is not valid`,
-					'plugin.contractVersion'
-				)
 			);
 		}
 	}

@@ -10,12 +10,7 @@ export {
 	MODIFY_ATTRIBUTE_DESCRIPTOR,
 	default as ReferenceCombatActionCatalog,
 } from './action/reference-combat.catalog';
-export {
-	MODIFY_ATTRIBUTE_ACTION_ID,
-	REFERENCE_PLUGIN_CONTRACT_RANGE,
-	REFERENCE_PLUGIN_ID,
-	REFERENCE_PLUGIN_VERSION,
-} from './action/reference-combat.constants';
+export { MODIFY_ATTRIBUTE_ACTION_ID, REFERENCE_PLUGIN_ID } from './action/reference-combat.constants';
 export type { ReferenceCombatInput, ReferenceCombatTarget } from './action/reference-combat.input';
 export { default as ReferenceCombatPlugin } from './action/reference-combat.plugin';
 export { default as ReferenceCombatActionSet } from './action/reference-combat-action-set';

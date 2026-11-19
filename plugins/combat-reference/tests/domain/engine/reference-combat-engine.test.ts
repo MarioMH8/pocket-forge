@@ -7,12 +7,7 @@ import { ReferenceCombatActionSet } from '@pocket-forge/combat-reference/domain'
 import { ReferenceCombatActionSetMother } from '@pocket-forge/combat-reference/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
-import {
-	ATTRIBUTE_DEFINITIONS,
-	referenceCombat,
-	referencePlugin,
-	VERSION_VALIDATOR,
-} from '../support/reference.fixtures';
+import { ATTRIBUTE_DEFINITIONS, referenceCombat, referencePlugin } from '../support/reference.fixtures';
 
 function combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
 	return combat.groups
@@ -33,8 +28,7 @@ describe('Reference combat through CombatEngine', () => {
 		const plugin = referencePlugin();
 		const actionSet = ReferenceCombatActionSet.create(
 			ReferenceCombatActionSetMother.bindings(),
-			plugin.actions,
-			VERSION_VALIDATOR
+			plugin.actions
 		).getRight();
 		const completion: CombatCompletionRule = {
 			// eslint-disable-next-line unicorn/no-useless-undefined

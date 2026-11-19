@@ -16,8 +16,6 @@ import type {
 } from '@pocket-forge/combat/domain';
 import { CombatActionSet, CombatResolutionError, CombatRuleset } from '@pocket-forge/combat/domain';
 
-import FakeContractVersionValidator from '../action/fake-contract-version.validator';
-
 const GROUP_CONSTRAINTS = {
 	maxCombatantsPerGroup: 6,
 	maxGroups: 4,
@@ -58,17 +56,14 @@ class FakeActionCatalog implements CombatActionCatalog {
 	}
 }
 
-const VERSION_VALIDATOR = new FakeContractVersionValidator();
-
 function actionSet(overrides?: Partial<CombatActionSetPrimitives>): CombatActionSet {
 	return CombatActionSet.create(
 		{
 			bindings: [{ actionId: 'tackle', config: {}, moveId: 'move-1' }],
-			plugin: { contractVersion: '^1.0.0', id: 'fake-plugin' },
+			plugin: { id: 'fake-plugin' },
 			...overrides,
 		},
-		new FakeActionCatalog(),
-		VERSION_VALIDATOR
+		new FakeActionCatalog()
 	).getRight();
 }
 
@@ -80,7 +75,6 @@ type ResolveBehavior = (context: CombatActionContext) => Either<CombatResolution
 class FakeActionPlugin implements CombatActionPlugin {
 	readonly actions: CombatActionCatalog = new FakeActionCatalog();
 	readonly contexts: CombatActionContext[] = [];
-	readonly contractVersion = '1.0.0';
 	readonly id = 'fake-plugin';
 	resolveWith?: ResolveBehavior;
 	supported = true;

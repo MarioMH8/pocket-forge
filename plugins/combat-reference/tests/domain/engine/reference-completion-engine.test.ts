@@ -15,7 +15,6 @@ import {
 	completionRuleset,
 	referenceCombat,
 	referencePlugin,
-	VERSION_VALIDATOR,
 } from '../support/reference.fixtures';
 
 function combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
@@ -42,8 +41,7 @@ describe('Reference completion through CombatEngine', () => {
 					moveId: 'move-1',
 				},
 			],
-			plugin.actions,
-			VERSION_VALIDATOR
+			plugin.actions
 		).getRight();
 		const completion = ThresholdCombatCompletionRule.create(ruleset, ATTRIBUTE_DEFINITIONS).getRight();
 		const engine = new CombatEngine(CombatSetupMother.create({ actions: plugin, actionSet, completion, ruleset }));

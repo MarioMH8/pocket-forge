@@ -6,13 +6,10 @@ import type {
 	CombatActionPlugin,
 	CombatActionSetPrimitives,
 	CombatTransition,
-	ContractVersionValidator,
 } from '@pocket-forge/combat/domain';
 import { CombatActionSet, CombatResolutionError } from '@pocket-forge/combat/domain';
 import { CombatMother } from '@pocket-forge/combat/mother/domain';
 import { describe, expect, it } from 'bun:test';
-
-import FakeContractVersionValidator from './fake-contract-version.validator';
 
 const TACKLE: CombatActionDescriptor = {
 	configDefinitions: [],
@@ -27,10 +24,7 @@ class TestActionCatalog implements CombatActionCatalog {
 
 class TestActionPlugin implements CombatActionPlugin {
 	readonly actions: CombatActionCatalog = new TestActionCatalog();
-	readonly contractVersion = '1.2.0';
 	readonly id = 'test-plugin';
-
-	constructor(private readonly versionValidator: ContractVersionValidator) {}
 
 	resolve(context: CombatActionContext): Either<CombatResolutionError[], CombatTransition> {
 		const binding = context.actionSet.find('move-1');
@@ -65,44 +59,30 @@ class TestActionPlugin implements CombatActionPlugin {
 	}
 
 	supports(actionSet: CombatActionSet): boolean {
-		return (
-			actionSet.plugin.id === this.id &&
-			this.versionValidator.isValid(this.contractVersion) &&
-			this.versionValidator.isValidRange(actionSet.plugin.contractVersion) &&
-			this.versionValidator.satisfies(this.contractVersion, actionSet.plugin.contractVersion)
-		);
+		return actionSet.plugin.id === this.id;
 	}
 }
 
-const VERSION_VALIDATOR = new FakeContractVersionValidator();
-const PLUGIN = new TestActionPlugin(VERSION_VALIDATOR);
+const PLUGIN = new TestActionPlugin();
 
 function actionSet(overrides?: Partial<CombatActionSetPrimitives>): CombatActionSet {
 	const primitives: CombatActionSetPrimitives = {
 		bindings: [{ actionId: 'tackle', config: {}, moveId: 'move-1' }],
-		plugin: { contractVersion: '^1.0.0', id: 'test-plugin' },
+		plugin: { id: 'test-plugin' },
 		...overrides,
 	};
 
-	return CombatActionSet.create(primitives, PLUGIN.actions, VERSION_VALIDATOR).getRight();
+	return CombatActionSet.create(primitives, PLUGIN.actions).getRight();
 }
 
 describe('CombatActionPlugin', () => {
 	describe('supports', () => {
-		it('accepts an action set with the same plugin id and a compatible range', () => {
+		it('accepts an action set with the same plugin id', () => {
 			expect(PLUGIN.supports(actionSet())).toBe(true);
 		});
 
 		it('rejects an action set targeting another plugin', () => {
-			expect(PLUGIN.supports(actionSet({ plugin: { contractVersion: '^1.0.0', id: 'other-plugin' } }))).toBe(
-				false
-			);
-		});
-
-		it('rejects an action set whose range does not accept the plugin version', () => {
-			expect(PLUGIN.supports(actionSet({ plugin: { contractVersion: '^2.0.0', id: 'test-plugin' } }))).toBe(
-				false
-			);
+			expect(PLUGIN.supports(actionSet({ plugin: { id: 'other-plugin' } }))).toBe(false);
 		});
 	});
 

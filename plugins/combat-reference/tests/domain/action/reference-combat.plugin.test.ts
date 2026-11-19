@@ -1,5 +1,5 @@
 import type { AttributeValue, AttributeValues } from '@pocket-forge/attribute/domain';
-import type { Combat, CombatActionSet, ContractVersionValidator } from '@pocket-forge/combat/domain';
+import type { Combat, CombatActionSet } from '@pocket-forge/combat/domain';
 import { CombatActionSet as CombatActionSetEntity } from '@pocket-forge/combat/domain';
 import { MODIFY_ATTRIBUTE_ACTION_ID, REFERENCE_CONFIG_KEYS } from '@pocket-forge/combat-reference/domain';
 import { describe, expect, it } from 'bun:test';
@@ -40,7 +40,7 @@ function combatantPower(combat: Combat, combatantId: string): AttributeValue | u
 
 describe('ReferenceCombatPlugin', () => {
 	describe('supports', () => {
-		it('accepts an action set with the same plugin id and a compatible range', () => {
+		it('accepts an action set with the same plugin id', () => {
 			expect(PLUGIN.supports(actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 1 }))).toBe(true);
 		});
 
@@ -48,31 +48,10 @@ describe('ReferenceCombatPlugin', () => {
 			const compatible = actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 1 });
 			const otherPlugin = CombatActionSetEntity.fromPrimitives({
 				...compatible.toPrimitives(),
-				plugin: { contractVersion: '^1.0.0', id: 'other-plugin' },
+				plugin: { id: 'other-plugin' },
 			});
 
 			expect(PLUGIN.supports(otherPlugin)).toBe(false);
-		});
-
-		it('rejects an action set whose range does not accept the plugin version', () => {
-			const compatible = actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 1 });
-			const incompatible = CombatActionSetEntity.fromPrimitives({
-				...compatible.toPrimitives(),
-				plugin: { contractVersion: '^2.0.0', id: 'pocket-forge.reference' },
-			});
-
-			expect(PLUGIN.supports(incompatible)).toBe(false);
-		});
-
-		it('rejects an action set when the plugin contract version is invalid', () => {
-			const rejectingValidator: ContractVersionValidator = {
-				isValid: () => false,
-				isValidRange: () => true,
-				satisfies: () => false,
-			};
-			const plugin = referencePlugin(rejectingValidator);
-
-			expect(plugin.supports(actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 1 }))).toBe(false);
 		});
 	});
 
@@ -283,7 +262,7 @@ describe('ReferenceCombatPlugin', () => {
 		it('rejects a binding to another action', () => {
 			const set = CombatActionSetEntity.fromPrimitives({
 				bindings: [{ actionId: 'otherAction', config: {}, moveId: MOVE_ID }],
-				plugin: { contractVersion: '^1.0.0', id: 'pocket-forge.reference' },
+				plugin: { id: 'pocket-forge.reference' },
 			});
 
 			const result = PLUGIN.resolve({

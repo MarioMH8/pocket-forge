@@ -9,18 +9,13 @@ import type {
 	CombatMoveBinding,
 	CombatPrimitives,
 	CombatTransition,
-	ContractVersionValidator,
 } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity, CombatResolutionError } from '@pocket-forge/combat/domain';
 
 import type { ReferenceOperation, ReferenceTargetScope } from './modify-attribute.config';
 import { isReferenceOperation, isReferenceTargetScope, REFERENCE_CONFIG_KEYS } from './modify-attribute.config';
 import ReferenceCombatActionCatalog from './reference-combat.catalog';
-import {
-	MODIFY_ATTRIBUTE_ACTION_ID,
-	REFERENCE_PLUGIN_ID,
-	REFERENCE_PLUGIN_VERSION,
-} from './reference-combat.constants';
+import { MODIFY_ATTRIBUTE_ACTION_ID, REFERENCE_PLUGIN_ID } from './reference-combat.constants';
 import type { ReferenceCombatInput, ReferenceCombatTarget } from './reference-combat.input';
 import { parseReferenceCombatInput } from './reference-combat.input';
 
@@ -259,18 +254,12 @@ class ReferenceCombatPlugin implements CombatActionPlugin {
 	 */
 	readonly actions: ReferenceCombatActionCatalog;
 	/**
-	 * Exact contract version declared by this plugin.
-	 */
-	readonly contractVersion = REFERENCE_PLUGIN_VERSION;
-	/**
 	 * Stable plugin identifier.
 	 */
 	readonly id = REFERENCE_PLUGIN_ID;
 	private readonly attributeDefinitions: readonly AttributeDefinition[];
-	private readonly versionValidator: ContractVersionValidator;
 
-	constructor(versionValidator: ContractVersionValidator, attributeDefinitions: readonly AttributeDefinition[]) {
-		this.versionValidator = versionValidator;
+	constructor(attributeDefinitions: readonly AttributeDefinition[]) {
 		this.attributeDefinitions = attributeDefinitions;
 		this.actions = new ReferenceCombatActionCatalog();
 	}
@@ -412,19 +401,13 @@ class ReferenceCombatPlugin implements CombatActionPlugin {
 	}
 
 	/**
-	 * Checks whether an action set targets this plugin and accepts its version.
+	 * Checks whether an action set targets this plugin.
 	 *
 	 * @param actionSet - Authored action set to check.
-	 * @returns `true` when the plugin id matches and the set's semver range
-	 *          accepts the plugin's exact version.
+	 * @returns `true` when the action set's plugin id matches this plugin's id.
 	 */
 	supports(actionSet: CombatActionSet): boolean {
-		return (
-			actionSet.plugin.id === this.id &&
-			this.versionValidator.isValid(this.contractVersion) &&
-			this.versionValidator.isValidRange(actionSet.plugin.contractVersion) &&
-			this.versionValidator.satisfies(this.contractVersion, actionSet.plugin.contractVersion)
-		);
+		return actionSet.plugin.id === this.id;
 	}
 }
 

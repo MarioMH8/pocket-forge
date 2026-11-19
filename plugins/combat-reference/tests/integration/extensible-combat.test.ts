@@ -21,7 +21,6 @@ import {
 	DEFAULT_COMPLETION_ATTRIBUTES,
 	referenceCombat,
 	referencePlugin,
-	VERSION_VALIDATOR,
 } from '../domain/support/reference.fixtures';
 
 const RULESET_PRIMITIVES: CombatRulesetPrimitives = {
@@ -61,7 +60,7 @@ function createRuleset(): CombatRuleset {
 function compose() {
 	const ruleset = createRuleset();
 	const plugin = referencePlugin();
-	const actionSet = ReferenceCombatActionSet.create(BINDINGS, plugin.actions, VERSION_VALIDATOR).getRight();
+	const actionSet = ReferenceCombatActionSet.create(BINDINGS, plugin.actions).getRight();
 	const completion = ThresholdCombatCompletionRule.create(ruleset, ATTRIBUTE_DEFINITIONS).getRight();
 
 	return {
@@ -108,7 +107,7 @@ describe('Extensible combat scenario', () => {
 		expect(ruleset.groupConstraints).toEqual(OneVersusOneCombatRuleset.CONSTRAINTS);
 
 		const plugin = referencePlugin();
-		const actionSetResult = ReferenceCombatActionSet.create(BINDINGS, plugin.actions, VERSION_VALIDATOR);
+		const actionSetResult = ReferenceCombatActionSet.create(BINDINGS, plugin.actions);
 
 		expect(actionSetResult.isRight()).toBe(true);
 

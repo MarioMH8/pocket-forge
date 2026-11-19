@@ -38,10 +38,6 @@ interface CombatActionPlugin {
 	 */
 	readonly actions: CombatActionCatalog;
 	/**
-	 * Exact contract version declared by this plugin.
-	 */
-	readonly contractVersion: string;
-	/**
 	 * Stable plugin identifier.
 	 */
 	readonly id: string;
@@ -57,11 +53,10 @@ interface CombatActionPlugin {
 	 */
 	resolve(context: CombatActionContext): Either<CombatResolutionError[], CombatTransition>;
 	/**
-	 * Checks whether an action set targets this plugin and accepts its version.
+	 * Checks whether an action set targets this plugin.
 	 *
 	 * @param actionSet - Authored action set to check.
-	 * @returns `true` when the plugin id matches and the set's semver range
-	 *          accepts the plugin's exact version.
+	 * @returns `true` when the action set's plugin id matches this plugin's id.
 	 */
 	supports(actionSet: CombatActionSet): boolean;
 }

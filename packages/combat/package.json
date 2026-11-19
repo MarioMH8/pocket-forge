@@ -33,11 +33,6 @@
 			"types": "./dist/domain/index.d.mts",
 			"default": "./dist/domain/index.mjs"
 		},
-		"./infrastructure": {
-			"development": "./src/infrastructure/index.ts",
-			"types": "./dist/infrastructure/index.d.mts",
-			"default": "./dist/infrastructure/index.mjs"
-		},
 		"./rulesets": {
 			"development": "./src/rulesets/index.ts",
 			"types": "./dist/rulesets/index.d.mts",
@@ -58,13 +53,7 @@
 		"@hexadrop/value-object": "^2.0.0",
 		"@pocket-forge/attribute": "workspace:*",
 		"@pocket-forge/creature": "workspace:*",
-		"@pocket-forge/rng": "workspace:*",
-		"semver": "^7.0.0"
-	},
-	"peerDependenciesMeta": {
-		"semver": {
-			"optional": true
-		}
+		"@pocket-forge/rng": "workspace:*"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "10.6.0",
@@ -75,8 +64,6 @@
 		"@pocket-forge/attribute": "0.0.0",
 		"@pocket-forge/creature": "0.0.0",
 		"@pocket-forge/rng": "0.0.0",
-		"@types/semver": "7.8.0",
-		"semver": "7.8.6",
 		"tsdown": "0.23.7"
 	}
 }

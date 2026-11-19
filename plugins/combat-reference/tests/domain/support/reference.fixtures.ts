@@ -1,14 +1,7 @@
 import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
-import type {
-	Combat,
-	CombatActionSet,
-	CombatPrimitives,
-	CombatRuleset,
-	ContractVersionValidator,
-} from '@pocket-forge/combat/domain';
+import type { Combat, CombatActionSet, CombatPrimitives, CombatRuleset } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
-import SemverContractVersionValidator from '@pocket-forge/combat/infrastructure';
 import { CombatantGroupMother, CombatantMother, CombatRulesetMother } from '@pocket-forge/combat/mother/domain';
 import {
 	COMPLETION_CONFIG_DEFINITIONS,
@@ -34,7 +27,6 @@ const BANNER = AttributeDefinitionMother.string({
 });
 
 const ATTRIBUTE_DEFINITIONS: readonly AttributeDefinition[] = [POWER, BANNER];
-const VERSION_VALIDATOR = new SemverContractVersionValidator();
 
 const COMPLETION_ATTRIBUTE_DEFINITIONS: readonly AttributeDefinition[] = [
 	...ATTRIBUTE_DEFINITIONS,
@@ -92,15 +84,14 @@ function referenceCombat(overrides?: Partial<CombatPrimitives>, powers?: PowerOv
 	return CombatEntity.fromPrimitives(combatPrimitives(overrides, powers));
 }
 
-function referencePlugin(versionValidator: ContractVersionValidator = VERSION_VALIDATOR): ReferenceCombatPlugin {
-	return new ReferenceCombatPlugin(versionValidator, ATTRIBUTE_DEFINITIONS);
+function referencePlugin(): ReferenceCombatPlugin {
+	return new ReferenceCombatPlugin(ATTRIBUTE_DEFINITIONS);
 }
 
 function referenceActionSet(config: AttributeValues, moveId = 'move-1'): CombatActionSet {
 	return ReferenceCombatActionSet.create(
 		[{ actionId: MODIFY_ATTRIBUTE_ACTION_ID, config, moveId }],
-		referencePlugin().actions,
-		VERSION_VALIDATOR
+		referencePlugin().actions
 	).getRight();
 }
 
@@ -123,5 +114,4 @@ export {
 	referenceActionSet,
 	referenceCombat,
 	referencePlugin,
-	VERSION_VALIDATOR,
 };

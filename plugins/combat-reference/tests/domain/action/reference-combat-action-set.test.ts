@@ -1,4 +1,4 @@
-import type { CombatMoveBindingPrimitives, ContractVersionValidator } from '@pocket-forge/combat/domain';
+import type { CombatMoveBindingPrimitives } from '@pocket-forge/combat/domain';
 import {
 	MODIFY_ATTRIBUTE_ACTION_ID,
 	REFERENCE_CONFIG_KEYS,
@@ -7,20 +7,12 @@ import {
 import { ReferenceCombatActionSetMother } from '@pocket-forge/combat-reference/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
-import { referencePlugin, VERSION_VALIDATOR } from '../support/reference.fixtures';
+import { referencePlugin } from '../support/reference.fixtures';
 
 const PLUGIN = referencePlugin();
-const REJECTING_VALIDATOR: ContractVersionValidator = {
-	isValid: () => true,
-	isValidRange: () => false,
-	satisfies: () => false,
-};
 
-function create(
-	bindings: readonly CombatMoveBindingPrimitives[],
-	validator: ContractVersionValidator = VERSION_VALIDATOR
-) {
-	return ReferenceCombatActionSet.create(bindings, PLUGIN.actions, validator);
+function create(bindings: readonly CombatMoveBindingPrimitives[]) {
+	return ReferenceCombatActionSet.create(bindings, PLUGIN.actions);
 }
 
 describe('ReferenceCombatActionSet', () => {
@@ -30,10 +22,7 @@ describe('ReferenceCombatActionSet', () => {
 		expect(result.isRight()).toBe(true);
 
 		const actionSet = result.getRight();
-		expect(actionSet.plugin).toEqual({
-			contractVersion: '^1.0.0',
-			id: 'pocket-forge.reference',
-		});
+		expect(actionSet.plugin).toEqual({ id: 'pocket-forge.reference' });
 		expect(actionSet.bindings).toHaveLength(2);
 		expect(actionSet.find('move-1')?.actionId).toBe(MODIFY_ATTRIBUTE_ACTION_ID);
 		expect(actionSet.find('move-2')?.config.toPrimitives()[REFERENCE_CONFIG_KEYS.probability]).toBe(0.5);
@@ -86,14 +75,6 @@ describe('ReferenceCombatActionSet', () => {
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('unknown-action');
 		expect(result.getLeft()[0]?.path).toBe('bindings.0.actionId');
-	});
-
-	it('rejects an invalid plugin version range', () => {
-		const result = create(ReferenceCombatActionSetMother.bindings(), REJECTING_VALIDATOR);
-
-		expect(result.isLeft()).toBe(true);
-		expect(result.getLeft()[0]?.reason).toBe('invalid-version-range');
-		expect(result.getLeft()[0]?.path).toBe('plugin.contractVersion');
 	});
 
 	it('rejects duplicated Move ids', () => {

@@ -8,8 +8,6 @@ import type {
 import { CombatActionSet } from '@pocket-forge/combat/domain';
 import { describe, expect, it } from 'bun:test';
 
-import FakeContractVersionValidator from './fake-contract-version.validator';
-
 const POWER = AttributeDefinitionMother.number({
 	constraints: { max: 10, min: 1 },
 	defaultValue: 2,
@@ -44,18 +42,17 @@ class TestActionCatalog implements CombatActionCatalog {
 }
 
 const CATALOG = new TestActionCatalog([TACKLE, STRIKE]);
-const VERSION_VALIDATOR = new FakeContractVersionValidator();
 
 function primitives(overrides?: Partial<CombatActionSetPrimitives>): CombatActionSetPrimitives {
 	return {
 		bindings: [{ actionId: 'tackle', config: { power: 5 }, moveId: 'move-1' }],
-		plugin: { contractVersion: '^1.0.0', id: 'test-plugin' },
+		plugin: { id: 'test-plugin' },
 		...overrides,
 	};
 }
 
 function create(overrides?: Partial<CombatActionSetPrimitives>) {
-	return CombatActionSet.create(primitives(overrides), CATALOG, VERSION_VALIDATOR);
+	return CombatActionSet.create(primitives(overrides), CATALOG);
 }
 
 describe('CombatActionSet', () => {
@@ -66,7 +63,7 @@ describe('CombatActionSet', () => {
 			expect(result.isRight()).toBe(true);
 
 			const actionSet = result.getRight();
-			expect(actionSet.plugin).toEqual({ contractVersion: '^1.0.0', id: 'test-plugin' });
+			expect(actionSet.plugin).toEqual({ id: 'test-plugin' });
 			expect(actionSet.bindings).toHaveLength(1);
 			expect(actionSet.find('move-1')?.actionId).toBe('tackle');
 			expect(actionSet.find('move-1')?.config.toPrimitives()).toEqual({ power: 5 });
@@ -81,26 +78,12 @@ describe('CombatActionSet', () => {
 			expect(result.getRight().find('move-1')?.config.toPrimitives()).toEqual({ power: 2 });
 		});
 
-		it('accepts a wildcard version range', () => {
-			const result = create({ plugin: { contractVersion: '*', id: 'test-plugin' } });
-
-			expect(result.isRight()).toBe(true);
-		});
-
 		it('rejects an empty plugin id', () => {
-			const result = create({ plugin: { contractVersion: '^1.0.0', id: ' ' } });
+			const result = create({ plugin: { id: ' ' } });
 
 			expect(result.isLeft()).toBe(true);
 			expect(result.getLeft()[0]?.reason).toBe('invalid-plugin-id');
 			expect(result.getLeft()[0]?.path).toBe('plugin.id');
-		});
-
-		it('rejects an invalid version range', () => {
-			const result = create({ plugin: { contractVersion: '1.0', id: 'test-plugin' } });
-
-			expect(result.isLeft()).toBe(true);
-			expect(result.getLeft()[0]?.reason).toBe('invalid-version-range');
-			expect(result.getLeft()[0]?.path).toBe('plugin.contractVersion');
 		});
 
 		it('rejects an empty Move id', () => {
@@ -161,8 +144,7 @@ describe('CombatActionSet', () => {
 
 			const result = CombatActionSet.create(
 				primitives({ bindings: [{ actionId: 'strike', config: {}, moveId: 'move-1' }] }),
-				catalog,
-				VERSION_VALIDATOR
+				catalog
 			);
 
 			expect(result.isLeft()).toBe(true);
@@ -200,13 +182,12 @@ describe('CombatActionSet', () => {
 					{ actionId: 'missing', config: {}, moveId: 'move-1' },
 					{ actionId: '', config: {}, moveId: '' },
 				],
-				plugin: { contractVersion: '', id: '' },
+				plugin: { id: '' },
 			});
 
 			expect(result.isLeft()).toBe(true);
 			expect(result.getLeft().map(error => error.reason)).toEqual([
 				'invalid-plugin-id',
-				'invalid-version-range',
 				'duplicate-move-binding',
 				'unknown-action',
 				'invalid-move-id',
