@@ -6,15 +6,12 @@ import type CombatantGroup from '../combatant-group';
 import type CombatGroupConstraints from './combat-group-constraints';
 import CombatRulesetError from './combat-ruleset.error';
 import type { CombatRulesetData, CombatRulesetPrimitives } from './combat-ruleset.types';
-import type ContractVersionValidator from './contract-version.validator';
 
 /**
  * The composition expected by a concrete Combat Ruleset implementation.
  */
 interface CombatRulesetContract {
-	readonly contractVersion: string;
 	readonly groupConstraints: CombatGroupConstraints;
-	readonly kind: string;
 }
 
 const CONSTRAINT_FIELDS = ['maxCombatantsPerGroup', 'maxGroups', 'minCombatantsPerGroup', 'minGroups'] as const;
@@ -22,14 +19,14 @@ const CONSTRAINT_FIELDS = ['maxCombatantsPerGroup', 'maxGroups', 'minCombatantsP
 /**
  * Abstract, authored Combat Ruleset.
  *
- * A ruleset describes a combat *format*: its identity, implementation version,
- * optional format attributes, and generic composition constraints. It knows
- * nothing about Moves, actions, completion rules, or victory.
+ * A ruleset describes a combat *format*: its identity, optional format
+ * attributes, and generic composition constraints. It knows nothing about
+ * Moves, actions, completion rules, or victory.
  *
- * Concrete formats (`1v1`, `2v2`, …) live in external packages. They declare
- * their own {@link CombatRuleset.kind}, {@link CombatRuleset.contractVersion},
- * and composition constraints, and expose an own `static create` that delegates
- * to {@link CombatRuleset.validate}.
+ * Concrete formats (`1v1`, `2v2`, …) declare their own composition constraints
+ * and expose an own `static create` that delegates to
+ * {@link CombatRuleset.validate}. The built-in formats live in `./rulesets`;
+ * authors can also extend this class with their own format.
  */
 abstract class CombatRuleset {
 	/**
@@ -52,14 +49,6 @@ abstract class CombatRuleset {
 	 * Human-readable ruleset name.
 	 */
 	readonly name: string;
-	/**
-	 * Exact contract version of the concrete ruleset implementation.
-	 */
-	abstract readonly contractVersion: string;
-	/**
-	 * Concrete format identifier.
-	 */
-	abstract readonly kind: string;
 
 	protected constructor(data: CombatRulesetData) {
 		this.attributes = data.attributes;
@@ -72,25 +61,22 @@ abstract class CombatRuleset {
 	/**
 	 * Validates primitives against a concrete ruleset contract.
 	 *
-	 * The concrete class is the source of truth: serialized `kind`,
-	 * `contractVersion`, and every composition constraint must match the
-	 * expected contract. Failures are aggregated, never thrown.
+	 * The concrete class is the source of truth: every composition constraint
+	 * must match the expected contract. Failures are aggregated, never thrown.
 	 *
 	 * @param primitives - Serialized ruleset data.
 	 * @param definitions - Attribute definitions that govern format attributes.
 	 * @param expected - Contract declared by the concrete implementation.
-	 * @param versionValidator - Domain port that validates the version scheme.
 	 * @returns Validated data, or every validation failure.
 	 */
 	protected static validate(
 		primitives: CombatRulesetPrimitives,
 		definitions: AttributeDefinition[],
-		expected: CombatRulesetContract,
-		versionValidator: ContractVersionValidator
+		expected: CombatRulesetContract
 	): Either<CombatRulesetError[], CombatRulesetData> {
 		const errors: CombatRulesetError[] = [];
 
-		this.validateIdentity(primitives, expected, versionValidator, errors);
+		this.validateIdentity(primitives, errors);
 		this.validateConstraints(primitives.groupConstraints, expected.groupConstraints, errors);
 		errors.push(...this.validateAttributes(primitives.attributes, definitions));
 
@@ -235,56 +221,13 @@ abstract class CombatRuleset {
 		}
 	}
 
-	private static validateIdentity(
-		primitives: CombatRulesetPrimitives,
-		expected: CombatRulesetContract,
-		versionValidator: ContractVersionValidator,
-		errors: CombatRulesetError[]
-	): void {
+	private static validateIdentity(primitives: CombatRulesetPrimitives, errors: CombatRulesetError[]): void {
 		if (!this.isNonEmpty(primitives.id)) {
 			errors.push(new CombatRulesetError('invalid-id', 'Combat ruleset id is required', 'id'));
 		}
 
 		if (!this.isNonEmpty(primitives.name)) {
 			errors.push(new CombatRulesetError('invalid-name', 'Combat ruleset name is required', 'name'));
-		}
-
-		if (!this.isNonEmpty(primitives.kind)) {
-			errors.push(new CombatRulesetError('invalid-kind', 'Combat ruleset kind is required', 'kind'));
-		} else if (primitives.kind !== expected.kind) {
-			errors.push(
-				new CombatRulesetError(
-					'invalid-kind',
-					`Expected combat ruleset kind "${expected.kind}", received "${primitives.kind}"`,
-					'kind'
-				)
-			);
-		}
-
-		if (!this.isNonEmpty(primitives.contractVersion)) {
-			errors.push(
-				new CombatRulesetError(
-					'invalid-version',
-					'Combat ruleset contract version is required',
-					'contractVersion'
-				)
-			);
-		} else if (!versionValidator.isValid(primitives.contractVersion)) {
-			errors.push(
-				new CombatRulesetError(
-					'invalid-version',
-					`Combat ruleset contract version "${primitives.contractVersion}" is not valid`,
-					'contractVersion'
-				)
-			);
-		} else if (primitives.contractVersion !== expected.contractVersion) {
-			errors.push(
-				new CombatRulesetError(
-					'invalid-version',
-					`Expected combat ruleset contract version "${expected.contractVersion}", received "${primitives.contractVersion}"`,
-					'contractVersion'
-				)
-			);
 		}
 	}
 
@@ -299,10 +242,8 @@ abstract class CombatRuleset {
 	toPrimitives(): CombatRulesetPrimitives {
 		return {
 			attributes: this.attributes.toPrimitives(),
-			contractVersion: this.contractVersion,
 			groupConstraints: { ...this.groupConstraints },
 			id: this.id,
-			kind: this.kind,
 			name: this.name,
 		};
 	}

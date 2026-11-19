@@ -28,7 +28,8 @@
 			"@pocket-forge/*/infrastructure": [
 				"./packages/*/src/infrastructure/index.ts",
 				"./plugins/*/src/infrastructure/index.ts"
-			]
+			],
+			"@pocket-forge/*/rulesets": ["./packages/*/src/rulesets/index.ts"]
 		},
 		"types": ["bun"]
 	},

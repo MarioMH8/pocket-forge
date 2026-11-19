@@ -36,6 +36,5 @@ export type { CombatRulesetContract } from './ruleset/combat-ruleset';
 export { default as CombatRuleset } from './ruleset/combat-ruleset';
 export type { CombatRulesetErrorReason } from './ruleset/combat-ruleset.error';
 export { default as CombatRulesetError } from './ruleset/combat-ruleset.error';
-export type { default as CombatRulesetFactory } from './ruleset/combat-ruleset.factory';
 export type { CombatRulesetData, CombatRulesetPrimitives } from './ruleset/combat-ruleset.types';
 export type { default as ContractVersionValidator } from './ruleset/contract-version.validator';

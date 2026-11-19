@@ -1,5 +1,7 @@
 # Separate Combat format, action logic, and completion
 
+> **Superseded in part by [ADR-0013](./0013-built-in-combat-rules-without-kinds.md): rulesets and completion rules no longer declare `kind` or `contractVersion`, and their factories are gone.**
+
 Combat must support customizable battle rules without embedding a particular format, Move implementation, or victory condition in the neutral core. We split the model into four collaborating pieces: `CombatRuleset` describes an abstract format (identity, `kind`, exact `contractVersion`, format attributes, and composition constraints) and contains no Move bindings, actions, or outcome logic; `CombatActionPlugin` registers and resolves Move-bound actions; `CombatActionSet` is authored Move-to-action data with serializable configuration; and `CombatCompletionRule` inspects a Combat snapshot and decides the outcome. `CombatEngine` composes those four pieces, validates their contracts, delegates resolution, and evaluates completion, while `Combat` remains a neutral immutable state holder. Concrete rulesets, action plugins, and completion rules live outside the core; `plugins/combat-reference` is the reference implementation.
 
 ## Considered Options

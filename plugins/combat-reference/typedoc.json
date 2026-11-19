@@ -31,7 +31,6 @@
 			"CombatActionSet": "/api/combat/",
 			"CombatActionSet.create": "/api/combat/",
 			"CombatRuleset": "/api/combat/",
-			"CombatRulesetFactory": "/api/combat/",
 			"CombatRulesetPrimitives": "/api/combat/",
 			"default": "/api/combat/"
 		},

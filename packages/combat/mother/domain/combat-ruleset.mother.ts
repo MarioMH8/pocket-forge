@@ -17,10 +17,8 @@ export default class CombatRulesetMother {
 	static primitives(overrides?: Partial<CombatRulesetPrimitives>): CombatRulesetPrimitives {
 		return {
 			attributes: {},
-			contractVersion: '1.0.0',
 			groupConstraints: { ...TEST_GROUP_CONSTRAINTS },
 			id: faker.string.uuid(),
-			kind: 'test',
 			name: faker.word.noun(),
 			...overrides,
 		};

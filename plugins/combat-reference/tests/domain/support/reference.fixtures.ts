@@ -13,8 +13,10 @@ import { CombatantGroupMother, CombatantMother, CombatRulesetMother } from '@poc
 import {
 	COMPLETION_CONFIG_DEFINITIONS,
 	COMPLETION_CONFIG_KEYS,
-	MODIFY_ATTRIBUTE_ACTION_ID,
 	OneVersusOneCombatRuleset,
+} from '@pocket-forge/combat/rulesets';
+import {
+	MODIFY_ATTRIBUTE_ACTION_ID,
 	ReferenceCombatActionSet,
 	ReferenceCombatPlugin,
 } from '@pocket-forge/combat-reference/domain';
@@ -108,14 +110,11 @@ function completionRuleset(attributes: AttributeValues = DEFAULT_COMPLETION_ATTR
 	return OneVersusOneCombatRuleset.create(
 		CombatRulesetMother.primitives({
 			attributes: { ...attributes },
-			contractVersion: OneVersusOneCombatRuleset.VERSION,
 			groupConstraints: { ...OneVersusOneCombatRuleset.CONSTRAINTS },
 			id: 'reference-completion',
-			kind: OneVersusOneCombatRuleset.KIND,
 			name: 'Reference Completion',
 		}),
-		[...COMPLETION_ATTRIBUTE_DEFINITIONS],
-		VERSION_VALIDATOR
+		[...COMPLETION_ATTRIBUTE_DEFINITIONS]
 	).getRight();
 }
 

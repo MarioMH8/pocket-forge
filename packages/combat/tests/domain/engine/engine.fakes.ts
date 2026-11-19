@@ -42,8 +42,6 @@ const TACKLE: CombatActionDescriptor = {
  * Ruleset fake: a valid ruleset whose `validateGroups` can be swapped per test.
  */
 class FakeCombatRuleset extends CombatRuleset {
-	readonly contractVersion = '1.0.0';
-	readonly kind = 'fake';
 	validateWith?: (groups: readonly CombatantGroup[]) => Either<CombatRulesetError[], void>;
 
 	constructor() {
@@ -106,9 +104,7 @@ class FakeActionPlugin implements CombatActionPlugin {
  * Completion rule fake that returns a scripted outcome.
  */
 class FakeCompletionRule implements CombatCompletionRule {
-	readonly contractVersion = '1.0.0';
 	readonly evaluated: Combat[] = [];
-	readonly kind = 'fake';
 	outcome: CombatOutcome | undefined = undefined;
 
 	evaluate(combat: Combat): CombatOutcome | undefined {

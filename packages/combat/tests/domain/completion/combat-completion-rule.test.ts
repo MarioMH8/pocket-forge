@@ -3,9 +3,6 @@ import { CombatMother } from '@pocket-forge/combat/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
 class LastStandingRule implements CombatCompletionRule {
-	readonly contractVersion = '1.0.0';
-	readonly kind = 'last-standing';
-
 	evaluate(combat: Combat): CombatOutcome | undefined {
 		const winner = combat.groups[0];
 
@@ -18,9 +15,6 @@ class LastStandingRule implements CombatCompletionRule {
 }
 
 class DrawRule implements CombatCompletionRule {
-	readonly contractVersion = '1.0.0';
-	readonly kind = 'draw';
-
 	evaluate(combat: Combat): CombatOutcome | undefined {
 		return combat.status === 'completed' ? { status: 'draw' } : undefined;
 	}
@@ -47,12 +41,5 @@ describe('CombatCompletionRule', () => {
 		const rule = new DrawRule();
 
 		expect(rule.evaluate(CombatMother.create({ status: 'completed' }))).toEqual({ status: 'draw' });
-	});
-
-	it('declares kind and contract version', () => {
-		const rule = new DrawRule();
-
-		expect(rule.kind).toBe('draw');
-		expect(rule.contractVersion).toBe('1.0.0');
 	});
 });

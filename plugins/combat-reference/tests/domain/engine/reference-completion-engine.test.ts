@@ -2,11 +2,11 @@ import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
 import { CombatEngine } from '@pocket-forge/combat/domain';
 import { CombatSetupMother } from '@pocket-forge/combat/mother/domain';
+import { ThresholdCombatCompletionRule } from '@pocket-forge/combat/rulesets';
 import {
 	MODIFY_ATTRIBUTE_ACTION_ID,
 	REFERENCE_CONFIG_KEYS,
 	ReferenceCombatActionSet,
-	ThresholdCombatCompletionRule,
 } from '@pocket-forge/combat-reference/domain';
 import { describe, expect, it } from 'bun:test';
 

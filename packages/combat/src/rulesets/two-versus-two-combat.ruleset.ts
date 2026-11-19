@@ -5,16 +5,15 @@ import type {
 	CombatRulesetData,
 	CombatRulesetError,
 	CombatRulesetPrimitives,
-	ContractVersionValidator,
 } from '@pocket-forge/combat/domain';
 import { CombatRuleset } from '@pocket-forge/combat/domain';
 
 /**
- * Reference `2v2` combat format: exactly two groups with two combatants each.
+ * Built-in `2v2` combat format: exactly two groups with two combatants each.
  *
- * The class is the source of truth for its `kind`, contract version, and
- * composition constraints. Hydration goes through {@link CombatRuleset.validate}
- * so serialized data is checked against this contract.
+ * The class is the source of truth for its composition constraints. Hydration
+ * goes through {@link CombatRuleset.validate} so serialized data is checked
+ * against this contract.
  */
 class TwoVersusTwoCombatRuleset extends CombatRuleset {
 	/**
@@ -27,24 +26,6 @@ class TwoVersusTwoCombatRuleset extends CombatRuleset {
 		minGroups: 2,
 	};
 
-	/**
-	 * Stable format identifier.
-	 */
-	static readonly KIND = '2v2';
-	/**
-	 * Exact contract version of this ruleset implementation.
-	 */
-	static readonly VERSION = '1.0.0';
-
-	/**
-	 * Exact contract version declared by this ruleset.
-	 */
-	readonly contractVersion = TwoVersusTwoCombatRuleset.VERSION;
-	/**
-	 * Concrete format identifier.
-	 */
-	readonly kind = TwoVersusTwoCombatRuleset.KIND;
-
 	private constructor(data: CombatRulesetData) {
 		super(data);
 	}
@@ -54,24 +35,23 @@ class TwoVersusTwoCombatRuleset extends CombatRuleset {
 	 *
 	 * @param primitives - Serialized ruleset data.
 	 * @param definitions - Attribute definitions that govern format attributes.
-	 * @param versionValidator - Domain port that validates the version scheme.
 	 * @returns The hydrated ruleset, or every validation failure.
+	 * @example
+	 * ```ts
+	 * const result = TwoVersusTwoCombatRuleset.create(primitives, definitions);
+	 *
+	 * if (result.isLeft()) {
+	 *   console.error(result.getLeft());
+	 * }
+	 * ```
 	 */
 	static create(
 		primitives: CombatRulesetPrimitives,
-		definitions: AttributeDefinition[],
-		versionValidator: ContractVersionValidator
+		definitions: AttributeDefinition[]
 	): Either<CombatRulesetError[], TwoVersusTwoCombatRuleset> {
-		return this.validate(
-			primitives,
-			definitions,
-			{
-				contractVersion: this.VERSION,
-				groupConstraints: this.CONSTRAINTS,
-				kind: this.KIND,
-			},
-			versionValidator
-		).mapRight(data => new TwoVersusTwoCombatRuleset(data));
+		return this.validate(primitives, definitions, { groupConstraints: this.CONSTRAINTS }).mapRight(
+			data => new TwoVersusTwoCombatRuleset(data)
+		);
 	}
 }
 
