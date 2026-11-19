@@ -30,7 +30,6 @@ const RULESET_DATA: CombatRulesetData = {
 	definitions: [],
 	groupConstraints: GROUP_CONSTRAINTS,
 	id: 'fake-ruleset',
-	name: 'Fake Ruleset',
 };
 
 const TACKLE: CombatActionDescriptor = {

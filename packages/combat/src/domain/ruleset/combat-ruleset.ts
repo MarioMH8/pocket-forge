@@ -45,17 +45,12 @@ abstract class CombatRuleset {
 	 * Unique ruleset identifier.
 	 */
 	readonly id: string;
-	/**
-	 * Human-readable ruleset name.
-	 */
-	readonly name: string;
 
 	protected constructor(data: CombatRulesetData) {
 		this.attributes = data.attributes;
 		this.definitions = data.definitions;
 		this.groupConstraints = data.groupConstraints;
 		this.id = data.id;
-		this.name = data.name;
 	}
 
 	/**
@@ -89,7 +84,6 @@ abstract class CombatRuleset {
 			definitions: Object.freeze([...definitions]),
 			groupConstraints: Object.freeze({ ...primitives.groupConstraints }),
 			id: primitives.id,
-			name: primitives.name,
 		});
 	}
 
@@ -225,10 +219,6 @@ abstract class CombatRuleset {
 		if (!this.isNonEmpty(primitives.id)) {
 			errors.push(new CombatRulesetError('invalid-id', 'Combat ruleset id is required', 'id'));
 		}
-
-		if (!this.isNonEmpty(primitives.name)) {
-			errors.push(new CombatRulesetError('invalid-name', 'Combat ruleset name is required', 'name'));
-		}
 	}
 
 	/**
@@ -244,7 +234,6 @@ abstract class CombatRuleset {
 			attributes: this.attributes.toPrimitives(),
 			groupConstraints: { ...this.groupConstraints },
 			id: this.id,
-			name: this.name,
 		};
 	}
 

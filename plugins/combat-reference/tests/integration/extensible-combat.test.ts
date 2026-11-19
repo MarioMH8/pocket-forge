@@ -28,7 +28,6 @@ const RULESET_PRIMITIVES: CombatRulesetPrimitives = {
 	attributes: { ...DEFAULT_COMPLETION_ATTRIBUTES },
 	groupConstraints: { ...OneVersusOneCombatRuleset.CONSTRAINTS },
 	id: 'extensible-1v1',
-	name: 'Extensible 1v1',
 };
 
 const BINDINGS: readonly CombatMoveBindingPrimitives[] = [

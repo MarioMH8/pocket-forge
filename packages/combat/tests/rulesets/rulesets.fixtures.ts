@@ -85,7 +85,6 @@ function completionRuleset(attributes: AttributeValues = DEFAULT_COMPLETION_ATTR
 			attributes: { ...attributes },
 			groupConstraints: { ...OneVersusOneCombatRuleset.CONSTRAINTS },
 			id: 'completion-ruleset',
-			name: 'Completion Ruleset',
 		}),
 		[...COMPLETION_ATTRIBUTE_DEFINITIONS]
 	).getRight();

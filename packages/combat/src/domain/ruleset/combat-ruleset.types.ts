@@ -22,10 +22,6 @@ interface CombatRulesetPrimitives {
 	 * Unique ruleset identifier.
 	 */
 	readonly id: string;
-	/**
-	 * Human-readable ruleset name.
-	 */
-	readonly name: string;
 }
 
 /**
@@ -51,10 +47,6 @@ interface CombatRulesetData {
 	 * Unique ruleset identifier.
 	 */
 	readonly id: string;
-	/**
-	 * Human-readable ruleset name.
-	 */
-	readonly name: string;
 }
 
 export type { CombatRulesetData, CombatRulesetPrimitives };

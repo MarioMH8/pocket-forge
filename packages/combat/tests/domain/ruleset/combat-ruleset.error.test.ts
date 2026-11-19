@@ -3,7 +3,7 @@ import { describe, expect, it } from 'bun:test';
 
 describe('CombatRulesetError', () => {
 	it('exposes a stable name and domain error code', () => {
-		const error = new CombatRulesetError('invalid-name', 'Name is required', 'name');
+		const error = new CombatRulesetError('invalid-id', 'Id is required', 'id');
 
 		expect(error).toBeInstanceOf(Error);
 		expect(error.name).toBe('CombatRulesetError');

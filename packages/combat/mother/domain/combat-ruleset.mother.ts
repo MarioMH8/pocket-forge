@@ -19,7 +19,6 @@ export default class CombatRulesetMother {
 			attributes: {},
 			groupConstraints: { ...TEST_GROUP_CONSTRAINTS },
 			id: faker.string.uuid(),
-			name: faker.word.noun(),
 			...overrides,
 		};
 	}

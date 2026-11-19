@@ -110,7 +110,6 @@ function completionRuleset(attributes: AttributeValues = DEFAULT_COMPLETION_ATTR
 			attributes: { ...attributes },
 			groupConstraints: { ...OneVersusOneCombatRuleset.CONSTRAINTS },
 			id: 'reference-completion',
-			name: 'Reference Completion',
 		}),
 		[...COMPLETION_ATTRIBUTE_DEFINITIONS]
 	).getRight();

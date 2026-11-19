@@ -67,7 +67,7 @@ class AlphaOnlyRuleset extends TestCombatRuleset {
 }
 
 function primitives(overrides?: Partial<CombatRulesetPrimitives>): CombatRulesetPrimitives {
-	return CombatRulesetMother.primitives({ id: 'ruleset-1', name: 'Standard Duel', ...overrides });
+	return CombatRulesetMother.primitives({ id: 'ruleset-1', ...overrides });
 }
 
 function create(
@@ -101,7 +101,6 @@ describe('CombatRuleset', () => {
 
 			const ruleset = result.getRight();
 			expect(ruleset.id).toBe('ruleset-1');
-			expect(ruleset.name).toBe('Standard Duel');
 			expect(ruleset.groupConstraints).toEqual(TEST_GROUP_CONSTRAINTS);
 			expect(ruleset.attributes.value['bonusHp']).toBe(7);
 			expect(ruleset.definitions).toEqual([definition]);
@@ -122,13 +121,6 @@ describe('CombatRuleset', () => {
 			expect(result.getLeft()).toHaveLength(1);
 			expect(result.getLeft()[0]?.reason).toBe('invalid-id');
 			expect(result.getLeft()[0]?.path).toBe('id');
-		});
-
-		it('rejects an empty name', () => {
-			const result = create({ name: ' '.repeat(3) });
-
-			expect(result.getLeft()[0]?.reason).toBe('invalid-name');
-			expect(result.getLeft()[0]?.path).toBe('name');
 		});
 
 		it('rejects every group constraint that differs from the concrete implementation', () => {
@@ -194,11 +186,11 @@ describe('CombatRuleset', () => {
 			expect(messages).toContain('minCombatantsPerGroup 2 cannot exceed maxCombatantsPerGroup 1');
 		});
 
-		it('aggregates every identity failure', () => {
-			const result = create({ id: '', name: '' });
+		it('rejects every identity failure', () => {
+			const result = create({ id: '' });
 
 			expect(result.isLeft()).toBe(true);
-			expect(result.getLeft().map(error => error.reason)).toEqual(['invalid-id', 'invalid-name']);
+			expect(result.getLeft().map(error => error.reason)).toEqual(['invalid-id']);
 		});
 	});
 
