@@ -16,7 +16,6 @@ export default class CreatureMother {
 			attributes: {},
 			id: faker.string.uuid(),
 			moves: [MoveMother.primitives()],
-			name: faker.person.firstName(),
 			species: SpeciesMother.primitives(),
 			...overrides,
 		};

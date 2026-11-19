@@ -7,21 +7,14 @@ describe('Ability', () => {
 	describe('create', () => {
 		it('creates an ability with valid attributes', () => {
 			const definition = AttributeDefinitionMother.create();
-			const ability = Ability.create('ability-1', 'Flame Body', 'Burns on contact', {}, [definition]);
+			const ability = Ability.create('ability-1', {}, [definition]);
 
 			expect(ability.id).toBe('ability-1');
-			expect(ability.name).toBe('Flame Body');
-			expect(ability.description).toBe('Burns on contact');
 		});
 
 		it('throws when id is empty', () => {
 			const definition = AttributeDefinitionMother.create();
-			expect(() => Ability.create('', 'Name', 'Desc', {}, [definition])).toThrow();
-		});
-
-		it('throws when name is empty', () => {
-			const definition = AttributeDefinitionMother.create();
-			expect(() => Ability.create('id', '', 'Desc', {}, [definition])).toThrow();
+			expect(() => Ability.create('', {}, [definition])).toThrow();
 		});
 	});
 

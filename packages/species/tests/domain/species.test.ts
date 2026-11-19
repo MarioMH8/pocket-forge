@@ -8,15 +8,10 @@ describe('Species', () => {
 			const species = SpeciesMother.create();
 
 			expect(species.id).toBeDefined();
-			expect(species.name).toBeDefined();
 		});
 
 		it('throws when id is empty', () => {
-			expect(() => Species.create('', 'Name', {}, [])).toThrow();
-		});
-
-		it('throws when name is empty', () => {
-			expect(() => Species.create('id', '', {}, [])).toThrow();
+			expect(() => Species.create('', {}, [])).toThrow();
 		});
 	});
 
@@ -25,11 +20,9 @@ describe('Species', () => {
 			const species = SpeciesMother.fromPrimitives({
 				attributes: { element: 'fire' },
 				id: 'species-1',
-				name: 'Dragon',
 			});
 
 			expect(species.id).toBe('species-1');
-			expect(species.name).toBe('Dragon');
 			expect(species.attributes.value['element']).toBe('fire');
 		});
 	});
@@ -39,7 +32,6 @@ describe('Species', () => {
 			const species = SpeciesMother.fromPrimitives({
 				attributes: {},
 				id: 'species-1',
-				name: 'Dragon',
 			});
 
 			expect(species.attributes.value['nonexistent']).toBeUndefined();
@@ -51,13 +43,11 @@ describe('Species', () => {
 			const species = SpeciesMother.fromPrimitives({
 				attributes: { element: 'fire' },
 				id: 'species-1',
-				name: 'Dragon',
 			});
 
 			const primitives = species.toPrimitives();
 
 			expect(primitives.id).toBe('species-1');
-			expect(primitives.name).toBe('Dragon');
 			expect(primitives.attributes).toEqual({ element: 'fire' });
 		});
 	});

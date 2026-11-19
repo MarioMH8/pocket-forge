@@ -10,9 +10,7 @@ export default class MoveMother {
 	static primitives(overrides?: Partial<MovePrimitives>): MovePrimitives {
 		return {
 			attributes: {},
-			description: faker.lorem.sentence(),
 			id: faker.string.uuid(),
-			name: faker.word.words(2),
 			...overrides,
 		};
 	}

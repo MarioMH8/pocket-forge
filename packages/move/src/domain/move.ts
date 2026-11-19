@@ -36,7 +36,7 @@ export interface MovePrimitives extends Primitives<Omit<Move, 'attributes'>> {
  * });
  *
  * const move = Move.create(
- *   'mv-001', 'Flame Burst', 'A concentrated blast of fire.',
+ *   'mv-001',
  *   { power: 90 },
  *   [powerDef]
  * );
@@ -49,23 +49,13 @@ export default class Move<T extends Record<keyof T, AttributeValue> = AttributeV
 	 */
 	readonly attributes: AttributeMap<T>;
 	/**
-	 *Human-readable flavour or lore text.
-	 */
-	readonly description: string;
-	/**
 	 *Unique catalog identifier for this move.
 	 */
 	readonly id: string;
-	/**
-	 *Display name shown in the UI.
-	 */
-	readonly name: string;
 
-	private constructor(attributes: AttributeMap<T>, description: string, id: string, name: string) {
+	private constructor(attributes: AttributeMap<T>, id: string) {
 		this.attributes = attributes;
-		this.description = description;
 		this.id = id;
-		this.name = name;
 	}
 
 	/**
@@ -75,31 +65,24 @@ export default class Move<T extends Record<keyof T, AttributeValue> = AttributeV
 	 * and its value must satisfy the definition's constraints.
 	 *
 	 * @param id - Unique catalog identifier. Must be non-empty.
-	 * @param name - Display name. Must be non-empty.
-	 * @param description - Flavour or lore text (may be empty).
 	 * @param values - Typed attribute values to assign to this move.
 	 * @param definitions - Attribute definitions that govern the values.
 	 * @returns A fully validated Move instance.
-	 * @throws {InvalidArgumentError} When `id` or `name` is empty, or when any
-	 *         value lacks a definition or fails validation.
+	 * @throws {InvalidArgumentError} When `id` is empty, or when any value
+	 *         lacks a definition or fails validation.
 	 */
 	static create<T extends Record<keyof T, AttributeValue>>(
 		id: string,
-		name: string,
-		description: string,
 		values: T,
 		definitions: AttributeDefinition[]
 	): Move<T> {
 		if (!id) {
 			throw new InvalidArgumentError('Move id is required', 'Move');
 		}
-		if (!name) {
-			throw new InvalidArgumentError('Move name is required', 'Move');
-		}
 
 		const attributeMap = AttributeMap.create(values, definitions, 'Move');
 
-		return new Move(attributeMap, description, id, name);
+		return new Move(attributeMap, id);
 	}
 
 	/**
@@ -114,7 +97,7 @@ export default class Move<T extends Record<keyof T, AttributeValue> = AttributeV
 	static fromPrimitives(primitives: MovePrimitives): Move {
 		const attributeMap = AttributeMap.fromPrimitives(primitives.attributes);
 
-		return new Move(attributeMap, primitives.description, primitives.id, primitives.name);
+		return new Move(attributeMap, primitives.id);
 	}
 
 	/**
@@ -123,9 +106,7 @@ export default class Move<T extends Record<keyof T, AttributeValue> = AttributeV
 	toPrimitives(): MovePrimitives {
 		return {
 			attributes: this.attributes.toPrimitives(),
-			description: this.description,
 			id: this.id,
-			name: this.name,
 		};
 	}
 }

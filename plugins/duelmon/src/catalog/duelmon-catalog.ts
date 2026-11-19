@@ -45,7 +45,7 @@ class DuelmonCatalog {
 	 * ```ts
 	 * const catalog = DuelmonCatalog.fromDataset(dataset).getRight();
 	 *
-	 * catalog.findSpecies('bulbasaur')?.name; // 'Bulbasaur'
+	 * catalog.findSpecies('bulbasaur')?.id; // 'bulbasaur'
 	 * catalog.typeMultipliers('Ice', ['Water', 'Flying']); // [0.5, 2]
 	 * ```
 	 */

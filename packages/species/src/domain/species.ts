@@ -36,7 +36,7 @@ export interface SpeciesPrimitives extends Primitives<Omit<Species, 'attributes'
  * });
  *
  * const species = Species.create(
- *   'sp-001', 'Pyrofox',
+ *   'sp-001',
  *   { baseHp: 45 },
  *   [hpDef]
  * );
@@ -52,15 +52,10 @@ export default class Species<T extends Record<keyof T, AttributeValue> = Attribu
 	 *Unique catalog identifier for this species.
 	 */
 	readonly id: string;
-	/**
-	 *Display name shown in the UI.
-	 */
-	readonly name: string;
 
-	private constructor(attributes: AttributeMap<T>, id: string, name: string) {
+	private constructor(attributes: AttributeMap<T>, id: string) {
 		this.attributes = attributes;
 		this.id = id;
-		this.name = name;
 	}
 
 	/**
@@ -70,29 +65,24 @@ export default class Species<T extends Record<keyof T, AttributeValue> = Attribu
 	 * and its value must satisfy the definition's constraints.
 	 *
 	 * @param id - Unique catalog identifier. Must be non-empty.
-	 * @param name - Display name. Must be non-empty.
 	 * @param values - Typed attribute values to assign to this species.
 	 * @param definitions - Attribute definitions that govern the values.
 	 * @returns A fully validated Species instance.
-	 * @throws {InvalidArgumentError} When `id` or `name` is empty, or when any
-	 *         value lacks a definition or fails validation.
+	 * @throws {InvalidArgumentError} When `id` is empty, or when any value
+	 *         lacks a definition or fails validation.
 	 */
 	static create<T extends Record<keyof T, AttributeValue>>(
 		id: string,
-		name: string,
 		values: T,
 		definitions: AttributeDefinition[]
 	): Species<T> {
 		if (!id) {
 			throw new InvalidArgumentError('Species id is required', 'Species');
 		}
-		if (!name) {
-			throw new InvalidArgumentError('Species name is required', 'Species');
-		}
 
 		const attributeMap = AttributeMap.create(values, definitions, 'Species');
 
-		return new Species(attributeMap, id, name);
+		return new Species(attributeMap, id);
 	}
 
 	/**
@@ -107,7 +97,7 @@ export default class Species<T extends Record<keyof T, AttributeValue> = Attribu
 	static fromPrimitives(primitives: SpeciesPrimitives): Species {
 		const attributeMap = AttributeMap.fromPrimitives(primitives.attributes);
 
-		return new Species(attributeMap, primitives.id, primitives.name);
+		return new Species(attributeMap, primitives.id);
 	}
 
 	/**
@@ -117,7 +107,6 @@ export default class Species<T extends Record<keyof T, AttributeValue> = Attribu
 		return {
 			attributes: this.attributes.toPrimitives(),
 			id: this.id,
-			name: this.name,
 		};
 	}
 }

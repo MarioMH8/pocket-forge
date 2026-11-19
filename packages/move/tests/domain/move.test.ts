@@ -7,21 +7,14 @@ describe('Move', () => {
 	describe('create', () => {
 		it('creates a move with valid attributes', () => {
 			const definition = AttributeDefinitionMother.create();
-			const move = Move.create('move-1', 'Tackle', 'A basic charge', {}, [definition]);
+			const move = Move.create('move-1', {}, [definition]);
 
 			expect(move.id).toBe('move-1');
-			expect(move.name).toBe('Tackle');
-			expect(move.description).toBe('A basic charge');
 		});
 
 		it('throws when id is empty', () => {
 			const definition = AttributeDefinitionMother.create();
-			expect(() => Move.create('', 'Name', 'Desc', {}, [definition])).toThrow();
-		});
-
-		it('throws when name is empty', () => {
-			const definition = AttributeDefinitionMother.create();
-			expect(() => Move.create('id', '', 'Desc', {}, [definition])).toThrow();
+			expect(() => Move.create('', {}, [definition])).toThrow();
 		});
 	});
 

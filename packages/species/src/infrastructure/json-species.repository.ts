@@ -15,7 +15,6 @@ const attributeValueSchema: z.ZodType<AttributeValue> = z.union([
 const speciesSchema = z.object({
 	attributes: z.record(attributeValueSchema),
 	id: z.string().min(1),
-	name: z.string().min(1),
 });
 
 /**

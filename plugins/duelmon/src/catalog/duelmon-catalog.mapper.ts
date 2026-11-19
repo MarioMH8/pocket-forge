@@ -71,7 +71,7 @@ class DuelmonCatalogMapper {
 			};
 
 			try {
-				moves.push(Move.create(entry.id, entry.name, '', values, [...definitions]));
+				moves.push(Move.create(entry.id, values, [...definitions]));
 			} catch (error) {
 				errors.push(
 					new DuelmonCatalogError(
@@ -138,7 +138,7 @@ class DuelmonCatalogMapper {
 			};
 
 			try {
-				species.push(Species.create(entry.id, entry.name, values, [...definitions]));
+				species.push(Species.create(entry.id, values, [...definitions]));
 			} catch (error) {
 				errors.push(
 					new DuelmonCatalogError(

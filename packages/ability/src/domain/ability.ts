@@ -36,7 +36,7 @@ export interface AbilityPrimitives extends Primitives<Omit<Ability, 'attributes'
  * });
  *
  * const ability = Ability.create(
- *   'ab-001', 'Intimidate', `Lowers the foe\'s attack on entry.`,
+ *   'ab-001',
  *   { cooldown: 3 },
  *   [cooldownDef]
  * );
@@ -49,23 +49,13 @@ export default class Ability<T extends Record<keyof T, AttributeValue> = Attribu
 	 */
 	readonly attributes: AttributeMap<T>;
 	/**
-	 *Human-readable flavour or lore text.
-	 */
-	readonly description: string;
-	/**
 	 *Unique catalog identifier for this ability.
 	 */
 	readonly id: string;
-	/**
-	 *Display name shown in the UI.
-	 */
-	readonly name: string;
 
-	private constructor(attributes: AttributeMap<T>, description: string, id: string, name: string) {
+	private constructor(attributes: AttributeMap<T>, id: string) {
 		this.attributes = attributes;
-		this.description = description;
 		this.id = id;
-		this.name = name;
 	}
 
 	/**
@@ -75,31 +65,24 @@ export default class Ability<T extends Record<keyof T, AttributeValue> = Attribu
 	 * and its value must satisfy the definition's constraints.
 	 *
 	 * @param id - Unique catalog identifier. Must be non-empty.
-	 * @param name - Display name. Must be non-empty.
-	 * @param description - Flavour or lore text (may be empty).
 	 * @param values - Typed attribute values to assign to this ability.
 	 * @param definitions - Attribute definitions that govern the values.
 	 * @returns A fully validated Ability instance.
-	 * @throws {InvalidArgumentError} When `id` or `name` is empty, or when any
-	 *         value lacks a definition or fails validation.
+	 * @throws {InvalidArgumentError} When `id` is empty, or when any value
+	 *         lacks a definition or fails validation.
 	 */
 	static create<T extends Record<keyof T, AttributeValue>>(
 		id: string,
-		name: string,
-		description: string,
 		values: T,
 		definitions: AttributeDefinition[]
 	): Ability<T> {
 		if (!id) {
 			throw new InvalidArgumentError('Ability id is required', 'Ability');
 		}
-		if (!name) {
-			throw new InvalidArgumentError('Ability name is required', 'Ability');
-		}
 
 		const attributeMap = AttributeMap.create(values, definitions, 'Ability');
 
-		return new Ability(attributeMap, description, id, name);
+		return new Ability(attributeMap, id);
 	}
 
 	/**
@@ -114,7 +97,7 @@ export default class Ability<T extends Record<keyof T, AttributeValue> = Attribu
 	static fromPrimitives(primitives: AbilityPrimitives): Ability {
 		const attributeMap = AttributeMap.fromPrimitives(primitives.attributes);
 
-		return new Ability(attributeMap, primitives.description, primitives.id, primitives.name);
+		return new Ability(attributeMap, primitives.id);
 	}
 
 	/**
@@ -123,9 +106,7 @@ export default class Ability<T extends Record<keyof T, AttributeValue> = Attribu
 	toPrimitives(): AbilityPrimitives {
 		return {
 			attributes: this.attributes.toPrimitives(),
-			description: this.description,
 			id: this.id,
-			name: this.name,
 		};
 	}
 }

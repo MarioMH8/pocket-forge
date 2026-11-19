@@ -17,7 +17,6 @@ describe('DuelmonCatalog.fromDataset', () => {
 		expect(current.species).toHaveLength(7);
 		expect(current.moves).toHaveLength(7);
 		expect(species?.id).toBe('stonelet');
-		expect(species?.name).toBe('Stonelet');
 		expect(species?.attributes.value).toMatchObject({
 			baseAtk: 80,
 			baseDef: 120,
@@ -27,8 +26,6 @@ describe('DuelmonCatalog.fromDataset', () => {
 			types: ['Rock', 'Ground'],
 		});
 		expect(move?.id).toBe('ember-burst');
-		expect(move?.name).toBe('Ember Burst');
-		expect(move?.description).toBe('');
 		expect(move?.attributes.value).toMatchObject({
 			accuracy: 100,
 			alwaysHits: true,

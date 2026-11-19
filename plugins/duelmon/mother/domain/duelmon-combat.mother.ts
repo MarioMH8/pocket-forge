@@ -196,8 +196,7 @@ export default class DuelmonCombatMother {
 			attributes: {},
 			id: `${speciesId}-creature`,
 			moves: [],
-			name: speciesId,
-			species: { attributes: {}, id: speciesId, name: speciesId },
+			species: { attributes: {}, id: speciesId },
 		};
 	}
 

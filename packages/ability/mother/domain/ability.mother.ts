@@ -10,9 +10,7 @@ export default class AbilityMother {
 	static primitives(overrides?: Partial<AbilityPrimitives>): AbilityPrimitives {
 		return {
 			attributes: {},
-			description: faker.lorem.sentence(),
 			id: faker.string.uuid(),
-			name: faker.word.words(2),
 			...overrides,
 		};
 	}

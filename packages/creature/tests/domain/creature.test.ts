@@ -19,7 +19,6 @@ describe('Creature', () => {
 			const species = SpeciesMother.primitives();
 			const creature = Creature.create<CreatureAttributes>(
 				'creature-1',
-				'Sparky',
 				species,
 				[],
 				[],
@@ -28,20 +27,13 @@ describe('Creature', () => {
 			);
 
 			expect(creature.id).toBe('creature-1');
-			expect(creature.name).toBe('Sparky');
 			expect(creature.species).toEqual(species);
 		});
 
 		it('throws when id is empty', () => {
 			const definition = AttributeDefinitionMother.create();
 			const species = SpeciesMother.primitives();
-			expect(() => Creature.create('', 'Name', species, [], [], {}, [definition])).toThrow();
-		});
-
-		it('throws when name is empty', () => {
-			const definition = AttributeDefinitionMother.create();
-			const species = SpeciesMother.primitives();
-			expect(() => Creature.create('id', '', species, [], [], {}, [definition])).toThrow();
+			expect(() => Creature.create('', species, [], [], {}, [definition])).toThrow();
 		});
 	});
 

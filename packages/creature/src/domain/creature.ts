@@ -45,8 +45,8 @@ export interface CreaturePrimitives extends Omit<
  * });
  *
  * const creature = Creature.create(
- *   'cr-001', 'Blaze',
- *   { id: 'sp-001', name: 'Pyrofox', description: '', attributes: { baseHp: 45 } },
+ *   'cr-001',
+ *   { id: 'sp-001', attributes: { baseHp: 45 } },
  *   [], // abilities
  *   [], // moves
  *   { currentHp: 42 },
@@ -73,10 +73,6 @@ export default class Creature<T extends Record<keyof T, AttributeValue> = Attrib
 	 */
 	readonly moves: MovePrimitives[];
 	/**
-	 *Display name (may differ from the species name).
-	 */
-	readonly name: string;
-	/**
 	 *The species this creature belongs to (as a primitives snapshot).
 	 */
 	readonly species: SpeciesPrimitives;
@@ -86,14 +82,12 @@ export default class Creature<T extends Record<keyof T, AttributeValue> = Attrib
 		attributes: AttributeMap<T>,
 		id: string,
 		moves: MovePrimitives[],
-		name: string,
 		species: SpeciesPrimitives
 	) {
 		this.abilities = abilities;
 		this.attributes = attributes;
 		this.id = id;
 		this.moves = moves;
-		this.name = name;
 		this.species = species;
 	}
 
@@ -104,19 +98,17 @@ export default class Creature<T extends Record<keyof T, AttributeValue> = Attrib
 	 * and its value must satisfy the definition's constraints.
 	 *
 	 * @param id - Unique creature identifier. Must be non-empty.
-	 * @param name - Display name. Must be non-empty.
 	 * @param species - Primitives snapshot of the creature's species.
 	 * @param abilities - Primitives snapshots of the creature's abilities.
 	 * @param moves - Primitives snapshots of the creature's moves.
 	 * @param values - Typed attribute values to assign to this creature.
 	 * @param definitions - Attribute definitions that govern the values.
 	 * @returns A fully validated Creature instance.
-	 * @throws {InvalidArgumentError} When `id` or `name` is empty, or when any
-	 *         value lacks a definition or fails validation.
+	 * @throws {InvalidArgumentError} When `id` is empty, or when any value
+	 *         lacks a definition or fails validation.
 	 */
 	static create<T extends Record<keyof T, AttributeValue>>(
 		id: string,
-		name: string,
 		species: SpeciesPrimitives,
 		abilities: AbilityPrimitives[],
 		moves: MovePrimitives[],
@@ -126,13 +118,10 @@ export default class Creature<T extends Record<keyof T, AttributeValue> = Attrib
 		if (!id) {
 			throw new InvalidArgumentError('Creature id is required', 'Creature');
 		}
-		if (!name) {
-			throw new InvalidArgumentError('Creature name is required', 'Creature');
-		}
 
 		const attributeMap = AttributeMap.create(values, definitions, 'Creature');
 
-		return new Creature(abilities, attributeMap, id, moves, name, species);
+		return new Creature(abilities, attributeMap, id, moves, species);
 	}
 
 	/**
@@ -147,14 +136,7 @@ export default class Creature<T extends Record<keyof T, AttributeValue> = Attrib
 	static fromPrimitives(primitives: CreaturePrimitives): Creature {
 		const attributeMap = AttributeMap.fromPrimitives(primitives.attributes);
 
-		return new Creature(
-			primitives.abilities,
-			attributeMap,
-			primitives.id,
-			primitives.moves,
-			primitives.name,
-			primitives.species
-		);
+		return new Creature(primitives.abilities, attributeMap, primitives.id, primitives.moves, primitives.species);
 	}
 
 	/**
@@ -166,7 +148,6 @@ export default class Creature<T extends Record<keyof T, AttributeValue> = Attrib
 			attributes: this.attributes.toPrimitives(),
 			id: this.id,
 			moves: this.moves,
-			name: this.name,
 			species: this.species,
 		};
 	}
