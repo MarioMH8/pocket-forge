@@ -1,6 +1,6 @@
 # Separate Combat format, action logic, and completion
 
-> **Superseded in part by [ADR-0013](./0013-built-in-combat-rules-without-kinds.md): rulesets and completion rules no longer declare `kind` or `contractVersion`, and their factories are gone.**
+> **Superseded in part by [ADR-0013](./0013-built-in-combat-rules-without-kinds.md): rulesets and completion rules no longer declare `kind` or `contractVersion`, their factories are gone, and action plugins and action sets no longer declare or validate `contractVersion`.**
 
 Combat must support customizable battle rules without embedding a particular format, Move implementation, or victory condition in the neutral core. We split the model into four collaborating pieces: `CombatRuleset` describes an abstract format (identity, `kind`, exact `contractVersion`, format attributes, and composition constraints) and contains no Move bindings, actions, or outcome logic; `CombatActionPlugin` registers and resolves Move-bound actions; `CombatActionSet` is authored Move-to-action data with serializable configuration; and `CombatCompletionRule` inspects a Combat snapshot and decides the outcome. `CombatEngine` composes those four pieces, validates their contracts, delegates resolution, and evaluates completion, while `Combat` remains a neutral immutable state holder. Concrete rulesets, action plugins, and completion rules live outside the core; `plugins/combat-reference` is the reference implementation.
 
@@ -15,7 +15,7 @@ Combat must support customizable battle rules without embedding a particular for
 
 - Extensions compose per combat: a format can be paired with different action plugins, action sets, and completion rules.
 - The core stays neutral and holds no format, Move, or victory knowledge.
-- Contracts become more explicit: rulesets, plugins, and completion rules each declare their identity and version, and action sets declare serializable bindings.
+- Contracts become more explicit: rulesets, plugins, and completion rules each declared their identity and version, and action sets declare serializable bindings.
 - The engine owns orchestration and uniform validation, so concrete extensions do not repeat composition and transition checks.
 - External packages provide implementations, with `plugins/combat-reference` proving the model end to end.
 - Configuration shape and compatibility need their own rules, documented in ADR-0009 and ADR-0010.

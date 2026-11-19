@@ -15,7 +15,7 @@ The reference action that sets, adds, or subtracts one declared attribute on a C
 _Avoid_: Stat change, damage action
 
 **Reference Combat Action Set**:
-An authored set of Move-to-action bindings validated through the Reference Combat Action Plugin catalog and a contract version port.
+An authored set of Move-to-action bindings validated through the Reference Combat Action Plugin catalog.
 _Avoid_: Core binding, hardcoded move
 
 **Attribute Catalog**:
