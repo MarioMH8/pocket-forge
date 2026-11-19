@@ -39,22 +39,6 @@ function combatantPower(combat: Combat, combatantId: string): AttributeValue | u
 }
 
 describe('ReferenceCombatPlugin', () => {
-	describe('supports', () => {
-		it('accepts an action set with the same plugin id', () => {
-			expect(PLUGIN.supports(actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 1 }))).toBe(true);
-		});
-
-		it('rejects an action set targeting another plugin', () => {
-			const compatible = actionSet({ [REFERENCE_CONFIG_KEYS.amount]: 1 });
-			const otherPlugin = CombatActionSetEntity.fromPrimitives({
-				...compatible.toPrimitives(),
-				plugin: { id: 'other-plugin' },
-			});
-
-			expect(PLUGIN.supports(otherPlugin)).toBe(false);
-		});
-	});
-
 	describe('modifyAttribute set', () => {
 		it('sets a combat attribute and emits a serializable success event', () => {
 			const combat = referenceCombat();
@@ -262,7 +246,6 @@ describe('ReferenceCombatPlugin', () => {
 		it('rejects a binding to another action', () => {
 			const set = CombatActionSetEntity.fromPrimitives({
 				bindings: [{ actionId: 'otherAction', config: {}, moveId: MOVE_ID }],
-				plugin: { id: 'pocket-forge.reference' },
 			});
 
 			const result = PLUGIN.resolve({

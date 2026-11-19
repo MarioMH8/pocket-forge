@@ -5,14 +5,9 @@ import type {
 	CombatRuleset,
 	CombatRulesetPrimitives,
 } from '@pocket-forge/combat/domain';
-import { CombatEngine } from '@pocket-forge/combat/domain';
-import { CombatSetupMother } from '@pocket-forge/combat/mother/domain';
+import { CombatActionSet, CombatEngine, CombatSetup } from '@pocket-forge/combat/domain';
 import { OneVersusOneCombatRuleset, ThresholdCombatCompletionRule } from '@pocket-forge/combat/rulesets';
-import {
-	MODIFY_ATTRIBUTE_ACTION_ID,
-	REFERENCE_CONFIG_KEYS,
-	ReferenceCombatActionSet,
-} from '@pocket-forge/combat-reference/domain';
+import { MODIFY_ATTRIBUTE_ACTION_ID, REFERENCE_CONFIG_KEYS } from '@pocket-forge/combat-reference/domain';
 import { describe, expect, it } from 'bun:test';
 
 import {
@@ -59,13 +54,13 @@ function createRuleset(): CombatRuleset {
 function compose() {
 	const ruleset = createRuleset();
 	const plugin = referencePlugin();
-	const actionSet = ReferenceCombatActionSet.create(BINDINGS, plugin.actions).getRight();
+	const actionSet = CombatActionSet.create({ bindings: BINDINGS }, plugin.actions).getRight();
 	const completion = ThresholdCombatCompletionRule.create(ruleset, ATTRIBUTE_DEFINITIONS).getRight();
 
 	return {
 		actionSet,
 		completion,
-		engine: new CombatEngine(CombatSetupMother.create({ actions: plugin, actionSet, completion, ruleset })),
+		engine: new CombatEngine(CombatSetup.create({ actions: plugin, actionSet, completion, ruleset })),
 		plugin,
 		ruleset,
 	};
@@ -106,7 +101,7 @@ describe('Extensible combat scenario', () => {
 		expect(ruleset.groupConstraints).toEqual(OneVersusOneCombatRuleset.CONSTRAINTS);
 
 		const plugin = referencePlugin();
-		const actionSetResult = ReferenceCombatActionSet.create(BINDINGS, plugin.actions);
+		const actionSetResult = CombatActionSet.create({ bindings: BINDINGS }, plugin.actions);
 
 		expect(actionSetResult.isRight()).toBe(true);
 

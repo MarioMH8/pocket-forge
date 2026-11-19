@@ -4,7 +4,6 @@ import type {
 	Combat,
 	CombatActionContext,
 	CombatActionPlugin,
-	CombatActionSet,
 	CombatEvent,
 	CombatMoveBinding,
 	CombatPrimitives,
@@ -15,7 +14,7 @@ import { Combat as CombatEntity, CombatResolutionError } from '@pocket-forge/com
 import type { ReferenceOperation, ReferenceTargetScope } from './modify-attribute.config';
 import { isReferenceOperation, isReferenceTargetScope, REFERENCE_CONFIG_KEYS } from './modify-attribute.config';
 import ReferenceCombatActionCatalog from './reference-combat.catalog';
-import { MODIFY_ATTRIBUTE_ACTION_ID, REFERENCE_PLUGIN_ID } from './reference-combat.constants';
+import MODIFY_ATTRIBUTE_ACTION_ID from './reference-combat.constants';
 import type { ReferenceCombatInput, ReferenceCombatTarget } from './reference-combat.input';
 import { parseReferenceCombatInput } from './reference-combat.input';
 
@@ -253,10 +252,6 @@ class ReferenceCombatPlugin implements CombatActionPlugin {
 	 * Actions registered by this plugin.
 	 */
 	readonly actions: ReferenceCombatActionCatalog;
-	/**
-	 * Stable plugin identifier.
-	 */
-	readonly id = REFERENCE_PLUGIN_ID;
 	private readonly attributeDefinitions: readonly AttributeDefinition[];
 
 	constructor(attributeDefinitions: readonly AttributeDefinition[]) {
@@ -398,16 +393,6 @@ class ReferenceCombatPlugin implements CombatActionPlugin {
 			combat,
 			events: [buildEvent({ after: nextValue, before, config, succeeded: isSucceeded, target })],
 		});
-	}
-
-	/**
-	 * Checks whether an action set targets this plugin.
-	 *
-	 * @param actionSet - Authored action set to check.
-	 * @returns `true` when the action set's plugin id matches this plugin's id.
-	 */
-	supports(actionSet: CombatActionSet): boolean {
-		return actionSet.plugin.id === this.id;
 	}
 }
 

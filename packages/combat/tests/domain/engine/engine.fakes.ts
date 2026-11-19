@@ -59,7 +59,6 @@ function actionSet(overrides?: Partial<CombatActionSetPrimitives>): CombatAction
 	return CombatActionSet.create(
 		{
 			bindings: [{ actionId: 'tackle', config: {}, moveId: 'move-1' }],
-			plugin: { id: 'fake-plugin' },
 			...overrides,
 		},
 		new FakeActionCatalog()
@@ -74,9 +73,7 @@ type ResolveBehavior = (context: CombatActionContext) => Either<CombatResolution
 class FakeActionPlugin implements CombatActionPlugin {
 	readonly actions: CombatActionCatalog = new FakeActionCatalog();
 	readonly contexts: CombatActionContext[] = [];
-	readonly id = 'fake-plugin';
 	resolveWith?: ResolveBehavior;
-	supported = true;
 
 	resolve(context: CombatActionContext): Either<CombatResolutionError[], CombatTransition> {
 		this.contexts.push(context);
@@ -85,10 +82,6 @@ class FakeActionPlugin implements CombatActionPlugin {
 			this.resolveWith?.(context) ??
 			Either.left([new CombatResolutionError('rejected', 'No resolve behavior configured', 'input')])
 		);
-	}
-
-	supports(actionSetToCheck: CombatActionSet): boolean {
-		return this.supported && actionSetToCheck.plugin.id === this.id;
 	}
 }
 

@@ -1,7 +1,7 @@
 import type { CombatActionCatalog, CombatActionDescriptor } from '@pocket-forge/combat/domain';
 
 import { MODIFY_ATTRIBUTE_CONFIG_DEFINITIONS, validateModifyAttributeConfig } from './modify-attribute.config';
-import { MODIFY_ATTRIBUTE_ACTION_ID } from './reference-combat.constants';
+import MODIFY_ATTRIBUTE_ACTION_ID from './reference-combat.constants';
 
 /**
  * Declares the reference attribute-modification action.

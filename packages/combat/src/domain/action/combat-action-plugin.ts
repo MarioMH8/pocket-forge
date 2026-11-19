@@ -38,10 +38,6 @@ interface CombatActionPlugin {
 	 */
 	readonly actions: CombatActionCatalog;
 	/**
-	 * Stable plugin identifier.
-	 */
-	readonly id: string;
-	/**
 	 * Resolves an action into a successor combat snapshot and ordered events.
 	 *
 	 * Implementations must be pure: rejected resolutions return
@@ -52,13 +48,6 @@ interface CombatActionPlugin {
 	 * @returns The resulting transition, or every resolution failure.
 	 */
 	resolve(context: CombatActionContext): Either<CombatResolutionError[], CombatTransition>;
-	/**
-	 * Checks whether an action set targets this plugin.
-	 *
-	 * @param actionSet - Authored action set to check.
-	 * @returns `true` when the action set's plugin id matches this plugin's id.
-	 */
-	supports(actionSet: CombatActionSet): boolean;
 }
 
 export type { CombatActionContext, CombatActionPlugin };

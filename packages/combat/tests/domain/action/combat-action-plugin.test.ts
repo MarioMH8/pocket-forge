@@ -24,7 +24,6 @@ class TestActionCatalog implements CombatActionCatalog {
 
 class TestActionPlugin implements CombatActionPlugin {
 	readonly actions: CombatActionCatalog = new TestActionCatalog();
-	readonly id = 'test-plugin';
 
 	resolve(context: CombatActionContext): Either<CombatResolutionError[], CombatTransition> {
 		const binding = context.actionSet.find('move-1');
@@ -57,10 +56,6 @@ class TestActionPlugin implements CombatActionPlugin {
 			events: [{ payload: { actionId: binding.actionId, roll }, sequence: 1, type: 'action-resolved' }],
 		});
 	}
-
-	supports(actionSet: CombatActionSet): boolean {
-		return actionSet.plugin.id === this.id;
-	}
 }
 
 const PLUGIN = new TestActionPlugin();
@@ -68,7 +63,6 @@ const PLUGIN = new TestActionPlugin();
 function actionSet(overrides?: Partial<CombatActionSetPrimitives>): CombatActionSet {
 	const primitives: CombatActionSetPrimitives = {
 		bindings: [{ actionId: 'tackle', config: {}, moveId: 'move-1' }],
-		plugin: { id: 'test-plugin' },
 		...overrides,
 	};
 
@@ -76,16 +70,6 @@ function actionSet(overrides?: Partial<CombatActionSetPrimitives>): CombatAction
 }
 
 describe('CombatActionPlugin', () => {
-	describe('supports', () => {
-		it('accepts an action set with the same plugin id', () => {
-			expect(PLUGIN.supports(actionSet())).toBe(true);
-		});
-
-		it('rejects an action set targeting another plugin', () => {
-			expect(PLUGIN.supports(actionSet({ plugin: { id: 'other-plugin' } }))).toBe(false);
-		});
-	});
-
 	describe('resolve', () => {
 		it('returns a transition with ordered serializable events', () => {
 			const combat = CombatMother.create();

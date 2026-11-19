@@ -1,18 +1,14 @@
 import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
-import type { Combat, CombatActionSet, CombatPrimitives, CombatRuleset } from '@pocket-forge/combat/domain';
-import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
+import type { Combat, CombatPrimitives, CombatRuleset } from '@pocket-forge/combat/domain';
+import { Combat as CombatEntity, CombatActionSet } from '@pocket-forge/combat/domain';
 import { CombatantGroupMother, CombatantMother, CombatRulesetMother } from '@pocket-forge/combat/mother/domain';
 import {
 	COMPLETION_CONFIG_DEFINITIONS,
 	COMPLETION_CONFIG_KEYS,
 	OneVersusOneCombatRuleset,
 } from '@pocket-forge/combat/rulesets';
-import {
-	MODIFY_ATTRIBUTE_ACTION_ID,
-	ReferenceCombatActionSet,
-	ReferenceCombatPlugin,
-} from '@pocket-forge/combat-reference/domain';
+import { MODIFY_ATTRIBUTE_ACTION_ID, ReferenceCombatPlugin } from '@pocket-forge/combat-reference/domain';
 
 const POWER = AttributeDefinitionMother.number({
 	constraints: { max: 100, min: 0 },
@@ -89,8 +85,8 @@ function referencePlugin(): ReferenceCombatPlugin {
 }
 
 function referenceActionSet(config: AttributeValues, moveId = 'move-1'): CombatActionSet {
-	return ReferenceCombatActionSet.create(
-		[{ actionId: MODIFY_ATTRIBUTE_ACTION_ID, config, moveId }],
+	return CombatActionSet.create(
+		{ bindings: [{ actionId: MODIFY_ATTRIBUTE_ACTION_ID, config, moveId }] },
 		referencePlugin().actions
 	).getRight();
 }

@@ -1,10 +1,6 @@
 export type { CombatActionCatalog, CombatActionDescriptor } from './action/combat-action';
 export type { CombatActionContext, CombatActionPlugin } from './action/combat-action-plugin';
-export type {
-	CombatActionSetPlugin,
-	CombatActionSetPrimitives,
-	CombatMoveBindingPrimitives,
-} from './action/combat-action-set';
+export type { CombatActionSetPrimitives, CombatMoveBindingPrimitives } from './action/combat-action-set';
 export { default as CombatActionSet, CombatMoveBinding } from './action/combat-action-set';
 export type { CombatActionSetErrorReason } from './action/combat-action-set.error';
 export { default as CombatActionSetError } from './action/combat-action-set.error';
@@ -29,8 +25,6 @@ export { default as CombatEngineError } from './engine/combat-engine.error';
 export type { default as CombatResolution } from './engine/combat-resolution';
 export type { CombatSetupInput } from './engine/combat-setup';
 export { default as CombatSetup } from './engine/combat-setup';
-export type { CombatSetupErrorReason } from './engine/combat-setup.error';
-export { default as CombatSetupError } from './engine/combat-setup.error';
 export type { default as CombatGroupConstraints } from './ruleset/combat-group-constraints';
 export type { CombatRulesetContract } from './ruleset/combat-ruleset';
 export { default as CombatRuleset } from './ruleset/combat-ruleset';

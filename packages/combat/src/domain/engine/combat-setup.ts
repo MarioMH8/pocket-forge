@@ -1,10 +1,7 @@
-import Either from '@hexadrop/either';
-
 import type { CombatActionPlugin } from '../action/combat-action-plugin';
 import type CombatActionSet from '../action/combat-action-set';
 import type CombatCompletionRule from '../completion/combat-completion-rule';
 import type CombatRuleset from '../ruleset/combat-ruleset';
-import CombatSetupError from './combat-setup.error';
 
 /**
  * Collaborators that compose a {@link CombatSetup}.
@@ -19,12 +16,11 @@ interface CombatSetupInput {
 }
 
 /**
- * Immutable, validated composition of the four Combat collaborators.
+ * Immutable composition of the four Combat collaborators.
  *
- * A setup is a snapshot: it validates their static compatibility once, at
- * creation, so a Combat Engine can never be constructed from a plugin and an
- * action set that do not belong together. Mutating a plugin after setup
- * creation does not restart that validation.
+ * A setup is a snapshot of the collaborators wired by the app. There is no
+ * static compatibility check: a plugin and an action set that do not belong
+ * together surface as an unknown action when the plugin resolves.
  */
 class CombatSetup {
 	/**
@@ -53,35 +49,17 @@ class CombatSetup {
 	}
 
 	/**
-	 * Validates the static compatibility of the four collaborators and builds
-	 * an immutable setup.
-	 *
-	 * The action plugin must support the configured action set. Every other
-	 * check belongs to the Combat Engine and runs per resolution.
+	 * Wires the four collaborators into an immutable setup.
 	 *
 	 * @param input - Collaborators that compose the setup.
-	 * @returns The validated setup, or every setup failure.
+	 * @returns The immutable setup.
 	 * @example
 	 * ```ts
-	 * const result = CombatSetup.create({ ruleset, actions, actionSet, completion });
-	 *
-	 * if (result.isLeft()) {
-	 *   console.error(result.getLeft());
-	 * }
+	 * const setup = CombatSetup.create({ ruleset, actions, actionSet, completion });
 	 * ```
 	 */
-	static create(input: CombatSetupInput): Either<CombatSetupError[], CombatSetup> {
-		if (!input.actions.supports(input.actionSet)) {
-			return Either.left([
-				new CombatSetupError(
-					'incompatible-action-set',
-					`Action plugin "${input.actions.id}" does not support the configured action set`,
-					'actions'
-				),
-			]);
-		}
-
-		return Either.right(new CombatSetup(input));
+	static create(input: CombatSetupInput): CombatSetup {
+		return new CombatSetup(input);
 	}
 }
 

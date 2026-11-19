@@ -1,13 +1,25 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat, CombatCompletionRule } from '@pocket-forge/combat/domain';
-import { CombatEngine } from '@pocket-forge/combat/domain';
-import { CombatRulesetMother, CombatSetupMother } from '@pocket-forge/combat/mother/domain';
+import { CombatActionSet, CombatEngine, CombatSetup } from '@pocket-forge/combat/domain';
+import { CombatRulesetMother } from '@pocket-forge/combat/mother/domain';
 import { OneVersusOneCombatRuleset } from '@pocket-forge/combat/rulesets';
-import { ReferenceCombatActionSet } from '@pocket-forge/combat-reference/domain';
-import { ReferenceCombatActionSetMother } from '@pocket-forge/combat-reference/mother/domain';
+import { MODIFY_ATTRIBUTE_ACTION_ID, REFERENCE_CONFIG_KEYS } from '@pocket-forge/combat-reference/domain';
 import { describe, expect, it } from 'bun:test';
 
 import { ATTRIBUTE_DEFINITIONS, referenceCombat, referencePlugin } from '../support/reference.fixtures';
+
+const BINDINGS = [
+	{
+		actionId: MODIFY_ATTRIBUTE_ACTION_ID,
+		config: {
+			[REFERENCE_CONFIG_KEYS.amount]: 5,
+			[REFERENCE_CONFIG_KEYS.attributeKey]: 'power',
+			[REFERENCE_CONFIG_KEYS.operation]: 'add',
+			[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+		},
+		moveId: 'move-1',
+	},
+] as const;
 
 function combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
 	return combat.groups
@@ -25,15 +37,12 @@ describe('Reference combat through CombatEngine', () => {
 			[...ATTRIBUTE_DEFINITIONS]
 		).getRight();
 		const plugin = referencePlugin();
-		const actionSet = ReferenceCombatActionSet.create(
-			ReferenceCombatActionSetMother.bindings(),
-			plugin.actions
-		).getRight();
+		const actionSet = CombatActionSet.create({ bindings: [...BINDINGS] }, plugin.actions).getRight();
 		const completion: CombatCompletionRule = {
 			// eslint-disable-next-line unicorn/no-useless-undefined
 			evaluate: () => undefined,
 		};
-		const engine = new CombatEngine(CombatSetupMother.create({ actions: plugin, actionSet, completion, ruleset }));
+		const engine = new CombatEngine(CombatSetup.create({ actions: plugin, actionSet, completion, ruleset }));
 		const combat = referenceCombat();
 		const before = combat.toPrimitives();
 

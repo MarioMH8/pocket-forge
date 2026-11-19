@@ -7,9 +7,10 @@ import {
 	CombatEngineError,
 	CombatResolutionError,
 	CombatRulesetError,
+	CombatSetup,
 	CombatTransitionError,
 } from '@pocket-forge/combat/domain';
-import { CombatantMother, CombatMother, CombatSetupMother } from '@pocket-forge/combat/mother/domain';
+import { CombatantMother, CombatMother } from '@pocket-forge/combat/mother/domain';
 import { beforeEach, describe, expect, it } from 'bun:test';
 
 import { actionSet, FakeActionPlugin, FakeCombatRuleset, FakeCompletionRule } from './engine.fakes';
@@ -40,9 +41,7 @@ describe('CombatEngine', () => {
 		ruleset = new FakeCombatRuleset();
 		plugin = new FakeActionPlugin();
 		completion = new FakeCompletionRule();
-		engine = new CombatEngine(
-			CombatSetupMother.create({ actions: plugin, actionSet: actionSet(), completion, ruleset })
-		);
+		engine = new CombatEngine(CombatSetup.create({ actions: plugin, actionSet: actionSet(), completion, ruleset }));
 	});
 
 	describe('validateComposition', () => {

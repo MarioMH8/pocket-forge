@@ -33,9 +33,6 @@
 			"development": "./src/domain/index.ts",
 			"types": "./dist/domain/index.d.mts",
 			"default": "./dist/domain/index.mjs"
-		},
-		"./mother/domain": {
-			"development": "./mother/domain/index.ts"
 		}
 	},
 	"scripts": {

@@ -4,12 +4,7 @@ import DomainError from '@hexadrop/error';
  * Reasons a Combat Action Set can fail validation.
  */
 type CombatActionSetErrorReason =
-	| 'duplicate-move-binding'
-	| 'invalid-action-id'
-	| 'invalid-config'
-	| 'invalid-move-id'
-	| 'invalid-plugin-id'
-	| 'unknown-action';
+	'duplicate-move-binding' | 'invalid-action-id' | 'invalid-config' | 'invalid-move-id' | 'unknown-action';
 
 /**
  * Structured validation failure for an authored Combat Action Set.

@@ -46,7 +46,6 @@ const CATALOG = new TestActionCatalog([TACKLE, STRIKE]);
 function primitives(overrides?: Partial<CombatActionSetPrimitives>): CombatActionSetPrimitives {
 	return {
 		bindings: [{ actionId: 'tackle', config: { power: 5 }, moveId: 'move-1' }],
-		plugin: { id: 'test-plugin' },
 		...overrides,
 	};
 }
@@ -57,13 +56,12 @@ function create(overrides?: Partial<CombatActionSetPrimitives>) {
 
 describe('CombatActionSet', () => {
 	describe('create', () => {
-		it('stores validated plugin identity and bindings', () => {
+		it('stores validated bindings', () => {
 			const result = create();
 
 			expect(result.isRight()).toBe(true);
 
 			const actionSet = result.getRight();
-			expect(actionSet.plugin).toEqual({ id: 'test-plugin' });
 			expect(actionSet.bindings).toHaveLength(1);
 			expect(actionSet.find('move-1')?.actionId).toBe('tackle');
 			expect(actionSet.find('move-1')?.config.toPrimitives()).toEqual({ power: 5 });
@@ -76,14 +74,6 @@ describe('CombatActionSet', () => {
 			});
 
 			expect(result.getRight().find('move-1')?.config.toPrimitives()).toEqual({ power: 2 });
-		});
-
-		it('rejects an empty plugin id', () => {
-			const result = create({ plugin: { id: ' ' } });
-
-			expect(result.isLeft()).toBe(true);
-			expect(result.getLeft()[0]?.reason).toBe('invalid-plugin-id');
-			expect(result.getLeft()[0]?.path).toBe('plugin.id');
 		});
 
 		it('rejects an empty Move id', () => {
@@ -182,12 +172,10 @@ describe('CombatActionSet', () => {
 					{ actionId: 'missing', config: {}, moveId: 'move-1' },
 					{ actionId: '', config: {}, moveId: '' },
 				],
-				plugin: { id: '' },
 			});
 
 			expect(result.isLeft()).toBe(true);
 			expect(result.getLeft().map(error => error.reason)).toEqual([
-				'invalid-plugin-id',
 				'duplicate-move-binding',
 				'unknown-action',
 				'invalid-move-id',

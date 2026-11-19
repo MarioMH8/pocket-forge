@@ -1,13 +1,8 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
-import { CombatEngine } from '@pocket-forge/combat/domain';
-import { CombatSetupMother } from '@pocket-forge/combat/mother/domain';
+import { CombatActionSet, CombatEngine, CombatSetup } from '@pocket-forge/combat/domain';
 import { ThresholdCombatCompletionRule } from '@pocket-forge/combat/rulesets';
-import {
-	MODIFY_ATTRIBUTE_ACTION_ID,
-	REFERENCE_CONFIG_KEYS,
-	ReferenceCombatActionSet,
-} from '@pocket-forge/combat-reference/domain';
+import { MODIFY_ATTRIBUTE_ACTION_ID, REFERENCE_CONFIG_KEYS } from '@pocket-forge/combat-reference/domain';
 import { describe, expect, it } from 'bun:test';
 
 import {
@@ -28,23 +23,25 @@ describe('Reference completion through CombatEngine', () => {
 	it('completes combat when the threshold rule is reached', () => {
 		const ruleset = completionRuleset();
 		const plugin = referencePlugin();
-		const actionSet = ReferenceCombatActionSet.create(
-			[
-				{
-					actionId: MODIFY_ATTRIBUTE_ACTION_ID,
-					config: {
-						[REFERENCE_CONFIG_KEYS.amount]: 25,
-						[REFERENCE_CONFIG_KEYS.attributeKey]: 'power',
-						[REFERENCE_CONFIG_KEYS.operation]: 'subtract',
-						[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+		const actionSet = CombatActionSet.create(
+			{
+				bindings: [
+					{
+						actionId: MODIFY_ATTRIBUTE_ACTION_ID,
+						config: {
+							[REFERENCE_CONFIG_KEYS.amount]: 25,
+							[REFERENCE_CONFIG_KEYS.attributeKey]: 'power',
+							[REFERENCE_CONFIG_KEYS.operation]: 'subtract',
+							[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+						},
+						moveId: 'move-1',
 					},
-					moveId: 'move-1',
-				},
-			],
+				],
+			},
 			plugin.actions
 		).getRight();
 		const completion = ThresholdCombatCompletionRule.create(ruleset, ATTRIBUTE_DEFINITIONS).getRight();
-		const engine = new CombatEngine(CombatSetupMother.create({ actions: plugin, actionSet, completion, ruleset }));
+		const engine = new CombatEngine(CombatSetup.create({ actions: plugin, actionSet, completion, ruleset }));
 		const combat = referenceCombat();
 		const input = {
 			actorId: 'combatant-a',

@@ -6,16 +6,6 @@ import type { CombatActionCatalog } from './combat-action';
 import CombatActionSetError from './combat-action-set.error';
 
 /**
- * Plugin reference declared by a Combat Action Set.
- */
-interface CombatActionSetPlugin {
-	/**
-	 * Stable plugin identifier.
-	 */
-	readonly id: string;
-}
-
-/**
  * Plain, serializable representation of a Move binding.
  */
 interface CombatMoveBindingPrimitives {
@@ -41,10 +31,6 @@ interface CombatActionSetPrimitives {
 	 * Bindings between Moves and registered combat actions.
 	 */
 	readonly bindings: readonly CombatMoveBindingPrimitives[];
-	/**
-	 * Plugin reference accepted by this action set.
-	 */
-	readonly plugin: CombatActionSetPlugin;
 }
 
 /**
@@ -113,31 +99,25 @@ class CombatMoveBinding {
 /**
  * Authored set of Move-to-action bindings handled by a Combat Action Plugin.
  *
- * The action set is a pure data contract: it declares which plugin it targets
- * and validates that every Move binding references a known action with a valid
- * configuration. It never imports Move or plugin packages.
+ * The action set is a pure data contract: it validates that every Move binding
+ * references a known action with a valid configuration. It never imports Move
+ * or plugin packages, and the app decides which plugin resolves it.
  */
 class CombatActionSet {
 	/**
 	 * Validated Move bindings.
 	 */
 	readonly bindings: readonly CombatMoveBinding[];
-	/**
-	 * Plugin reference accepted by this action set.
-	 */
-	readonly plugin: CombatActionSetPlugin;
 
-	private constructor(bindings: readonly CombatMoveBinding[], plugin: CombatActionSetPlugin) {
+	private constructor(bindings: readonly CombatMoveBinding[]) {
 		this.bindings = bindings;
-		this.plugin = plugin;
 	}
 
 	/**
 	 * Validates primitives and builds an immutable action set.
 	 *
-	 * Validation failures are aggregated instead of thrown: empty plugin and
-	 * binding ids, duplicated Move ids, unknown actions, and invalid action
-	 * configurations.
+	 * Validation failures are aggregated instead of thrown: empty binding ids,
+	 * duplicated Move ids, unknown actions, and invalid action configurations.
 	 *
 	 * @param primitives - Serialized action set data.
 	 * @param catalog - Plugin-owned action catalog.
@@ -148,8 +128,6 @@ class CombatActionSet {
 		catalog: CombatActionCatalog
 	): Either<CombatActionSetError[], CombatActionSet> {
 		const errors: CombatActionSetError[] = [];
-
-		this.validatePlugin(primitives.plugin, errors);
 
 		const bindings: CombatMoveBinding[] = [];
 		const seenMoveIds = new Set<string>();
@@ -230,7 +208,7 @@ class CombatActionSet {
 			return Either.left(errors);
 		}
 
-		return Either.right(new CombatActionSet(Object.freeze(bindings), Object.freeze({ ...primitives.plugin })));
+		return Either.right(new CombatActionSet(Object.freeze(bindings)));
 	}
 
 	/**
@@ -242,7 +220,7 @@ class CombatActionSet {
 	static fromPrimitives(primitives: CombatActionSetPrimitives): CombatActionSet {
 		const bindings = primitives.bindings.map(binding => CombatMoveBinding.fromPrimitives(binding));
 
-		return new CombatActionSet(Object.freeze(bindings), Object.freeze({ ...primitives.plugin }));
+		return new CombatActionSet(Object.freeze(bindings));
 	}
 
 	private static isNonEmpty(value: string): boolean {
@@ -305,14 +283,6 @@ class CombatActionSet {
 		return errors;
 	}
 
-	private static validatePlugin(plugin: CombatActionSetPlugin, errors: CombatActionSetError[]): void {
-		if (!this.isNonEmpty(plugin.id)) {
-			errors.push(
-				new CombatActionSetError('invalid-plugin-id', 'Combat action set plugin id is required', 'plugin.id')
-			);
-		}
-	}
-
 	/**
 	 * Finds the binding registered for a Move.
 	 *
@@ -331,11 +301,10 @@ class CombatActionSet {
 	toPrimitives(): CombatActionSetPrimitives {
 		return {
 			bindings: this.bindings.map(binding => binding.toPrimitives()),
-			plugin: { ...this.plugin },
 		};
 	}
 }
 
-export type { CombatActionSetPlugin, CombatActionSetPrimitives, CombatMoveBindingPrimitives };
+export type { CombatActionSetPrimitives, CombatMoveBindingPrimitives };
 export { CombatMoveBinding };
 export default CombatActionSet;
