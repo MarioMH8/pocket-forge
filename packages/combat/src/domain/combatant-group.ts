@@ -15,27 +15,21 @@ export default class CombatantGroup<T extends Record<keyof T, AttributeValue> = 
 	readonly attributes: AttributeMap<T>;
 	readonly combatants: readonly Combatant[];
 	readonly id: string;
-	readonly name: string;
 
-	private constructor(attributes: AttributeMap<T>, combatants: readonly Combatant[], id: string, name: string) {
+	private constructor(attributes: AttributeMap<T>, combatants: readonly Combatant[], id: string) {
 		this.attributes = attributes;
 		this.combatants = combatants;
 		this.id = id;
-		this.name = name;
 	}
 
 	static create<T extends Record<keyof T, AttributeValue>>(
 		id: string,
-		name: string,
 		combatants: Combatant[],
 		values: T,
 		definitions: AttributeDefinition[]
 	): CombatantGroup<T> {
 		if (!id) {
 			throw new InvalidArgumentError('CombatantGroup id is required', 'CombatantGroup');
-		}
-		if (!name) {
-			throw new InvalidArgumentError('CombatantGroup name is required', 'CombatantGroup');
 		}
 
 		if (combatants.length === 0) {
@@ -44,14 +38,14 @@ export default class CombatantGroup<T extends Record<keyof T, AttributeValue> = 
 
 		const attributeMap = AttributeMap.create(values, definitions, 'CombatantGroup');
 
-		return new CombatantGroup(attributeMap, Object.freeze([...combatants]), id, name);
+		return new CombatantGroup(attributeMap, Object.freeze([...combatants]), id);
 	}
 
 	static fromPrimitives(primitives: CombatantGroupPrimitives): CombatantGroup {
 		const attributeMap = AttributeMap.fromPrimitives(primitives.attributes);
 		const combatants = primitives.combatants.map(c => Combatant.fromPrimitives(c));
 
-		return new CombatantGroup(attributeMap, Object.freeze(combatants), primitives.id, primitives.name);
+		return new CombatantGroup(attributeMap, Object.freeze(combatants), primitives.id);
 	}
 
 	toPrimitives(): CombatantGroupPrimitives {
@@ -59,7 +53,6 @@ export default class CombatantGroup<T extends Record<keyof T, AttributeValue> = 
 			attributes: this.attributes.toPrimitives(),
 			combatants: this.combatants.map(c => c.toPrimitives()),
 			id: this.id,
-			name: this.name,
 		};
 	}
 }

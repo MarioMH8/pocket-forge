@@ -155,7 +155,7 @@ describe('Combat', () => {
 			const combat = CombatMother.create();
 			const newRng = RandomPocketMother.create();
 			const newGroup = CombatantGroupMother.create({
-				name: 'New Squad',
+				id: 'new-squad',
 			});
 
 			const result = combat.apply({
@@ -169,7 +169,7 @@ describe('Combat', () => {
 			const next = result.getRight();
 			expect(next).not.toBe(combat);
 			expect(next.id).toBe(combat.id);
-			expect(next.groups[0]?.name).toBe('New Squad');
+			expect(next.groups[0]?.id).toBe('new-squad');
 			expect(next.randomPocket).toBe(newRng);
 		});
 

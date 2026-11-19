@@ -16,7 +16,6 @@ export default class CombatantGroupMother {
 			attributes: {},
 			combatants: [CombatantMother.primitives({ groupId: id })],
 			id,
-			name: faker.word.noun(),
 			...overrides,
 		};
 	}

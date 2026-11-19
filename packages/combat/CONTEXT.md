@@ -13,7 +13,7 @@ A combat-local participant that carries a Creature snapshot and its own battle a
 _Avoid_: Creature, player
 
 **Combatant Group**:
-A named collection of Combatants with its own battle attributes; its cardinality and relationships are defined by the Combat Ruleset, and composition changes happen only through resolved Combat Transitions.
+A collection of Combatants with its own battle attributes; its cardinality and relationships are defined by the Combat Ruleset, and composition changes happen only through resolved Combat Transitions.
 _Avoid_: Team, side
 
 **Combat Action Plugin**:

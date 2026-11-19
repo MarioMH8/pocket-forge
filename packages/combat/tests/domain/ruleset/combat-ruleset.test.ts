@@ -52,7 +52,7 @@ class AlphaOnlyRuleset extends TestCombatRuleset {
 		}
 
 		const errors = groups
-			.filter(group => !group.name.startsWith('Alpha'))
+			.filter(group => !group.id.startsWith('Alpha'))
 			.map(
 				group =>
 					new CombatRulesetError(
@@ -77,13 +77,12 @@ function create(
 	return TestCombatRuleset.create(primitives(overrides), definitions);
 }
 
-function group(id: string, combatants: number, name = `Group ${id}`): CombatantGroupType {
+function group(id: string, combatants: number): CombatantGroupType {
 	return CombatantGroupMother.create({
 		combatants: Array.from({ length: combatants }, (_, index) =>
 			CombatantMother.primitives({ groupId: id, id: `${id}-combatant-${String(index)}` })
 		),
 		id,
-		name,
 	});
 }
 
@@ -352,8 +351,8 @@ describe('CombatRuleset', () => {
 		it('can be overridden by a concrete ruleset', () => {
 			const ruleset = AlphaOnlyRuleset.create(primitives(), []).getRight();
 
-			const valid = ruleset.validateGroups([group('alpha', 2, 'Alpha One'), group('beta', 2, 'Alpha Two')]);
-			const invalid = ruleset.validateGroups([group('alpha', 2, 'Alpha One'), group('beta', 2, 'Beta Two')]);
+			const valid = ruleset.validateGroups([group('Alpha One', 2), group('Alpha Two', 2)]);
+			const invalid = ruleset.validateGroups([group('Alpha One', 2), group('Beta Two', 2)]);
 
 			expect(valid.isRight()).toBe(true);
 			expect(invalid.isLeft()).toBe(true);

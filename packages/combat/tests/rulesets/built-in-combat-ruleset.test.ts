@@ -23,7 +23,6 @@ function group(id: string, combatants: number): CombatantGroup {
 			CombatantMother.primitives({ groupId: id, id: `${id}-combatant-${String(index)}` })
 		),
 		id,
-		name: `Group ${id}`,
 	});
 }
 

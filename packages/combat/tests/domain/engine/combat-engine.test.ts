@@ -26,17 +26,6 @@ function withStatus(combat: Combat, status: CombatPrimitives['status']): Combat 
 	return CombatEntity.fromPrimitives({ ...combat.toPrimitives(), status });
 }
 
-function withGroupName(combat: Combat, name: string): Combat {
-	const primitives = combat.toPrimitives();
-	const group = primitives.groups[0];
-
-	if (!group) {
-		throw new Error('Expected the combat to have at least one group');
-	}
-
-	return CombatEntity.fromPrimitives({ ...primitives, groups: [{ ...group, name }] });
-}
-
 function event(sequence: number, type = 'action-resolved'): CombatEvent {
 	return { payload: { actionId: 'tackle' }, sequence, type };
 }
@@ -235,7 +224,6 @@ describe('CombatEngine', () => {
 						attributes: {},
 						combatants: [CombatantMother.primitives({ groupId: 'another-group', id: 'combatant-1' })],
 						id: groupId,
-						name: 'Invalid membership',
 					},
 				],
 			});
@@ -257,14 +245,32 @@ describe('CombatEngine', () => {
 
 		it('rejects a successor rejected by the ruleset composition', () => {
 			const combat = CombatMother.create();
+			const primitives = combat.toPrimitives();
+			const group = primitives.groups[0];
+
+			if (!group) {
+				throw new Error('Expected the combat to have at least one group');
+			}
+
+			const succession = CombatEntity.fromPrimitives({
+				...primitives,
+				groups: [
+					{
+						...group,
+						combatants: group.combatants.map(combatant => ({ ...combatant, groupId: 'Invalid' })),
+						id: 'Invalid',
+					},
+				],
+			});
+
 			ruleset.validateWith = groups =>
-				groups.some(group => group.name === 'Invalid')
-					? Either.left([new CombatRulesetError('invalid-constraints', 'Group name is reserved', 'groups')])
+				groups.some(group => group.id === 'Invalid')
+					? Either.left([new CombatRulesetError('invalid-constraints', 'Group id is reserved', 'groups')])
 					: Either.right();
 
 			plugin.resolveWith = () =>
 				Either.right<CombatResolutionError[], CombatTransition>({
-					combat: withGroupName(combat, 'Invalid'),
+					combat: succession,
 					events: [],
 				});
 

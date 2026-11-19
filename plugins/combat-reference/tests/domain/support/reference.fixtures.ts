@@ -68,7 +68,6 @@ function combatPrimitives(overrides?: Partial<CombatPrimitives>, powers?: PowerO
 					}),
 				],
 				id: 'group-a',
-				name: 'Alpha',
 			}),
 			CombatantGroupMother.primitives({
 				attributes: { banner: 'blue', power: 60 },
@@ -80,7 +79,6 @@ function combatPrimitives(overrides?: Partial<CombatPrimitives>, powers?: PowerO
 					}),
 				],
 				id: 'group-b',
-				name: 'Beta',
 			}),
 		],
 		id: 'combat-1',
