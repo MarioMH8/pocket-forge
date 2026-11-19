@@ -37,6 +37,7 @@
 	},
 	"scripts": {
 		"build": "tsdown",
+		"extract": "bun run scripts/extract-showdown.ts",
 		"prepublishOnly": "tsdown"
 	},
 	"peerDependencies": {
