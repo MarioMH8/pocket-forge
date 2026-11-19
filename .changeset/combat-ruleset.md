@@ -2,4 +2,4 @@
 '@pocket-forge/combat': minor
 ---
 
-Add the abstract authored Combat Ruleset model and an optional semver-based contract version adapter.
+Add the abstract Combat Ruleset model with format attributes and composition constraints.
