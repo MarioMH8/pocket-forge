@@ -1,18 +1,17 @@
 import type { CombatMoveBindingPrimitives } from '@pocket-forge/combat/domain';
 import { CombatActionSet } from '@pocket-forge/combat/domain';
-import { DUELMON_CONFIG_KEYS, MODIFY_ATTRIBUTE_ACTION_ID } from '@pocket-forge/duelmon/domain';
+import { ModifyAttributeAction, ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
+import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
-
-import { duelmonPlugin } from '../support/duelmon.fixtures';
 
 function binding(overrides?: Partial<CombatMoveBindingPrimitives>): CombatMoveBindingPrimitives {
 	return {
-		actionId: MODIFY_ATTRIBUTE_ACTION_ID,
+		actionId: ModifyAttributeAction.ID,
 		config: {
-			[DUELMON_CONFIG_KEYS.amount]: 5,
-			[DUELMON_CONFIG_KEYS.attributeKey]: 'power',
-			[DUELMON_CONFIG_KEYS.operation]: 'add',
-			[DUELMON_CONFIG_KEYS.scope]: 'combatant',
+			[ModifyAttributeConfig.KEYS.amount]: 5,
+			[ModifyAttributeConfig.KEYS.attributeKey]: 'power',
+			[ModifyAttributeConfig.KEYS.operation]: 'add',
+			[ModifyAttributeConfig.KEYS.scope]: 'combatant',
 		},
 		moveId: 'move-1',
 		...overrides,
@@ -20,7 +19,7 @@ function binding(overrides?: Partial<CombatMoveBindingPrimitives>): CombatMoveBi
 }
 
 function create(bindings: readonly CombatMoveBindingPrimitives[]) {
-	return CombatActionSet.create({ bindings }, duelmonPlugin().actions);
+	return CombatActionSet.create({ bindings }, DuelmonCombatMother.plugin().actions);
 }
 
 describe('duelmon combat catalog', () => {
@@ -38,7 +37,7 @@ describe('duelmon combat catalog', () => {
 	it('rejects a config that misses a required value', () => {
 		const result = create([
 			binding({
-				config: { [DUELMON_CONFIG_KEYS.attributeKey]: 'power' },
+				config: { [ModifyAttributeConfig.KEYS.attributeKey]: 'power' },
 			}),
 		]);
 

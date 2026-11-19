@@ -1,29 +1,27 @@
 import Either from '@hexadrop/either';
-import { CombatResolutionError } from '@pocket-forge/combat/domain';
+import type { CombatResolutionError } from '@pocket-forge/combat/domain';
 
-import type { DuelmonTargetScope } from './modify-attribute.config';
-import { isDuelmonTargetScope } from './modify-attribute.config';
+import { DuelmonErrors } from './duelmon.errors';
+import type { DuelmonTarget } from './duelmon-target';
+import { DuelmonTarget as DuelmonTargetValue } from './duelmon-target';
 
 type UnknownRecord = Record<string, unknown>;
 
-/**
- * Scope selection carried by the duelmon plugin input.
- */
-interface DuelmonCombatTarget {
-	/**
-	 * Optional target identifier. Required for `group` and `combatant`.
-	 */
-	readonly id?: string | undefined;
-	/**
-	 * Scope addressed by the action.
-	 */
-	readonly scope: DuelmonTargetScope;
+function isNonEmptyString(value: unknown): value is string {
+	return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isRecord(value: unknown): value is UnknownRecord {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
- * Plugin-owned input shape accepted by the duelmon action plugin.
+ * Plugin-owned input accepted by the Duelmon action plugin.
+ *
+ * The input is parsed once by the plugin and then handed to the selected
+ * action resolver with its target already shaped as a value object.
  */
-interface DuelmonCombatInput {
+class DuelmonCombatInput {
 	/**
 	 * Acting combatant identifier.
 	 */
@@ -35,67 +33,73 @@ interface DuelmonCombatInput {
 	/**
 	 * Target selection validated against the current Combat.
 	 */
-	readonly target: DuelmonCombatTarget;
+	readonly target: DuelmonTarget;
+
+	private constructor(actorId: string, moveId: string, target: DuelmonTarget) {
+		this.actorId = actorId;
+		this.moveId = moveId;
+		this.target = target;
+	}
+
+	/**
+	 * Creates an input from already validated values.
+	 *
+	 * @param actorId - Acting combatant identifier.
+	 * @param moveId - Move identifier.
+	 * @param target - Parsed target selection.
+	 * @returns An immutable input value.
+	 * @example
+	 * ```ts
+	 * const input = DuelmonCombatInput.create(
+	 * 	'combatant-a',
+	 * 	'ember-burst',
+	 * 	DuelmonTarget.create('combatant', 'combatant-b')
+	 * );
+	 * ```
+	 */
+	static create(actorId: string, moveId: string, target: DuelmonTarget): DuelmonCombatInput {
+		return new DuelmonCombatInput(actorId, moveId, target);
+	}
+
+	/**
+	 * Validates the plugin-owned input shape at runtime.
+	 *
+	 * @param value - Untrusted plugin input.
+	 * @returns The validated input, or structured `invalid-input` failures.
+	 */
+	static parse(value: unknown): Either<CombatResolutionError[], DuelmonCombatInput> {
+		if (!isRecord(value)) {
+			return DuelmonErrors.fail('invalid-input', 'Duelmon combat input must be an object', 'input');
+		}
+
+		const { actorId, moveId, target } = value;
+
+		if (!isNonEmptyString(actorId)) {
+			return DuelmonErrors.fail(
+				'invalid-input',
+				'Duelmon combat input actorId must be a non-empty string',
+				'input.actorId'
+			);
+		}
+
+		if (!isNonEmptyString(moveId)) {
+			return DuelmonErrors.fail(
+				'invalid-input',
+				'Duelmon combat input moveId must be a non-empty string',
+				'input.moveId'
+			);
+		}
+
+		const parsedTarget = DuelmonTargetValue.parse(target);
+
+		if (parsedTarget.isLeft()) {
+			return Either.left(parsedTarget.getLeft());
+		}
+
+		return Either.right(new DuelmonCombatInput(actorId, moveId, parsedTarget.getRight()));
+	}
 }
 
-function isNonEmptyString(value: unknown): value is string {
-	return typeof value === 'string' && value.trim().length > 0;
-}
+export { DuelmonCombatInput };
 
-function isRecord(value: unknown): value is UnknownRecord {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function invalidInput(message: string, path: string): CombatResolutionError[] {
-	return [new CombatResolutionError('invalid-input', message, path)];
-}
-
-/**
- * Validates the plugin-owned input shape at runtime.
- *
- * @param input - Untrusted plugin input.
- * @returns The validated input, or structured `invalid-input` failures.
- */
-function parseDuelmonCombatInput(input: unknown): Either<CombatResolutionError[], DuelmonCombatInput> {
-	if (!isRecord(input)) {
-		return Either.left(invalidInput('Duelmon combat input must be an object', 'input'));
-	}
-
-	const { actorId, moveId, target } = input;
-
-	if (!isNonEmptyString(actorId)) {
-		return Either.left(invalidInput('Duelmon combat input actorId must be a non-empty string', 'input.actorId'));
-	}
-
-	if (!isNonEmptyString(moveId)) {
-		return Either.left(invalidInput('Duelmon combat input moveId must be a non-empty string', 'input.moveId'));
-	}
-
-	if (!isRecord(target)) {
-		return Either.left(invalidInput('Duelmon combat input target must be an object', 'input.target'));
-	}
-
-	const scope = target['scope'];
-
-	if (!isDuelmonTargetScope(scope)) {
-		return Either.left(
-			invalidInput(
-				'Duelmon combat input target scope must be one of: combat, group, combatant',
-				'input.target.scope'
-			)
-		);
-	}
-
-	const id = target['id'];
-
-	if (id !== undefined && !isNonEmptyString(id)) {
-		return Either.left(
-			invalidInput('Duelmon combat input target id must be a non-empty string when provided', 'input.target.id')
-		);
-	}
-
-	return Either.right({ actorId, moveId, target: { id, scope } });
-}
-
-export type { DuelmonCombatInput, DuelmonCombatTarget };
-export { parseDuelmonCombatInput };
+export default DuelmonCombatInput;

@@ -1,5 +1,7 @@
+export type { DuelmonMoveCategory, DuelmonType } from '../duelmon.types';
+export { DuelmonTypes } from '../duelmon.types';
 export type { BuildDuelmonDatasetOptions, ShowdownTables } from './duelmon-dataset.builder';
-export { default as buildDuelmonDataset } from './duelmon-dataset.builder';
+export { DuelmonDatasetBuilder } from './duelmon-dataset.builder';
 export type {
 	DuelmonAbility,
 	DuelmonDataset,
@@ -7,3 +9,4 @@ export type {
 	DuelmonMoveSecondary,
 	DuelmonSpecies,
 } from './duelmon-dataset.types';
+export { DuelmonGen1Normalizer } from './duelmon-gen1-normalizer';

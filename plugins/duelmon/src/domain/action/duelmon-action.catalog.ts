@@ -1,25 +1,18 @@
 import type { CombatActionCatalog, CombatActionDescriptor } from '@pocket-forge/combat/domain';
 
-import { MODIFY_ATTRIBUTE_ACTION_ID } from './duelmon.constants';
-import { MODIFY_ATTRIBUTE_CONFIG_DEFINITIONS, validateModifyAttributeConfig } from './modify-attribute.config';
-
-/**
- * Declares the Duelmon attribute-modification action.
- */
-const MODIFY_ATTRIBUTE_DESCRIPTOR: CombatActionDescriptor = {
-	configDefinitions: MODIFY_ATTRIBUTE_CONFIG_DEFINITIONS,
-	id: MODIFY_ATTRIBUTE_ACTION_ID,
-	validateConfig: validateModifyAttributeConfig,
-};
+import type DuelmonAction from './duelmon-action';
 
 /**
  * Catalog of actions registered by the Duelmon Combat plugin.
+ *
+ * Descriptors come from the registered actions, so the catalog never drifts
+ * from the resolver map built by the plugin.
  */
 class DuelmonActionCatalog implements CombatActionCatalog {
 	private readonly descriptors: readonly CombatActionDescriptor[];
 
-	constructor(descriptors: readonly CombatActionDescriptor[] = [MODIFY_ATTRIBUTE_DESCRIPTOR]) {
-		this.descriptors = descriptors;
+	constructor(actions: readonly DuelmonAction[]) {
+		this.descriptors = actions.map(action => action.descriptor);
 	}
 
 	/**
@@ -33,5 +26,6 @@ class DuelmonActionCatalog implements CombatActionCatalog {
 	}
 }
 
-export { MODIFY_ATTRIBUTE_DESCRIPTOR };
+export { DuelmonActionCatalog };
+
 export default DuelmonActionCatalog;

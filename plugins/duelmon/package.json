@@ -34,10 +34,18 @@
 			"types": "./dist/domain/index.d.mts",
 			"default": "./dist/domain/index.mjs"
 		},
+		"./catalog": {
+			"development": "./src/catalog/index.ts",
+			"types": "./dist/catalog/index.d.mts",
+			"default": "./dist/catalog/index.mjs"
+		},
 		"./dataset": {
 			"development": "./src/dataset/index.ts",
 			"types": "./dist/dataset/index.d.mts",
 			"default": "./dist/dataset/index.mjs"
+		},
+		"./mother/domain": {
+			"development": "./mother/domain/index.ts"
 		}
 	},
 	"scripts": {
@@ -48,7 +56,9 @@
 		"@hexadrop/either": "^2.0.0",
 		"@hexadrop/error": "^2.0.0",
 		"@pocket-forge/attribute": "workspace:*",
-		"@pocket-forge/combat": "workspace:*"
+		"@pocket-forge/combat": "workspace:*",
+		"@pocket-forge/move": "workspace:*",
+		"@pocket-forge/species": "workspace:*"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "10.6.0",
@@ -56,6 +66,8 @@
 		"@hexadrop/error": "2.0.0",
 		"@pocket-forge/attribute": "0.0.0",
 		"@pocket-forge/combat": "0.0.0",
+		"@pocket-forge/move": "0.0.0",
+		"@pocket-forge/species": "0.0.0",
 		"tsdown": "0.23.7"
 	}
 }

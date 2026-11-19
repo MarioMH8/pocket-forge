@@ -1,3 +1,4 @@
+import { DuelmonTypes } from '../duelmon.types';
 import type {
 	DuelmonAbility,
 	DuelmonDataset,
@@ -5,6 +6,7 @@ import type {
 	DuelmonMoveSecondary,
 	DuelmonSpecies,
 } from './duelmon-dataset.types';
+import { DuelmonGen1Normalizer } from './duelmon-gen1-normalizer';
 
 type ShowdownTable = Record<string, unknown>;
 type UnknownRecord = Record<string, unknown>;
@@ -31,25 +33,6 @@ interface BuildDuelmonDatasetOptions {
 
 const GEN1_SPECIES_MAX = 151;
 const GEN1_MOVE_MAX = 165;
-const GEN1_TYPES = [
-	'Normal',
-	'Fire',
-	'Water',
-	'Electric',
-	'Grass',
-	'Ice',
-	'Fighting',
-	'Poison',
-	'Ground',
-	'Flying',
-	'Psychic',
-	'Bug',
-	'Rock',
-	'Ghost',
-	'Dragon',
-] as const;
-const GEN1_TYPE_SET = new Set<string>(GEN1_TYPES);
-const PHYSICAL_TYPES = new Set(['Bug', 'Fighting', 'Flying', 'Ghost', 'Ground', 'Normal', 'Poison', 'Rock']);
 
 function isRecord(value: unknown): value is UnknownRecord {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -250,19 +233,11 @@ function buildSpecies(pokedex: ShowdownTable, gen1Pokedex: ShowdownTable): reado
 			id,
 			name: readString(entry, 'name', path),
 			num: speciesNumber,
-			types: readStringArray(entry, 'types', path),
+			types: DuelmonGen1Normalizer.speciesTypes(readStringArray(entry, 'types', path)),
 		});
 	}
 
 	return species.toSorted((first, second) => first.num - second.num);
-}
-
-function deriveCategory(category: string, type: string): DuelmonMove['category'] {
-	if (category === 'Status') {
-		return 'Status';
-	}
-
-	return PHYSICAL_TYPES.has(type) ? 'Physical' : 'Special';
 }
 
 function readAccuracy(entry: UnknownRecord): number | true {
@@ -278,7 +253,7 @@ function readAccuracy(entry: UnknownRecord): number | true {
 function buildMove(id: string, baseEntry: UnknownRecord, gen1Entry: unknown): DuelmonMove {
 	const merged = mergeEntry(baseEntry, gen1Entry);
 	const path = `moves.${id}`;
-	const type = readString(merged, 'type', path);
+	const type = DuelmonGen1Normalizer.moveType(readString(merged, 'type', path));
 	const category = readString(merged, 'category', path);
 	const secondary = readSecondary(merged['secondary'], `${path}.secondary`);
 	const status = optionalString(merged, 'status');
@@ -291,7 +266,7 @@ function buildMove(id: string, baseEntry: UnknownRecord, gen1Entry: unknown): Du
 
 	return {
 		accuracy: readAccuracy(merged),
-		category: deriveCategory(category, type),
+		category: DuelmonGen1Normalizer.category(category, type),
 		...(critRatio !== undefined && { critRatio }),
 		...(drain !== undefined && { drain }),
 		flags: readNumericRecord(merged['flags'], `${path}.flags`),
@@ -330,10 +305,10 @@ function buildMoves(moves: ShowdownTable, gen1Moves: ShowdownTable): readonly Du
 
 function readDamageTaken(merged: UnknownRecord): Readonly<Record<string, number>> {
 	const damage = isRecord(merged['damageTaken']) ? merged['damageTaken'] : {};
-	const damageTaken: Record<string, number> = {};
+	const damageTaken = Object.fromEntries(DuelmonTypes.ALL.map(type => [type, 0]));
 
 	for (const [attackType, value] of Object.entries(damage)) {
-		if (typeof value === 'number' && Number.isFinite(value) && GEN1_TYPE_SET.has(attackType)) {
+		if (typeof value === 'number' && Number.isFinite(value) && DuelmonTypes.is(attackType)) {
 			damageTaken[attackType] = value;
 		}
 	}
@@ -347,7 +322,7 @@ function buildTypechart(
 ): Readonly<Record<string, Readonly<Record<string, number>>>> {
 	const result: Record<string, Readonly<Record<string, number>>> = {};
 
-	for (const type of GEN1_TYPES) {
+	for (const type of DuelmonTypes.ALL) {
 		const key = type.toLowerCase();
 		const merged = mergeEntry(requireRecord(typechart[key], `typechart.${key}`), gen1Typechart[key]);
 
@@ -362,26 +337,32 @@ function buildTypechart(
  *
  * The builder is pure: it does not read files, fetch a repository, or mutate
  * its inputs.
- *
- * @param options - Pinned commit and the base and Gen 1 Showdown tables.
- * @returns The serializable Duelmon Gen 1 dataset.
  */
-function buildDuelmonDataset({ commit, tables }: BuildDuelmonDatasetOptions): DuelmonDataset {
-	if (commit.trim().length === 0) {
-		throw new Error('A Showdown commit is required');
+class DuelmonDatasetBuilder {
+	/**
+	 * Builds the serializable Duelmon Gen 1 dataset.
+	 *
+	 * @param options - Pinned commit and the base and Gen 1 Showdown tables.
+	 * @returns The serializable Duelmon Gen 1 dataset.
+	 * @throws {Error} When the commit is empty or a table entry is malformed.
+	 */
+	static build({ commit, tables }: BuildDuelmonDatasetOptions): DuelmonDataset {
+		if (commit.trim().length === 0) {
+			throw new Error('A Showdown commit is required');
+		}
+
+		const abilities: readonly DuelmonAbility[] = [];
+
+		return {
+			abilities,
+			generation: 1,
+			moves: buildMoves(tables.moves, tables.gen1Moves),
+			source: { commit, repository: 'smogon/pokemon-showdown' },
+			species: buildSpecies(tables.pokedex, tables.gen1Pokedex),
+			typechart: buildTypechart(tables.typechart, tables.gen1Typechart),
+		};
 	}
-
-	const abilities: readonly DuelmonAbility[] = [];
-
-	return {
-		abilities,
-		generation: 1,
-		moves: buildMoves(tables.moves, tables.gen1Moves),
-		source: { commit, repository: 'smogon/pokemon-showdown' },
-		species: buildSpecies(tables.pokedex, tables.gen1Pokedex),
-		typechart: buildTypechart(tables.typechart, tables.gen1Typechart),
-	};
 }
 
 export type { BuildDuelmonDatasetOptions, ShowdownTables };
-export default buildDuelmonDataset;
+export { DuelmonDatasetBuilder };

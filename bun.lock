@@ -195,6 +195,8 @@
         "@hexadrop/error": "2.0.0",
         "@pocket-forge/attribute": "0.0.0",
         "@pocket-forge/combat": "0.0.0",
+        "@pocket-forge/move": "0.0.0",
+        "@pocket-forge/species": "0.0.0",
         "tsdown": "0.23.7",
       },
       "peerDependencies": {
@@ -202,6 +204,8 @@
         "@hexadrop/error": "^2.0.0",
         "@pocket-forge/attribute": "workspace:*",
         "@pocket-forge/combat": "workspace:*",
+        "@pocket-forge/move": "workspace:*",
+        "@pocket-forge/species": "workspace:*",
       },
     },
   },

@@ -1,24 +1,6 @@
 import type { DuelmonSpecies, ShowdownTables } from '@pocket-forge/duelmon/dataset';
-import { buildDuelmonDataset } from '@pocket-forge/duelmon/dataset';
+import { DuelmonDatasetBuilder, DuelmonTypes } from '@pocket-forge/duelmon/dataset';
 import { describe, expect, it } from 'bun:test';
-
-const GEN1_ATTACK_TYPES = [
-	'Normal',
-	'Fire',
-	'Water',
-	'Electric',
-	'Grass',
-	'Ice',
-	'Fighting',
-	'Poison',
-	'Ground',
-	'Flying',
-	'Psychic',
-	'Bug',
-	'Rock',
-	'Ghost',
-	'Dragon',
-] as const;
 
 const EXCLUDED_ATTACK_TYPES = ['Dark', 'Steel', 'Fairy', 'Stellar'] as const;
 
@@ -27,7 +9,7 @@ function stats(overrides: Partial<DuelmonSpecies['baseStats']> = {}): DuelmonSpe
 }
 
 function gen1Damage(overrides: Record<string, number> = {}): Record<string, number> {
-	return { ...Object.fromEntries(GEN1_ATTACK_TYPES.map(type => [type, 0])), ...overrides };
+	return { ...Object.fromEntries(DuelmonTypes.ALL.map(type => [type, 0])), ...overrides };
 }
 
 function damageTaken(overrides: Record<string, number> = {}): Record<string, number> {
@@ -40,7 +22,7 @@ function damageTaken(overrides: Record<string, number> = {}): Record<string, num
 
 function tables(): ShowdownTables {
 	const typechart = Object.fromEntries(
-		GEN1_ATTACK_TYPES.map(type => [type.toLowerCase(), { damageTaken: damageTaken() }])
+		DuelmonTypes.ALL.map(type => [type.toLowerCase(), { damageTaken: damageTaken() }])
 	);
 
 	return {
@@ -52,7 +34,7 @@ function tables(): ShowdownTables {
 				pp: 5,
 				priority: 0,
 				target: 'normal',
-				type: 'Stone',
+				type: 'Rock',
 			},
 			oath: {
 				category: 'Status',
@@ -60,7 +42,7 @@ function tables(): ShowdownTables {
 				pp: 10,
 				priority: 0,
 				target: 'self',
-				type: 'Wraith',
+				type: 'Ghost',
 			},
 			spark: {
 				accuracy: 90,
@@ -69,11 +51,11 @@ function tables(): ShowdownTables {
 				priority: 1,
 				secondary: { boosts: { spe: -1 }, chance: 33 },
 				target: 'all',
-				type: 'Aqua',
+				type: 'Water',
 			},
 			wild: {
 				inherit: true,
-				type: 'Aqua',
+				type: 'Water',
 			},
 		},
 		gen1Pokedex: {
@@ -117,7 +99,7 @@ function tables(): ShowdownTables {
 				pp: 30,
 				priority: 0,
 				target: 'self',
-				type: 'Wraith',
+				type: 'Ghost',
 			},
 			spark: {
 				accuracy: 100,
@@ -129,7 +111,7 @@ function tables(): ShowdownTables {
 				pp: 25,
 				priority: 0,
 				target: 'normal',
-				type: 'Ember',
+				type: 'Fire',
 			},
 			strike: {
 				accuracy: 100,
@@ -183,21 +165,21 @@ function tables(): ShowdownTables {
 				baseStats: stats(),
 				name: 'Afterguard',
 				num: 152,
-				types: ['Stone'],
+				types: ['Rock'],
 			},
 			aquafin: {
 				abilities: { 0: 'Current' },
 				baseStats: stats({ spa: 40, spd: 40 }),
 				name: 'Aquafin',
 				num: 2,
-				types: ['Aqua'],
+				types: ['Water'],
 			},
 			emberling: {
 				abilities: { 0: 'Emberheart' },
 				baseStats: stats({ atk: 55 }),
 				name: 'Emberling',
 				num: 1,
-				types: ['Ember'],
+				types: ['Fire'],
 			},
 			glitch: {
 				abilities: { 0: 'Static' },
@@ -211,7 +193,7 @@ function tables(): ShowdownTables {
 				baseStats: stats({ def: 120 }),
 				name: 'Stonelet',
 				num: 151,
-				types: ['Stone'],
+				types: ['Rock'],
 			},
 		},
 		typechart: {
@@ -223,9 +205,9 @@ function tables(): ShowdownTables {
 	};
 }
 
-describe('buildDuelmonDataset', () => {
+describe('DuelmonDatasetBuilder.build', () => {
 	it('keeps only the 151 Gen 1 species and merges inherited stats', () => {
-		const dataset = buildDuelmonDataset({ commit: 'fixture-commit', tables: tables() });
+		const dataset = DuelmonDatasetBuilder.build({ commit: 'fixture-commit', tables: tables() });
 
 		expect(dataset.species.map(species => species.id)).toEqual(['emberling', 'aquafin', 'stonelet']);
 		expect(dataset.species[0]).toEqual({
@@ -233,13 +215,13 @@ describe('buildDuelmonDataset', () => {
 			id: 'emberling',
 			name: 'Emberling',
 			num: 1,
-			types: ['Ember'],
+			types: ['Fire'],
 		});
 		expect(dataset.species[1]?.baseStats).toMatchObject({ spa: 80, spd: 80 });
 	});
 
 	it('keeps only Gen 1 moves, merges overrides, and derives the category', () => {
-		const dataset = buildDuelmonDataset({ commit: 'fixture-commit', tables: tables() });
+		const dataset = DuelmonDatasetBuilder.build({ commit: 'fixture-commit', tables: tables() });
 		const moves = new Map(dataset.moves.map(move => [move.id, move]));
 
 		expect(dataset.moves.map(move => move.id)).toEqual(['strike', 'spark', 'oath', 'ward', 'wild']);
@@ -260,7 +242,7 @@ describe('buildDuelmonDataset', () => {
 	});
 
 	it('uses the base category and the merged type to classify a move', () => {
-		const dataset = buildDuelmonDataset({ commit: 'fixture-commit', tables: tables() });
+		const dataset = DuelmonDatasetBuilder.build({ commit: 'fixture-commit', tables: tables() });
 		const moves = new Map(dataset.moves.map(move => [move.id, move]));
 
 		expect(moves.get('spark')).toMatchObject({
@@ -270,14 +252,67 @@ describe('buildDuelmonDataset', () => {
 			priority: 1,
 			secondary: { boosts: { spe: -1 }, chance: 33 },
 			target: 'all',
-			type: 'Aqua',
+			type: 'Water',
 		});
 		expect(moves.get('oath')).toMatchObject({ category: 'Status', name: 'Oath', pp: 10 });
-		expect(moves.get('wild')).toMatchObject({ category: 'Special', type: 'Aqua' });
+		expect(moves.get('wild')).toMatchObject({ category: 'Special', type: 'Water' });
+	});
+
+	it('drops Fairy and falls back to Normal when no Gen 1 type remains', () => {
+		const fixture = tables();
+		const dataset = DuelmonDatasetBuilder.build({
+			commit: 'fixture-commit',
+			tables: {
+				...fixture,
+				pokedex: {
+					...fixture.pokedex,
+					aquafin: {
+						...(fixture.pokedex['aquafin'] as Record<string, unknown>),
+						types: ['Water', 'Fairy'],
+					},
+					emberling: {
+						...(fixture.pokedex['emberling'] as Record<string, unknown>),
+						types: ['Fairy'],
+					},
+				},
+			},
+		});
+		const species = new Map(dataset.species.map(entry => [entry.id, entry]));
+
+		expect(species.get('emberling')?.types).toEqual(['Normal']);
+		expect(species.get('aquafin')?.types).toEqual(['Water']);
+	});
+
+	it('normalizes ??? move types to Normal', () => {
+		const fixture = tables();
+		const dataset = DuelmonDatasetBuilder.build({
+			commit: 'fixture-commit',
+			tables: {
+				...fixture,
+				moves: {
+					...fixture.moves,
+					bide: {
+						accuracy: 100,
+						basePower: 0,
+						category: 'Physical',
+						flags: {},
+						name: 'Bide',
+						num: 6,
+						pp: 10,
+						priority: 0,
+						target: 'self',
+						type: '???',
+					},
+				},
+			},
+		});
+		const moves = new Map(dataset.moves.map(move => [move.id, move]));
+
+		expect(moves.get('bide')).toMatchObject({ category: 'Physical', power: 0, type: 'Normal' });
 	});
 
 	it('drops non-Gen 1 types from the chart and from every damage table', () => {
-		const dataset = buildDuelmonDataset({ commit: 'fixture-commit', tables: tables() });
+		const dataset = DuelmonDatasetBuilder.build({ commit: 'fixture-commit', tables: tables() });
 
 		expect(Object.keys(dataset.typechart)).toHaveLength(15);
 		expect(dataset.typechart).not.toHaveProperty('dark');
@@ -289,7 +324,7 @@ describe('buildDuelmonDataset', () => {
 	});
 
 	it('pins the source and omits Gen 1 abilities', () => {
-		const dataset = buildDuelmonDataset({ commit: 'fixture-commit', tables: tables() });
+		const dataset = DuelmonDatasetBuilder.build({ commit: 'fixture-commit', tables: tables() });
 
 		expect(dataset).toMatchObject({
 			abilities: [],
@@ -299,6 +334,6 @@ describe('buildDuelmonDataset', () => {
 	});
 
 	it('rejects an empty commit', () => {
-		expect(() => buildDuelmonDataset({ commit: ' ', tables: tables() })).toThrow('Showdown commit');
+		expect(() => DuelmonDatasetBuilder.build({ commit: ' ', tables: tables() })).toThrow('Showdown commit');
 	});
 });

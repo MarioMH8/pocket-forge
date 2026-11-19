@@ -2,16 +2,9 @@ import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
 import { CombatEngine, CombatSetup } from '@pocket-forge/combat/domain';
 import { ThresholdCombatCompletionRule } from '@pocket-forge/combat/rulesets';
-import { DUELMON_CONFIG_KEYS } from '@pocket-forge/duelmon/domain';
+import { ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
+import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
-
-import {
-	ATTRIBUTE_DEFINITIONS,
-	completionRuleset,
-	duelmonActionSet,
-	duelmonCombat,
-	duelmonPlugin,
-} from '../support/duelmon.fixtures';
 
 function combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
 	return combat.groups
@@ -22,17 +15,20 @@ function combatantPower(combat: Combat, combatantId: string): AttributeValue | u
 
 describe('Duelmon completion through CombatEngine', () => {
 	it('completes combat when the threshold rule is reached', () => {
-		const ruleset = completionRuleset();
-		const plugin = duelmonPlugin();
-		const actionSet = duelmonActionSet({
-			[DUELMON_CONFIG_KEYS.amount]: 25,
-			[DUELMON_CONFIG_KEYS.attributeKey]: 'power',
-			[DUELMON_CONFIG_KEYS.operation]: 'subtract',
-			[DUELMON_CONFIG_KEYS.scope]: 'combatant',
+		const ruleset = DuelmonCombatMother.completionRuleset();
+		const plugin = DuelmonCombatMother.plugin();
+		const actionSet = DuelmonCombatMother.actionSet({
+			[ModifyAttributeConfig.KEYS.amount]: 25,
+			[ModifyAttributeConfig.KEYS.attributeKey]: 'power',
+			[ModifyAttributeConfig.KEYS.operation]: 'subtract',
+			[ModifyAttributeConfig.KEYS.scope]: 'combatant',
 		});
-		const completion = ThresholdCombatCompletionRule.create(ruleset, ATTRIBUTE_DEFINITIONS).getRight();
+		const completion = ThresholdCombatCompletionRule.create(
+			ruleset,
+			DuelmonCombatMother.ATTRIBUTE_DEFINITIONS
+		).getRight();
 		const engine = new CombatEngine(CombatSetup.create({ actions: plugin, actionSet, completion, ruleset }));
-		const combat = duelmonCombat();
+		const combat = DuelmonCombatMother.create();
 		const input = {
 			actorId: 'combatant-a',
 			moveId: 'move-1',

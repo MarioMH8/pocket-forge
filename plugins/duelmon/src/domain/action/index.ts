@@ -1,12 +1,19 @@
-export { MODIFY_ATTRIBUTE_ACTION_ID } from './duelmon.constants';
-export { default as DuelmonActionCatalog, MODIFY_ATTRIBUTE_DESCRIPTOR } from './duelmon-action.catalog';
-export type { DuelmonCombatInput, DuelmonCombatTarget } from './duelmon-combat.input';
-export { default as DuelmonCombatPlugin } from './duelmon-combat.plugin';
-export type { DuelmonOperation, DuelmonTargetScope } from './modify-attribute.config';
-export {
-	DUELMON_CONFIG_KEYS,
-	DUELMON_OPERATIONS,
-	DUELMON_SCOPES,
-	MODIFY_ATTRIBUTE_CONFIG_DEFINITIONS,
-	validateModifyAttributeConfig,
-} from './modify-attribute.config';
+export { DuelmonCombatAttributes } from './combat-attributes';
+export { DuelmonErrors } from './duelmon.errors';
+export type { default as DuelmonAction } from './duelmon-action';
+export { DuelmonActionCatalog } from './duelmon-action.catalog';
+export type { default as DuelmonActionResolver } from './duelmon-action.resolver';
+export { DuelmonCombatInput } from './duelmon-combat.input';
+export { DuelmonCombatPlugin } from './duelmon-combat.plugin';
+export type { DuelmonTargetScope } from './duelmon-target';
+export { DuelmonTarget, ResolvedDuelmonTarget } from './duelmon-target';
+export { ModifyAttributeAction } from './modify-attribute/modify-attribute.action';
+export type { DuelmonOperation } from './modify-attribute/modify-attribute.config';
+export { ModifyAttributeConfig } from './modify-attribute/modify-attribute.config';
+export { Gen1BattleStats } from './use-move/gen1/gen1-battle-stats';
+export type { Gen1DamageInput } from './use-move/gen1/gen1-damage';
+export { Gen1Damage } from './use-move/gen1/gen1-damage';
+export { Gen1UseMoveMechanics } from './use-move/gen1/gen1-use-move.mechanics';
+export { UseMoveAction } from './use-move/use-move.action';
+export type { UseMoveAttributes, UseMoveInput, UseMoveMechanics, UseMoveOutcome } from './use-move/use-move.mechanics';
+export { UseMoveResolution } from './use-move/use-move.resolution';

@@ -1,3 +1,5 @@
+import type { DuelmonMoveCategory, DuelmonType } from '../duelmon.types';
+
 /**
  * Curated, serializable species entry extracted from Pokémon Showdown.
  */
@@ -46,7 +48,7 @@ interface DuelmonSpecies {
 	/**
 	 *Gen 1 types.
 	 */
-	readonly types: readonly string[];
+	readonly types: readonly DuelmonType[];
 }
 
 /**
@@ -95,7 +97,7 @@ interface DuelmonMove {
 	/**
 	 *Gen 1 damage category, derived from the type.
 	 */
-	readonly category: 'Physical' | 'Special' | 'Status';
+	readonly category: DuelmonMoveCategory;
 	/**
 	 *High-critical-hit ratio when greater than 1.
 	 */
@@ -151,7 +153,7 @@ interface DuelmonMove {
 	/**
 	 *Move type.
 	 */
-	readonly type: string;
+	readonly type: DuelmonType;
 	/**
 	 *Primary volatile status inflicted on the target.
 	 */
