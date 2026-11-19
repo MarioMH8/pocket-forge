@@ -1,6 +1,6 @@
 import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
-import type { Combat, CombatPrimitives, CombatRuleset } from '@pocket-forge/combat/domain';
+import type { Combat, CombatMoveBindingPrimitives, CombatPrimitives, CombatRuleset } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity, CombatActionSet } from '@pocket-forge/combat/domain';
 import { CombatantGroupMother, CombatantMother, CombatRulesetMother } from '@pocket-forge/combat/mother/domain';
 import {
@@ -8,7 +8,11 @@ import {
 	COMPLETION_CONFIG_KEYS,
 	OneVersusOneCombatRuleset,
 } from '@pocket-forge/combat/rulesets';
-import { MODIFY_ATTRIBUTE_ACTION_ID, ReferenceCombatPlugin } from '@pocket-forge/combat-reference/domain';
+import {
+	MODIFY_ATTRIBUTE_ACTION_ID,
+	REFERENCE_CONFIG_KEYS,
+	ReferenceCombatPlugin,
+} from '@pocket-forge/combat-reference/domain';
 
 const POWER = AttributeDefinitionMother.number({
 	constraints: { max: 100, min: 0 },
@@ -84,6 +88,34 @@ function referencePlugin(): ReferenceCombatPlugin {
 	return new ReferenceCombatPlugin(ATTRIBUTE_DEFINITIONS);
 }
 
+const REFERENCE_BINDINGS: readonly CombatMoveBindingPrimitives[] = [
+	{
+		actionId: MODIFY_ATTRIBUTE_ACTION_ID,
+		config: {
+			[REFERENCE_CONFIG_KEYS.amount]: 5,
+			[REFERENCE_CONFIG_KEYS.attributeKey]: 'power',
+			[REFERENCE_CONFIG_KEYS.operation]: 'add',
+			[REFERENCE_CONFIG_KEYS.scope]: 'combatant',
+		},
+		moveId: 'move-1',
+	},
+	{
+		actionId: MODIFY_ATTRIBUTE_ACTION_ID,
+		config: {
+			[REFERENCE_CONFIG_KEYS.amount]: 25,
+			[REFERENCE_CONFIG_KEYS.attributeKey]: 'power',
+			[REFERENCE_CONFIG_KEYS.operation]: 'set',
+			[REFERENCE_CONFIG_KEYS.probability]: 0.5,
+			[REFERENCE_CONFIG_KEYS.scope]: 'group',
+		},
+		moveId: 'move-2',
+	},
+];
+
+function referenceBindings(): CombatMoveBindingPrimitives[] {
+	return REFERENCE_BINDINGS.map(binding => ({ ...binding, config: { ...binding.config } }));
+}
+
 function referenceActionSet(config: AttributeValues, moveId = 'move-1'): CombatActionSet {
 	return CombatActionSet.create(
 		{ bindings: [{ actionId: MODIFY_ATTRIBUTE_ACTION_ID, config, moveId }] },
@@ -107,6 +139,7 @@ export {
 	completionRuleset,
 	DEFAULT_COMPLETION_ATTRIBUTES,
 	referenceActionSet,
+	referenceBindings,
 	referenceCombat,
 	referencePlugin,
 };
