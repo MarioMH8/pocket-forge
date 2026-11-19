@@ -5,7 +5,7 @@ import type { AttributeDefinition, AttributeValue, AttributeValues } from '@pock
 import { AttributeMap } from '@pocket-forge/attribute/domain';
 import RandomPocket from '@pocket-forge/rng/domain';
 
-import CombatTransitionError from './combat-transition.error';
+import CombatTransitionError from './combat.error';
 import type { CombatantGroupPrimitives } from './combatant-group';
 import CombatantGroup from './combatant-group';
 
