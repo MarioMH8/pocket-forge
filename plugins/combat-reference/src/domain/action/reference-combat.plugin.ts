@@ -14,7 +14,7 @@ import { Combat as CombatEntity, CombatResolutionError } from '@pocket-forge/com
 import type { ReferenceOperation, ReferenceTargetScope } from './modify-attribute.config';
 import { isReferenceOperation, isReferenceTargetScope, REFERENCE_CONFIG_KEYS } from './modify-attribute.config';
 import ReferenceCombatActionCatalog from './reference-combat.catalog';
-import MODIFY_ATTRIBUTE_ACTION_ID from './reference-combat.constants';
+import { MODIFY_ATTRIBUTE_ACTION_ID } from './reference-combat.constants';
 import type { ReferenceCombatInput, ReferenceCombatTarget } from './reference-combat.input';
 import { parseReferenceCombatInput } from './reference-combat.input';
 

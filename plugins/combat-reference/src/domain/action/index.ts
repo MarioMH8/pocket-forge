@@ -7,6 +7,6 @@ export {
 	validateModifyAttributeConfig,
 } from './modify-attribute.config';
 export { MODIFY_ATTRIBUTE_DESCRIPTOR, default as ReferenceCombatActionCatalog } from './reference-combat.catalog';
-export { default as MODIFY_ATTRIBUTE_ACTION_ID } from './reference-combat.constants';
+export { MODIFY_ATTRIBUTE_ACTION_ID } from './reference-combat.constants';
 export type { ReferenceCombatInput, ReferenceCombatTarget } from './reference-combat.input';
 export { default as ReferenceCombatPlugin } from './reference-combat.plugin';

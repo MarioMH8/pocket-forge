@@ -3,4 +3,6 @@
  */
 const MODIFY_ATTRIBUTE_ACTION_ID = 'modifyAttribute';
 
-export default MODIFY_ATTRIBUTE_ACTION_ID;
+// The package exposes a named constant rather than a default export.
+// eslint-disable-next-line import/prefer-default-export
+export { MODIFY_ATTRIBUTE_ACTION_ID };
