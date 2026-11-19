@@ -17,11 +17,11 @@ A collection of Combatants with its own battle attributes; its cardinality and r
 _Avoid_: Team, side
 
 **Combat Action Plugin**:
-Reusable external logic that registers actions and resolves Move-bound actions into Combat Transitions.
+Reusable external logic that registers actions and resolves Move-bound actions into Combat Transitions; the object itself is the identity, with no separate plugin id.
 _Avoid_: Combat Plugin, rules engine, embedded move logic
 
 **Combat Ruleset**:
-A concrete combat format that declares format attributes and composition constraints. It does not contain Move bindings, action logic, or victory logic.
+A concrete combat format that declares format attributes and composition constraints; the class itself is the identity. It does not contain Move bindings, action logic, or victory logic.
 _Avoid_: Plugin, battle configuration, embedded ruleset
 
 **Built-in Combat Rules**:
@@ -33,7 +33,7 @@ Plugin-registered executable logic selected by a Combat Action Set for a Move; i
 _Avoid_: Move function, embedded move logic
 
 **Combat Action Set**:
-Authored data binding Move identifiers to registered Combat Actions and serializable action configuration.
+Authored data binding Move identifiers to registered Combat Actions and serializable action configuration; it carries no plugin reference, so the app pairs it with the plugin that resolves it.
 _Avoid_: Core binding, hardcoded move
 
 **Combat Completion Rule**:

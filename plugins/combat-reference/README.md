@@ -11,5 +11,5 @@ core and proves that Move logic and authored bindings compose through public
 extension contracts instead of importing implementation details.
 
 - `ReferenceCombatPlugin` resolves the `modifyAttribute` action.
-- `ReferenceCombatActionSet` validates authored Move-to-action bindings against
-  the plugin catalog and a contract version range.
+- Authored Move-to-action bindings are validated by `CombatActionSet.create` from
+  `@pocket-forge/combat/domain` against the plugin catalog.

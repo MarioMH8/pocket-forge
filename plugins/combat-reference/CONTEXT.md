@@ -7,16 +7,12 @@ stays in `packages/combat/CONTEXT.md`.
 ## Language
 
 **Reference Combat Action Plugin**:
-A concrete Combat Action Plugin owned by this package that registers the Modify Attribute Action and resolves it into a Combat Transition.
+A concrete Combat Action Plugin owned by this package that registers the Modify Attribute Action and resolves it into a Combat Transition. It has no plugin id or `supports` check; the app wires it with an action set.
 _Avoid_: Core action resolver, engine plugin
 
 **Modify Attribute Action**:
 The reference action that sets, adds, or subtracts one declared attribute on a Combat, Combatant Group, or Combatant, optionally gated by one deterministic probability draw.
 _Avoid_: Stat change, damage action
-
-**Reference Combat Action Set**:
-An authored set of Move-to-action bindings validated through the Reference Combat Action Plugin catalog.
-_Avoid_: Core binding, hardcoded move
 
 **Attribute Catalog**:
 The project-level list of Attribute Definitions injected into the Reference Combat Action Plugin to validate and saturate target attributes.
