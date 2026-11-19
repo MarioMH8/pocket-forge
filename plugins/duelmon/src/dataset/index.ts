@@ -1,5 +1,5 @@
-export type { BuildDuelmonDatasetOptions, ShowdownTables } from './build-duelmon-dataset';
-export { default as buildDuelmonDataset } from './build-duelmon-dataset';
+export type { BuildDuelmonDatasetOptions, ShowdownTables } from './duelmon-dataset.builder';
+export { default as buildDuelmonDataset } from './duelmon-dataset.builder';
 export type {
 	DuelmonAbility,
 	DuelmonDataset,
