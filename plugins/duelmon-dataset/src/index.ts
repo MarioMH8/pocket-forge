@@ -1,5 +1,3 @@
-export type { DuelmonMoveCategory, DuelmonType } from '../duelmon-types';
-export { DuelmonTypes } from '../duelmon-types';
 export type {
 	BuildDuelmonDatasetOptions,
 	DuelmonAbility,
@@ -11,3 +9,5 @@ export type {
 } from './duelmon-dataset.builder';
 export { DuelmonDatasetBuilder } from './duelmon-dataset.builder';
 export { DuelmonGen1Normalizer } from './duelmon-gen1-normalizer';
+export type { DuelmonMoveCategory, DuelmonType } from './duelmon-types';
+export { DuelmonTypes } from './duelmon-types';

@@ -1,7 +1,7 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 
-import type { DuelmonMoveCategory, DuelmonType } from '../duelmon-types';
-import { DuelmonTypes } from '../duelmon-types';
+import type { DuelmonMoveCategory, DuelmonType } from './duelmon-types';
+import { DuelmonTypes } from './duelmon-types';
 
 const FAIRY_TYPE = 'Fairy';
 const UNKNOWN_MOVE_TYPE = '???';

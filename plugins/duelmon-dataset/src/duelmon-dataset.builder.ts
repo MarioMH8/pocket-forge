@@ -1,8 +1,8 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 
-import type { DuelmonMoveCategory, DuelmonType } from '../duelmon-types';
-import { DuelmonTypes } from '../duelmon-types';
 import { DuelmonGen1Normalizer } from './duelmon-gen1-normalizer';
+import type { DuelmonMoveCategory, DuelmonType } from './duelmon-types';
+import { DuelmonTypes } from './duelmon-types';
 
 /**
  * Curated, serializable species entry extracted from Pokémon Showdown.
