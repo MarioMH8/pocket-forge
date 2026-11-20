@@ -2,7 +2,7 @@ import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeMap } from '@pocket-forge/attribute/domain';
 
-import type { CombatActionCatalog } from './combat-action';
+import type { CombatActionCatalog } from './combat-action-descriptor';
 import CombatMoveBindingSetError from './combat-move-binding-set.error';
 
 /**

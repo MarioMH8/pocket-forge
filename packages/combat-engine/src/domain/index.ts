@@ -1,5 +1,5 @@
-export type { CombatActionCatalog, CombatActionDescriptor } from './action/combat-action';
-export type { CombatActionContext, CombatActionResolver } from './action/combat-action.resolver';
+export type { CombatActionCatalog, CombatActionDescriptor } from './action/combat-action-descriptor';
+export type { CombatActionContext, CombatActionResolver } from './action/combat-action-resolver';
 export type { CombatMoveBindingPrimitives, CombatMoveBindingSetPrimitives } from './action/combat-move-binding-set';
 export { CombatMoveBinding, default as CombatMoveBindingSet } from './action/combat-move-binding-set';
 export type { CombatMoveBindingSetErrorReason } from './action/combat-move-binding-set.error';

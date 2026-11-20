@@ -3,7 +3,7 @@ import type { Combat } from '@pocket-forge/combat/domain';
 
 import type CombatResolutionError from '../combat-resolution.error';
 import type CombatTransition from '../combat-transition';
-import type { CombatActionCatalog } from './combat-action';
+import type { CombatActionCatalog } from './combat-action-descriptor';
 import type CombatMoveBindingSet from './combat-move-binding-set';
 
 /**
