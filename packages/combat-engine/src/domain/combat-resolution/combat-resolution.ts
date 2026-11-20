@@ -10,7 +10,7 @@ import type { CombatEvent } from '../event/combat-event';
  * resolving it, and the reached outcome when the completion rule ended the
  * combat.
  */
-export default interface CombatResolution {
+class CombatResolution {
 	/**
 	 * Successor snapshot, including the advanced RandomPocket.
 	 */
@@ -23,4 +23,25 @@ export default interface CombatResolution {
 	 * Reached outcome, or `undefined` while combat continues.
 	 */
 	readonly outcome: CombatOutcome | undefined;
+
+	private constructor(combat: Combat, events: readonly CombatEvent[], outcome: CombatOutcome | undefined) {
+		this.combat = combat;
+		this.events = Object.freeze([...events]);
+		this.outcome = outcome;
+		Object.freeze(this);
+	}
+
+	/**
+	 * Creates an immutable resolution.
+	 *
+	 * @param combat - Successor Combat snapshot.
+	 * @param events - Ordered events produced by the resolution.
+	 * @param outcome - Reached outcome, or `undefined` while combat continues.
+	 * @returns The immutable resolution.
+	 */
+	static create(combat: Combat, events: readonly CombatEvent[], outcome?: CombatOutcome): CombatResolution {
+		return new CombatResolution(combat, events, outcome);
+	}
 }
+
+export default CombatResolution;

@@ -7,8 +7,8 @@ import type {
 	CombatActionDescriptor,
 	CombatMoveBinding,
 	CombatResolutionError,
-	CombatTransition,
 } from '@pocket-forge/combat-engine/domain';
+import { CombatTransition } from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type RandomPocket from '@pocket-forge/rng/domain';
 
@@ -96,9 +96,8 @@ class UseMoveAction implements DuelmonAction {
 		const move = resolution.getRight();
 
 		if (move.effectiveness === 0) {
-			return Either.right({
-				combat: context.combat,
-				events: [
+			return Either.right(
+				CombatTransition.create(context.combat, [
 					DuelmonCombatEvents.moveUsed(
 						{
 							actionId: this.id,
@@ -110,8 +109,8 @@ class UseMoveAction implements DuelmonAction {
 						},
 						1
 					),
-				],
-			});
+				])
+			);
 		}
 
 		const hpDefinition = this.attributeDefinitions.find(entry => entry.key === HP_KEY);
@@ -152,9 +151,8 @@ class UseMoveAction implements DuelmonAction {
 		const result = outcome.getRight();
 
 		if (!result.hit) {
-			return Either.right({
-				combat: combatAfter(context.combat, result.randomPocket),
-				events: [
+			return Either.right(
+				CombatTransition.create(combatAfter(context.combat, result.randomPocket), [
 					DuelmonCombatEvents.moveMissed(
 						{
 							actionId: this.id,
@@ -164,8 +162,8 @@ class UseMoveAction implements DuelmonAction {
 						},
 						1
 					),
-				],
-			});
+				])
+			);
 		}
 
 		const primitives = DuelmonCombatAttributes.update(
@@ -175,25 +173,23 @@ class UseMoveAction implements DuelmonAction {
 			DuelmonCombatAttributes.saturate(Math.max(0, currentHp - result.damage), hpDefinition)
 		);
 
-		return Either.right({
-			combat: CombatEntity.fromPrimitives({
-				...primitives,
-				randomPocket: result.randomPocket.toPrimitives(),
-			}),
-			events: [
-				DuelmonCombatEvents.moveUsed(
-					{
-						actionId: this.id,
-						attackerId: move.attacker.id,
-						damage: result.damage,
-						effectiveness: move.effectiveness,
-						moveId: move.moveId,
-						targetId: move.target.id,
-					},
-					1
-				),
-			],
+		const successor = CombatEntity.fromPrimitives({
+			...primitives,
+			randomPocket: result.randomPocket.toPrimitives(),
 		});
+		const event = DuelmonCombatEvents.moveUsed(
+			{
+				actionId: this.id,
+				attackerId: move.attacker.id,
+				damage: result.damage,
+				effectiveness: move.effectiveness,
+				moveId: move.moveId,
+				targetId: move.target.id,
+			},
+			1
+		);
+
+		return Either.right(CombatTransition.create(successor, [event]));
 	}
 }
 

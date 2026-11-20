@@ -9,12 +9,12 @@ export { default as CombatEngine } from './combat-engine';
 export type { CombatEngineErrorReason } from './combat-engine.error';
 export { default as CombatEngineError } from './combat-engine.error';
 export type { CombatOutcome } from './combat-outcome';
-export type { default as CombatResolution } from './combat-resolution/combat-resolution';
+export { default as CombatResolution } from './combat-resolution/combat-resolution';
 export type { CombatResolutionErrorReason } from './combat-resolution/combat-resolution.error';
 export { default as CombatResolutionError } from './combat-resolution/combat-resolution.error';
 export type { CombatSetupInput } from './combat-setup';
 export { default as CombatSetup } from './combat-setup';
-export type { default as CombatTransition } from './combat-transition';
+export { default as CombatTransition } from './combat-transition';
 export {
 	COMBAT_EVENT_TYPES,
 	type CombatCompletedEvent,

@@ -3,13 +3,13 @@ import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import type { Combat, CombatPrimitives } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity, CombatTransitionError } from '@pocket-forge/combat/domain';
 import { CombatMother } from '@pocket-forge/combat/mother/domain';
-import type { CombatEvent, CombatRule, CombatTransition } from '@pocket-forge/combat-engine/domain';
+import type { CombatEvent, CombatRule } from '@pocket-forge/combat-engine/domain';
 import {
 	CombatEngine,
 	CombatEngineError,
-	CombatResolutionError,
 	CombatRuleError,
 	CombatSetup,
+	CombatTransition,
 } from '@pocket-forge/combat-engine/domain';
 import { beforeEach, describe, expect, it } from 'bun:test';
 
@@ -104,7 +104,7 @@ describe('CombatEngine', () => {
 			const successor = withAttributes(combat, { power: 7 });
 			const events = [event(1), event(2)];
 
-			resolver.resolveWith = () => Either.right({ combat: successor, events });
+			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, events));
 
 			const result = engine.resolve(combat, 'input');
 
@@ -126,7 +126,7 @@ describe('CombatEngine', () => {
 			const winnerGroupId = successor.groups[0]?.id ?? '';
 			const events = [event(1), event(2)];
 
-			resolver.resolveWith = () => Either.right({ combat: successor, events });
+			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, events));
 			completion.outcome = { status: 'victory', winnerGroupId };
 
 			const result = engine.resolve(combat, 'input');
@@ -157,7 +157,7 @@ describe('CombatEngine', () => {
 			const winnerGroupId = successor.groups[0]?.id ?? '';
 			const second = new FakeCompletionRule();
 
-			resolver.resolveWith = () => Either.right({ combat: successor, events: [] });
+			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
 			completion.outcome = { status: 'victory', winnerGroupId };
 			second.outcome = { status: 'victory', winnerGroupId };
 
@@ -174,7 +174,7 @@ describe('CombatEngine', () => {
 			const successor = withAttributes(combat, { power: 7 });
 			const second = new FakeCompletionRule();
 
-			resolver.resolveWith = () => Either.right({ combat: successor, events: [] });
+			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
 			completion.outcome = { status: 'victory', winnerGroupId: successor.groups[0]?.id ?? '' };
 			second.outcome = { status: 'draw' };
 
@@ -190,7 +190,7 @@ describe('CombatEngine', () => {
 			const combat = CombatMother.create();
 			const successor = withAttributes(combat, { power: 7 });
 
-			resolver.resolveWith = () => Either.right({ combat: successor, events: [] });
+			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
 
 			const result = engineWith([composition], resolver).resolve(combat, 'input');
 
@@ -202,7 +202,7 @@ describe('CombatEngine', () => {
 			const combat = CombatMother.create();
 			const successor = withAttributes(combat, { power: 7 });
 
-			resolver.resolveWith = () => Either.right({ combat: successor, events: [] });
+			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
 			completion.outcome = { status: 'victory', winnerGroupId: 'missing-group' };
 
 			const result = engine.resolve(combat, 'input');
@@ -218,7 +218,7 @@ describe('CombatEngine', () => {
 			const combat = CombatMother.create();
 			const successor = withAttributes(combat, { power: 7 });
 
-			resolver.resolveWith = () => Either.right({ combat: successor, events: [] });
+			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
 			completion.outcome = { status: 'draw' };
 
 			const resolution = engine.resolve(combat, 'input').getRight();
@@ -249,11 +249,7 @@ describe('CombatEngine', () => {
 		it('rejects a successor with a different combat id', () => {
 			const combat = CombatMother.create();
 
-			resolver.resolveWith = () =>
-				Either.right<CombatResolutionError[], CombatTransition>({
-					combat: withId(combat, 'other-combat'),
-					events: [],
-				});
+			resolver.resolveWith = () => Either.right(CombatTransition.create(withId(combat, 'other-combat'), []));
 
 			const result = engine.resolve(combat, 'input');
 
@@ -266,11 +262,7 @@ describe('CombatEngine', () => {
 		it('rejects a successor that the resolver already completed', () => {
 			const combat = CombatMother.create();
 
-			resolver.resolveWith = () =>
-				Either.right<CombatResolutionError[], CombatTransition>({
-					combat: withStatus(combat, 'completed'),
-					events: [],
-				});
+			resolver.resolveWith = () => Either.right(CombatTransition.create(withStatus(combat, 'completed'), []));
 
 			const result = engine.resolve(combat, 'input');
 
@@ -299,8 +291,7 @@ describe('CombatEngine', () => {
 				],
 			});
 
-			resolver.resolveWith = () =>
-				Either.right<CombatResolutionError[], CombatTransition>({ combat: successor, events: [] });
+			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
 
 			const result = engine.resolve(combat, 'input');
 
@@ -313,8 +304,7 @@ describe('CombatEngine', () => {
 			const combat = CombatMother.create();
 			const successor = withAttributes(combat, { power: 7 });
 
-			resolver.resolveWith = () =>
-				Either.right<CombatResolutionError[], CombatTransition>({ combat: successor, events: [] });
+			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
 			let calls = 0;
 			composition.validateWith = () => {
 				calls += 1;
@@ -336,7 +326,8 @@ describe('CombatEngine', () => {
 			const before = combat.toPrimitives();
 			const randomPocket = combat.randomPocket;
 
-			resolver.resolveWith = () => Either.right({ combat: withAttributes(combat, { power: 7 }), events: [] });
+			resolver.resolveWith = () =>
+				Either.right(CombatTransition.create(withAttributes(combat, { power: 7 }), []));
 
 			expect(engine.resolve(combat, 'input').isRight()).toBe(true);
 			expect(combat.toPrimitives()).toEqual(before);

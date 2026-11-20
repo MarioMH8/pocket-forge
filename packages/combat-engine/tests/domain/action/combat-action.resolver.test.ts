@@ -6,9 +6,8 @@ import type {
 	CombatActionDescriptor,
 	CombatActionResolver,
 	CombatMoveBindingSetPrimitives,
-	CombatTransition,
 } from '@pocket-forge/combat-engine/domain';
-import { CombatMoveBindingSet, CombatResolutionError } from '@pocket-forge/combat-engine/domain';
+import { CombatMoveBindingSet, CombatResolutionError, CombatTransition } from '@pocket-forge/combat-engine/domain';
 import { describe, expect, it } from 'bun:test';
 
 const TACKLE: CombatActionDescriptor = {
@@ -51,10 +50,11 @@ class TestActionResolver implements CombatActionResolver {
 			);
 		}
 
-		return Either.right({
-			combat: applied.getRight(),
-			events: [{ payload: { actionId: binding.actionId, roll }, sequence: 1, type: 'action-resolved' }],
-		});
+		return Either.right(
+			CombatTransition.create(applied.getRight(), [
+				{ payload: { actionId: binding.actionId, roll }, sequence: 1, type: 'action-resolved' },
+			])
+		);
 	}
 }
 

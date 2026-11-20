@@ -4,7 +4,7 @@ import { Combat } from '@pocket-forge/combat/domain';
 
 import CombatEngineError from './combat-engine.error';
 import type { CombatOutcome } from './combat-outcome';
-import type CombatResolution from './combat-resolution/combat-resolution';
+import CombatResolution from './combat-resolution/combat-resolution';
 import type CombatResolutionError from './combat-resolution/combat-resolution.error';
 import type CombatSetup from './combat-setup';
 import type { CombatEvent } from './event/combat-event';
@@ -137,7 +137,7 @@ class CombatEngine {
 		}
 
 		if (!outcome) {
-			return Either.right({ combat: successor, events: transition.events, outcome: undefined });
+			return Either.right(CombatResolution.create(successor, transition.events));
 		}
 
 		const completed = successor.apply({
@@ -152,11 +152,9 @@ class CombatEngine {
 
 		const completionEvent = CombatEvents.completed(outcome, CombatEngine.nextSequence(transition.events));
 
-		return Either.right({
-			combat: completed.getRight(),
-			events: [...transition.events, completionEvent],
-			outcome,
-		});
+		return Either.right(
+			CombatResolution.create(completed.getRight(), [...transition.events, completionEvent], outcome)
+		);
 	}
 
 	/**

@@ -6,8 +6,8 @@ import type {
 	CombatActionDescriptor,
 	CombatMoveBinding,
 	CombatResolutionError,
-	CombatTransition,
 } from '@pocket-forge/combat-engine/domain';
+import { CombatTransition } from '@pocket-forge/combat-engine/domain';
 
 import { DuelmonCombatEvents } from '../../event/duelmon-combat-event';
 import { DuelmonCombatAttributes } from '../combat-attributes';
@@ -154,10 +154,7 @@ class ModifyAttributeAction implements DuelmonAction {
 					1
 				);
 
-		return Either.right({
-			combat,
-			events: [event],
-		});
+		return Either.right(CombatTransition.create(combat, [event]));
 	}
 }
 
