@@ -1,7 +1,7 @@
 import Either from '@hexadrop/either';
 import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeDefinition } from '@pocket-forge/attribute/domain';
-import type { CombatMoveBinding, CombatResolutionError } from '@pocket-forge/combat-engine/domain';
+import type { CombatActionBinding, CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 
 import { DuelmonErrors } from '../duelmon.errors';
 import type { DuelmonTargetScope } from '../duelmon-target';
@@ -129,7 +129,7 @@ class ModifyAttributeConfig {
 	/**
 	 * Reads and validates the configuration carried by a binding.
 	 *
-	 * @param binding - Validated Move binding.
+	 * @param binding - Validated action binding.
 	 * @returns The action configuration, or an invalid-action failure.
 	 * @example
 	 * ```ts
@@ -139,7 +139,7 @@ class ModifyAttributeConfig {
 	 * config.operation; // 'add'
 	 * ```
 	 */
-	static fromBinding(binding: CombatMoveBinding): Either<CombatResolutionError[], ModifyAttributeConfig> {
+	static fromBinding(binding: CombatActionBinding): Either<CombatResolutionError[], ModifyAttributeConfig> {
 		const config = binding.config.toPrimitives();
 		const amount = config[CONFIG_KEYS.amount];
 
@@ -203,7 +203,7 @@ class ModifyAttributeConfig {
 		return messages;
 	}
 
-	private static invalid(binding: CombatMoveBinding): Either<CombatResolutionError[], never> {
+	private static invalid(binding: CombatActionBinding): Either<CombatResolutionError[], never> {
 		return DuelmonErrors.fail(
 			'invalid-action',
 			`Action "${binding.actionId}" has an invalid configuration`,

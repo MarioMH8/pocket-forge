@@ -2,9 +2,9 @@ import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValue } from '@pocket-forge/attribute/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import type {
+	CombatActionBinding,
 	CombatActionContext,
 	CombatActionDescriptor,
-	CombatMoveBinding,
 	CombatResolutionError,
 } from '@pocket-forge/combat-engine/domain';
 import { CombatTransition } from '@pocket-forge/combat-engine/domain';
@@ -49,13 +49,13 @@ class ModifyAttributeAction implements DuelmonAction {
 	 *
 	 * @param context - Immutable action context.
 	 * @param input - Parsed Duelmon input.
-	 * @param binding - Move binding that selected this action.
+	 * @param binding - Action binding that selected this action.
 	 * @returns The resulting transition, or every resolution failure.
 	 */
 	resolve(
 		context: CombatActionContext,
 		input: DuelmonCombatInput,
-		binding: CombatMoveBinding
+		binding: CombatActionBinding
 	): Either<CombatResolutionError[], CombatTransition> {
 		if (!DuelmonTarget.findCombatant(context.combat, input.actorId)) {
 			return DuelmonErrors.fail('invalid-input', `Unknown combatant actor "${input.actorId}"`, 'input.actorId');

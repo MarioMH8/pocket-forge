@@ -89,7 +89,7 @@ class DuelmonCombatPlugin implements CombatActionResolver {
 		}
 
 		const input = parsedInput.getRight();
-		const binding = context.moveBindings.find(input.moveId);
+		const binding = context.actionBindings.find(input.moveId);
 
 		if (!binding) {
 			return DuelmonErrors.fail(
@@ -105,7 +105,7 @@ class DuelmonCombatPlugin implements CombatActionResolver {
 			return DuelmonErrors.fail(
 				'invalid-action',
 				`Move "${input.moveId}" is bound to unsupported action "${binding.actionId}"`,
-				'moveBindings.bindings'
+				'actionBindings.bindings'
 			);
 		}
 

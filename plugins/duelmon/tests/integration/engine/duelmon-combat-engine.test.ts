@@ -1,7 +1,7 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
 import type { CombatRule } from '@pocket-forge/combat-engine/domain';
-import { CombatEngine, CombatMoveBindingSet, CombatSetup } from '@pocket-forge/combat-engine/domain';
+import { CombatActionBindingSet, CombatEngine, CombatSetup } from '@pocket-forge/combat-engine/domain';
 import { CombatRuleMother } from '@pocket-forge/combat-engine/mother/domain';
 import { OneVersusOneCombatRule } from '@pocket-forge/combat-engine/rules';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
@@ -23,12 +23,12 @@ describe('Duelmon combat through CombatEngine', () => {
 			[...DuelmonCombatMother.ATTRIBUTE_DEFINITIONS]
 		).getRight();
 		const plugin = DuelmonCombatMother.plugin();
-		const moveBindings = CombatMoveBindingSet.create(
+		const actionBindings = CombatActionBindingSet.create(
 			{ bindings: DuelmonCombatMother.bindings() },
 			plugin.actions
 		).getRight();
 		const rules: readonly CombatRule[] = [composition];
-		const engine = new CombatEngine(CombatSetup.create({ actions: plugin, moveBindings, rules }));
+		const engine = new CombatEngine(CombatSetup.create({ actionBindings, actions: plugin, rules }));
 		const combat = DuelmonCombatMother.create();
 		const before = combat.toPrimitives();
 

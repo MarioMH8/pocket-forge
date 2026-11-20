@@ -3,9 +3,9 @@ import type { AttributeDefinition } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import type {
+	CombatActionBinding,
 	CombatActionContext,
 	CombatActionDescriptor,
-	CombatMoveBinding,
 	CombatResolutionError,
 } from '@pocket-forge/combat-engine/domain';
 import { CombatTransition } from '@pocket-forge/combat-engine/domain';
@@ -73,13 +73,13 @@ class UseMoveAction implements DuelmonAction {
 	 *
 	 * @param context - Immutable action context.
 	 * @param input - Parsed Duelmon input.
-	 * @param _binding - Move binding that selected this action.
+	 * @param _binding - Action binding that selected this action.
 	 * @returns The resulting transition, or every resolution failure.
 	 */
 	resolve(
 		context: CombatActionContext,
 		input: DuelmonCombatInput,
-		_binding: CombatMoveBinding
+		_binding: CombatActionBinding
 	): Either<CombatResolutionError[], CombatTransition> {
 		const resolvedTarget = input.target.resolve(context.combat, 'combatant');
 

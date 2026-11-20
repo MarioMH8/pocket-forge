@@ -18,14 +18,14 @@ describe('Duelmon completion through CombatEngine', () => {
 		const composition = DuelmonCombatMother.compositionRule();
 		const completion = DuelmonCombatMother.completionRule();
 		const plugin = DuelmonCombatMother.plugin();
-		const moveBindings = DuelmonCombatMother.moveBindings({
+		const actionBindings = DuelmonCombatMother.actionBindings({
 			[ModifyAttributeConfig.KEYS.amount]: 25,
 			[ModifyAttributeConfig.KEYS.attributeKey]: 'power',
 			[ModifyAttributeConfig.KEYS.operation]: 'subtract',
 			[ModifyAttributeConfig.KEYS.scope]: 'combatant',
 		});
 		const rules: readonly CombatRule[] = [composition, completion];
-		const engine = new CombatEngine(CombatSetup.create({ actions: plugin, moveBindings, rules }));
+		const engine = new CombatEngine(CombatSetup.create({ actionBindings, actions: plugin, rules }));
 		const combat = DuelmonCombatMother.create();
 		const input = {
 			actorId: 'combatant-a',

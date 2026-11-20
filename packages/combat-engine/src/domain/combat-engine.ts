@@ -18,7 +18,7 @@ import type CombatRuleError from './rule/combat-rule.error';
 type CombatEngineFailure = CombatEngineError | CombatResolutionError | CombatRuleError | CombatTransitionError;
 
 /**
- * Pure orchestrator that composes rules, an action resolver, and Move bindings
+ * Pure orchestrator that composes rules, an action resolver, and action bindings
  * through an immutable {@link CombatEngineSetup}.
  *
  * The engine validates each combat's composition, delegates action resolution
@@ -77,7 +77,7 @@ class CombatEngine {
 			return Either.left(composition.getLeft());
 		}
 
-		const resolved = this.setup.actions.resolve({ combat, input, moveBindings: this.setup.moveBindings });
+		const resolved = this.setup.actions.resolve({ actionBindings: this.setup.actionBindings, combat, input });
 
 		if (resolved.isLeft()) {
 			return Either.left(resolved.getLeft());

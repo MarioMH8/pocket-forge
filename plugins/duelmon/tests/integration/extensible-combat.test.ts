@@ -1,7 +1,11 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
-import type { CombatMoveBindingPrimitives, CombatRule, CombatRulePrimitives } from '@pocket-forge/combat-engine/domain';
-import { CombatEngine, CombatMoveBindingSet, CombatOutcome, CombatSetup } from '@pocket-forge/combat-engine/domain';
+import type {
+	CombatActionBindingPrimitives,
+	CombatRule,
+	CombatRulePrimitives,
+} from '@pocket-forge/combat-engine/domain';
+import { CombatActionBindingSet, CombatEngine, CombatOutcome, CombatSetup } from '@pocket-forge/combat-engine/domain';
 import type { CombatCompositionRulePrimitives } from '@pocket-forge/combat-engine/rules';
 import { OneVersusOneCombatRule, ThresholdCombatCompletionRule } from '@pocket-forge/combat-engine/rules';
 import { ModifyAttributeAction, ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
@@ -17,7 +21,7 @@ const COMPLETION_PRIMITIVES: CombatRulePrimitives = {
 	attributes: { ...DuelmonCombatMother.DEFAULT_COMPLETION_ATTRIBUTES },
 };
 
-const BINDINGS: readonly CombatMoveBindingPrimitives[] = [
+const BINDINGS: readonly CombatActionBindingPrimitives[] = [
 	{
 		actionId: ModifyAttributeAction.ID,
 		config: {
@@ -59,14 +63,14 @@ function compose() {
 	const composition = createCompositionRule();
 	const completion = createCompletionRule();
 	const plugin = DuelmonCombatMother.plugin();
-	const moveBindings = CombatMoveBindingSet.create({ bindings: BINDINGS }, plugin.actions).getRight();
+	const actionBindings = CombatActionBindingSet.create({ bindings: BINDINGS }, plugin.actions).getRight();
 	const rules: readonly CombatRule[] = [composition, completion];
 
 	return {
+		actionBindings,
 		completion,
 		composition,
-		engine: new CombatEngine(CombatSetup.create({ actions: plugin, moveBindings, rules })),
-		moveBindings,
+		engine: new CombatEngine(CombatSetup.create({ actionBindings, actions: plugin, rules })),
 		plugin,
 	};
 }
@@ -99,24 +103,26 @@ const MOVE_1_INPUT = {
 } as const;
 
 describe('Extensible combat scenario', () => {
-	it('hydrates the authored rules and builds the Move bindings and completion rule', () => {
+	it('hydrates the authored rules and builds the action bindings and completion rule', () => {
 		const composition = createCompositionRule();
 
 		expect(composition).toBeInstanceOf(OneVersusOneCombatRule);
 		expect(composition).toMatchObject({ groupConstraints: OneVersusOneCombatRule.CONSTRAINTS });
 
 		const plugin = DuelmonCombatMother.plugin();
-		const moveBindingsResult = CombatMoveBindingSet.create({ bindings: BINDINGS }, plugin.actions);
+		const actionBindingsResult = CombatActionBindingSet.create({ bindings: BINDINGS }, plugin.actions);
 
-		expect(moveBindingsResult.isRight()).toBe(true);
+		expect(actionBindingsResult.isRight()).toBe(true);
 
-		const moveBindings = moveBindingsResult.getRight();
+		const actionBindings = actionBindingsResult.getRight();
 
-		expect(moveBindings.bindings).toHaveLength(2);
-		expect(moveBindings.find('move-1')?.actionId).toBe(ModifyAttributeAction.ID);
-		expect(moveBindings.find('move-1')?.config.toPrimitives()[ModifyAttributeConfig.KEYS.scope]).toBe('combatant');
-		expect(moveBindings.find('move-2')?.config.toPrimitives()[ModifyAttributeConfig.KEYS.scope]).toBe('group');
-		expect(moveBindings.find('move-2')?.config.toPrimitives()[ModifyAttributeConfig.KEYS.probability]).toBe(1);
+		expect(actionBindings.bindings).toHaveLength(2);
+		expect(actionBindings.find('move-1')?.actionId).toBe(ModifyAttributeAction.ID);
+		expect(actionBindings.find('move-1')?.config.toPrimitives()[ModifyAttributeConfig.KEYS.scope]).toBe(
+			'combatant'
+		);
+		expect(actionBindings.find('move-2')?.config.toPrimitives()[ModifyAttributeConfig.KEYS.scope]).toBe('group');
+		expect(actionBindings.find('move-2')?.config.toPrimitives()[ModifyAttributeConfig.KEYS.probability]).toBe(1);
 
 		const completion = createCompletionRule();
 

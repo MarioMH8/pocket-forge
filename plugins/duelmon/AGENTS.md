@@ -1,6 +1,6 @@
 # @pocket-forge/duelmon agent guide
 
-Duelmon Combat action resolver, authored Move binding set, and a private dataset
+Duelmon Combat action resolver, authored action binding set, and a private dataset
 extractor for the Pokémon Showdown Gen 1 tables.
 
 - **Package manager:** Bun (`bun`)

@@ -3,8 +3,12 @@ import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain
 import type { Combat, CombatantPrimitives, CombatPrimitives } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import { CombatantGroupMother, CombatantMother } from '@pocket-forge/combat/mother/domain';
-import type { CombatMoveBindingPrimitives, CombatMoveBindingSet, CombatRule } from '@pocket-forge/combat-engine/domain';
-import { CombatMoveBindingSet as CombatMoveBindingSetEntity } from '@pocket-forge/combat-engine/domain';
+import type {
+	CombatActionBindingPrimitives,
+	CombatActionBindingSet,
+	CombatRule,
+} from '@pocket-forge/combat-engine/domain';
+import { CombatActionBindingSet as CombatActionBindingSetEntity } from '@pocket-forge/combat-engine/domain';
 import { CombatRuleMother } from '@pocket-forge/combat-engine/mother/domain';
 import {
 	COMPLETION_CONFIG_DEFINITIONS,
@@ -53,7 +57,7 @@ const DEFAULT_COMPLETION_ATTRIBUTES: AttributeValues = {
 	[COMPLETION_CONFIG_KEYS.winnerPolicy]: 'threshold-group',
 };
 
-const DUELMON_BINDINGS: readonly CombatMoveBindingPrimitives[] = [
+const DUELMON_BINDINGS: readonly CombatActionBindingPrimitives[] = [
 	{
 		actionId: ModifyAttributeAction.ID,
 		config: {
@@ -107,11 +111,25 @@ export default class DuelmonCombatMother {
 	private static catalogCache: DuelmonCatalog | undefined;
 
 	/**
+	 * Builds an action binding set containing one modifyAttribute binding.
+	 *
+	 * @param config - Binding configuration values.
+	 * @param moveId - Bound move identifier.
+	 * @returns The validated action binding set.
+	 */
+	static actionBindings(config: AttributeValues, moveId = 'move-1'): CombatActionBindingSet {
+		return CombatActionBindingSetEntity.create(
+			{ bindings: [{ actionId: ModifyAttributeAction.ID, config, moveId }] },
+			this.plugin().actions
+		).getRight();
+	}
+
+	/**
 	 * Builds the authored modifyAttribute bindings.
 	 *
 	 * @returns Fresh binding primitives.
 	 */
-	static bindings(): CombatMoveBindingPrimitives[] {
+	static bindings(): CombatActionBindingPrimitives[] {
 		return DUELMON_BINDINGS.map(binding => ({ ...binding, config: { ...binding.config } }));
 	}
 
@@ -200,20 +218,6 @@ export default class DuelmonCombatMother {
 	}
 
 	/**
-	 * Builds a Move binding set containing one modifyAttribute binding.
-	 *
-	 * @param config - Binding configuration values.
-	 * @param moveId - Bound move identifier.
-	 * @returns The validated Move binding set.
-	 */
-	static moveBindings(config: AttributeValues, moveId = 'move-1'): CombatMoveBindingSet {
-		return CombatMoveBindingSetEntity.create(
-			{ bindings: [{ actionId: ModifyAttributeAction.ID, config, moveId }] },
-			this.plugin().actions
-		).getRight();
-	}
-
-	/**
 	 * Builds the composed Duelmon plugin with explicit Gen 1 mechanics.
 	 *
 	 * @returns The plugin under test.
@@ -264,13 +268,13 @@ export default class DuelmonCombatMother {
 	}
 
 	/**
-	 * Builds a Move binding set that binds every move to `useMove`.
+	 * Builds an action binding set that binds every move to `useMove`.
 	 *
 	 * @param moveIds - Move identifiers to bind.
-	 * @returns The validated Move binding set.
+	 * @returns The validated action binding set.
 	 */
-	static useMoveBindings(moveIds: readonly string[] = ['ember-burst']): CombatMoveBindingSet {
-		return CombatMoveBindingSetEntity.create(
+	static useMoveBindings(moveIds: readonly string[] = ['ember-burst']): CombatActionBindingSet {
+		return CombatActionBindingSetEntity.create(
 			{
 				bindings: moveIds.map(moveId => ({
 					actionId: UseMoveAction.ID,

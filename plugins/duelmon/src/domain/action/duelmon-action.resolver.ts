@@ -1,7 +1,7 @@
 import type Either from '@hexadrop/either';
 import type {
+	CombatActionBinding,
 	CombatActionContext,
-	CombatMoveBinding,
 	CombatResolutionError,
 	CombatTransition,
 } from '@pocket-forge/combat-engine/domain';
@@ -21,12 +21,12 @@ export default interface DuelmonActionResolver {
 	 *
 	 * @param context - Immutable action context.
 	 * @param input - Parsed Duelmon input.
-	 * @param binding - Move binding that selected this action.
+	 * @param binding - Action binding that selected this action.
 	 * @returns The resulting transition, or every resolution failure.
 	 */
 	resolve(
 		context: CombatActionContext,
 		input: DuelmonCombatInput,
-		binding: CombatMoveBinding
+		binding: CombatActionBinding
 	): Either<CombatResolutionError[], CombatTransition>;
 }

@@ -2,7 +2,7 @@
 
 Defines the neutral combat session model and the vocabulary through which authored rules and external resolution logic interact.
 
-The context spans two packages: `@pocket-forge/combat` holds the neutral state (Combat, Combatant, Combatant Group), and `@pocket-forge/combat-engine` holds the Combat Engine and the extension contracts (rule, hooks, action resolver, Move binding set, transition, event, outcome).
+The context spans two packages: `@pocket-forge/combat` holds the neutral state (Combat, Combatant, Combatant Group), and `@pocket-forge/combat-engine` holds the Combat Engine and the extension contracts (rule, hooks, action resolver, action binding set, transition, event, outcome).
 
 ## Language
 
@@ -35,10 +35,10 @@ Reusable external logic that owns an action catalog and resolves Move-bound acti
 _Avoid_: Combat Plugin, rules engine, embedded move logic
 
 **Combat Action**:
-Resolver-registered executable logic selected by a Combat Move Binding Set for a Move; it receives an immutable context and returns a Combat Transition.
+Resolver-registered executable logic selected by a Combat Action Binding Set for a Move; it receives an immutable context and returns a Combat Transition.
 _Avoid_: Move function, embedded move logic
 
-**Combat Move Binding Set**:
+**Combat Action Binding Set**:
 Authored data binding Move identifiers to registered Combat Actions and serializable action configuration; it carries no resolver reference, so the app pairs it with the resolver that executes it.
 _Avoid_: Core binding, hardcoded move
 
@@ -51,7 +51,7 @@ The built-in completion rule that ends Combat when a Combatant attribute satisfi
 _Avoid_: Hit-point check, knockout rule
 
 **Combat Engine**:
-A pure orchestrator that composes Combat Rules, an action resolver, and a Move binding set; it validates composition, delegates resolution, evaluates completion hooks, and requires agreeing outcomes. It lives in `@pocket-forge/combat-engine`.
+A pure orchestrator that composes Combat Rules, an action resolver, and an action binding set; it validates composition, delegates resolution, evaluates completion hooks, and requires agreeing outcomes. It lives in `@pocket-forge/combat-engine`.
 _Avoid_: Game loop, battle manager
 
 **Combat Transition**:

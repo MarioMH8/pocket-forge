@@ -1,10 +1,10 @@
-import type { CombatMoveBindingPrimitives } from '@pocket-forge/combat-engine/domain';
-import { CombatMoveBindingSet } from '@pocket-forge/combat-engine/domain';
+import type { CombatActionBindingPrimitives } from '@pocket-forge/combat-engine/domain';
+import { CombatActionBindingSet } from '@pocket-forge/combat-engine/domain';
 import { ModifyAttributeAction, ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
-function binding(overrides?: Partial<CombatMoveBindingPrimitives>): CombatMoveBindingPrimitives {
+function binding(overrides?: Partial<CombatActionBindingPrimitives>): CombatActionBindingPrimitives {
 	return {
 		actionId: ModifyAttributeAction.ID,
 		config: {
@@ -18,8 +18,8 @@ function binding(overrides?: Partial<CombatMoveBindingPrimitives>): CombatMoveBi
 	};
 }
 
-function create(bindings: readonly CombatMoveBindingPrimitives[]) {
-	return CombatMoveBindingSet.create({ bindings }, DuelmonCombatMother.plugin().actions);
+function create(bindings: readonly CombatActionBindingPrimitives[]) {
+	return CombatActionBindingSet.create({ bindings }, DuelmonCombatMother.plugin().actions);
 }
 
 describe('duelmon combat catalog', () => {
@@ -49,6 +49,6 @@ describe('duelmon combat catalog', () => {
 		const result = create([binding(), binding()]);
 
 		expect(result.isLeft()).toBe(true);
-		expect(result.getLeft()[0]?.reason).toBe('duplicate-move-binding');
+		expect(result.getLeft()[0]?.reason).toBe('duplicate-action-binding');
 	});
 });

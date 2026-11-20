@@ -1,9 +1,12 @@
+export type {
+	CombatActionBindingPrimitives,
+	CombatActionBindingSetPrimitives,
+} from './action/combat-action-binding-set';
+export { CombatActionBinding, default as CombatActionBindingSet } from './action/combat-action-binding-set';
+export type { CombatActionBindingSetErrorReason } from './action/combat-action-binding-set.error';
+export { default as CombatActionBindingSetError } from './action/combat-action-binding-set.error';
 export type { CombatActionCatalog, CombatActionDescriptor } from './action/combat-action-descriptor';
 export type { CombatActionContext, CombatActionResolver } from './action/combat-action-resolver';
-export type { CombatMoveBindingPrimitives, CombatMoveBindingSetPrimitives } from './action/combat-move-binding-set';
-export { CombatMoveBinding, default as CombatMoveBindingSet } from './action/combat-move-binding-set';
-export type { CombatMoveBindingSetErrorReason } from './action/combat-move-binding-set.error';
-export { default as CombatMoveBindingSetError } from './action/combat-move-binding-set.error';
 export type { CombatEngineFailure } from './combat-engine';
 export { default as CombatEngine } from './combat-engine';
 export type { CombatEngineErrorReason } from './combat-engine.error';

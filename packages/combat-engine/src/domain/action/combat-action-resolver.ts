@@ -3,13 +3,17 @@ import type { Combat } from '@pocket-forge/combat/domain';
 
 import type CombatResolutionError from '../combat-resolution.error';
 import type CombatTransition from '../combat-transition';
+import type CombatActionBindingSet from './combat-action-binding-set';
 import type { CombatActionCatalog } from './combat-action-descriptor';
-import type CombatMoveBindingSet from './combat-move-binding-set';
 
 /**
  * Immutable context handed to a Combat Action Resolver.
  */
 interface CombatActionContext {
+	/**
+	 * Action bindings selected by the app.
+	 */
+	readonly actionBindings: CombatActionBindingSet;
 	/**
 	 * Combat snapshot to resolve against. Resolvers must not mutate it.
 	 */
@@ -18,10 +22,6 @@ interface CombatActionContext {
 	 * Resolver-owned input shape. The neutral contract does not fix it.
 	 */
 	readonly input: unknown;
-	/**
-	 * Move bindings selected by the app.
-	 */
-	readonly moveBindings: CombatMoveBindingSet;
 }
 
 /**
@@ -29,7 +29,7 @@ interface CombatActionContext {
  *
  * A resolver owns its action catalog and its input shape. Concrete resolvers
  * live outside the neutral contract; the app composes them with the rules and
- * the Move bindings.
+ * the action bindings.
  */
 interface CombatActionResolver {
 	/**

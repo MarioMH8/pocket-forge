@@ -11,7 +11,7 @@ that Move logic and authored bindings compose through public extension
 contracts instead of importing implementation details.
 
 - `DuelmonCombatPlugin` resolves the `modifyAttribute` and `useMove` actions.
-- Authored Move-to-action bindings are validated by `CombatMoveBindingSet.create`
+- Authored action bindings are validated by `CombatActionBindingSet.create`
   from `@pocket-forge/combat-engine/domain` against the resolver catalog.
 - `DuelmonDatasetBuilder.build` turns the pinned Showdown tables into a
   curated, serializable Gen 1 dataset.

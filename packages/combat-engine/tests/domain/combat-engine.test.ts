@@ -14,7 +14,7 @@ import {
 } from '@pocket-forge/combat-engine/domain';
 import { beforeEach, describe, expect, it } from 'bun:test';
 
-import { FakeActionResolver, FakeCompletionRule, FakeCompositionRule, moveBindings } from './engine.fakes';
+import { actionBindings, FakeActionResolver, FakeCompletionRule, FakeCompositionRule } from './engine.fakes';
 
 function withAttributes(combat: Combat, attributes: AttributeValues): Combat {
 	return CombatEntity.fromPrimitives({ ...combat.toPrimitives(), attributes });
@@ -33,7 +33,7 @@ function event(sequence: number, type = 'tackle'): CombatEvent {
 }
 
 function engineWith(rules: readonly CombatRule[], resolver: FakeActionResolver): CombatEngine {
-	return new CombatEngine(CombatSetup.create({ actions: resolver, moveBindings: moveBindings(), rules }));
+	return new CombatEngine(CombatSetup.create({ actionBindings: actionBindings(), actions: resolver, rules }));
 }
 
 describe('CombatEngine', () => {
@@ -118,7 +118,7 @@ describe('CombatEngine', () => {
 			expect(resolver.contexts).toHaveLength(1);
 			expect(resolver.contexts[0]?.combat).toBe(combat);
 			expect(resolver.contexts[0]?.input).toBe('input');
-			expect(resolver.contexts[0]?.moveBindings).toBeDefined();
+			expect(resolver.contexts[0]?.actionBindings).toBeDefined();
 		});
 
 		it('produces a completed successor when a completion rule returns an outcome', () => {

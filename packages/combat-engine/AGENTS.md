@@ -1,6 +1,6 @@
 # @pocket-forge/combat-engine agent guide
 
-Pure combat engine and extension framework. The Combat Engine, Combat Setup, the Combat Rule base and its hook contracts, the action resolver and Move binding contracts, and the built-in rules.
+Pure combat engine and extension framework. The Combat Engine, Combat Setup, the Combat Rule base and its hook contracts, the action resolver and action binding contracts, and the built-in rules.
 
 - **Package manager:** Bun (`bun`)
 - **Build:** `bun run build` (at package folder)
@@ -16,7 +16,7 @@ This package orchestrates neutral combat state from `@pocket-forge/combat`. It m
 
 ## Structure
 
-- `./domain` holds the engine and its contracts: `CombatEngine`, `CombatEngineSetup`, `CombatRule`, the hook interfaces, the action resolver and Move binding contracts, events, outcomes, and resolution errors. It must stay free of concrete rules.
+- `./domain` holds the engine and its contracts: `CombatEngine`, `CombatEngineSetup`, `CombatRule`, the hook interfaces, the action resolver and action binding contracts, events, outcomes, and resolution errors. It must stay free of concrete rules.
 - `./rules` holds the built-in rule implementations: `rules/composition` (composition base, group constraints, `1v1`, `2v2`) and `rules/completion` (threshold completion rule and its configuration).
 
 ## Conventions

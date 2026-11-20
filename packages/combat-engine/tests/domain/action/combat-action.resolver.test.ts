@@ -1,13 +1,13 @@
 import Either from '@hexadrop/either';
 import { CombatMother } from '@pocket-forge/combat/mother/domain';
 import type {
+	CombatActionBindingSetPrimitives,
 	CombatActionCatalog,
 	CombatActionContext,
 	CombatActionDescriptor,
 	CombatActionResolver,
-	CombatMoveBindingSetPrimitives,
 } from '@pocket-forge/combat-engine/domain';
-import { CombatMoveBindingSet, CombatResolutionError, CombatTransition } from '@pocket-forge/combat-engine/domain';
+import { CombatActionBindingSet, CombatResolutionError, CombatTransition } from '@pocket-forge/combat-engine/domain';
 import { describe, expect, it } from 'bun:test';
 
 const TACKLE: CombatActionDescriptor = {
@@ -25,11 +25,11 @@ class TestActionResolver implements CombatActionResolver {
 	readonly actions: CombatActionCatalog = new TestActionCatalog();
 
 	resolve(context: CombatActionContext): Either<CombatResolutionError[], CombatTransition> {
-		const binding = context.moveBindings.find('move-1');
+		const binding = context.actionBindings.find('move-1');
 
 		if (!binding) {
 			return Either.left([
-				new CombatResolutionError('invalid-action', 'No action is bound to move-1', 'moveBindings.bindings'),
+				new CombatResolutionError('invalid-action', 'No action is bound to move-1', 'actionBindings.bindings'),
 			]);
 		}
 
@@ -60,13 +60,13 @@ class TestActionResolver implements CombatActionResolver {
 
 const RESOLVER = new TestActionResolver();
 
-function moveBindings(overrides?: Partial<CombatMoveBindingSetPrimitives>): CombatMoveBindingSet {
-	const primitives: CombatMoveBindingSetPrimitives = {
+function actionBindings(overrides?: Partial<CombatActionBindingSetPrimitives>): CombatActionBindingSet {
+	const primitives: CombatActionBindingSetPrimitives = {
 		bindings: [{ actionId: 'tackle', config: {}, moveId: 'move-1' }],
 		...overrides,
 	};
 
-	return CombatMoveBindingSet.create(primitives, RESOLVER.actions).getRight();
+	return CombatActionBindingSet.create(primitives, RESOLVER.actions).getRight();
 }
 
 describe('CombatActionResolver', () => {
@@ -74,7 +74,7 @@ describe('CombatActionResolver', () => {
 		it('returns a transition with ordered serializable events', () => {
 			const combat = CombatMother.create();
 
-			const result = RESOLVER.resolve({ combat, input: 'resolve', moveBindings: moveBindings() });
+			const result = RESOLVER.resolve({ actionBindings: actionBindings(), combat, input: 'resolve' });
 
 			expect(result.isRight()).toBe(true);
 
@@ -87,7 +87,7 @@ describe('CombatActionResolver', () => {
 
 		it('replays deterministically from the same combat snapshot', () => {
 			const combat = CombatMother.create();
-			const context = { combat, input: 'resolve', moveBindings: moveBindings() };
+			const context = { actionBindings: actionBindings(), combat, input: 'resolve' };
 
 			const first = RESOLVER.resolve(context).getRight();
 			const second = RESOLVER.resolve(context).getRight();
@@ -101,7 +101,7 @@ describe('CombatActionResolver', () => {
 			const combat = CombatMother.create();
 			const before = combat.toPrimitives();
 
-			const result = RESOLVER.resolve({ combat, input: 'unsupported', moveBindings: moveBindings() });
+			const result = RESOLVER.resolve({ actionBindings: actionBindings(), combat, input: 'unsupported' });
 
 			expect(result.isLeft()).toBe(true);
 			expect(result.getLeft()[0]?.reason).toBe('invalid-input');
@@ -113,9 +113,9 @@ describe('CombatActionResolver', () => {
 			const before = combat.toPrimitives();
 
 			const result = RESOLVER.resolve({
+				actionBindings: actionBindings({ bindings: [] }),
 				combat,
 				input: 'resolve',
-				moveBindings: moveBindings({ bindings: [] }),
 			});
 
 			expect(result.isLeft()).toBe(true);

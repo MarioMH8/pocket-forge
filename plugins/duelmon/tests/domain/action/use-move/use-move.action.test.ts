@@ -61,13 +61,13 @@ describe('UseMoveAction', () => {
 		const before = combat.toPrimitives();
 		const [randomFactor, expectedRandomPocket] = combat.randomPocket.nextInt(217, 255);
 		const result = PLUGIN.resolve({
+			actionBindings: DuelmonCombatMother.useMoveBindings(),
 			combat,
 			input: {
 				actorId: ATTACKER_ID,
 				moveId: 'ember-burst',
 				target: { id: TARGET_ID, scope: 'combatant' },
 			},
-			moveBindings: DuelmonCombatMother.useMoveBindings(),
 		});
 
 		expect(randomFactor).toBe(240);
@@ -99,13 +99,13 @@ describe('UseMoveAction', () => {
 		const combat = DuelmonCombatMother.useMoveCombat();
 		const [, expectedRandomPocket] = combat.randomPocket.nextInt(217, 255);
 		const result = PLUGIN.resolve({
+			actionBindings: DuelmonCombatMother.useMoveBindings(['tackle']),
 			combat,
 			input: {
 				actorId: ATTACKER_ID,
 				moveId: 'tackle',
 				target: { id: TARGET_ID, scope: 'combatant' },
 			},
-			moveBindings: DuelmonCombatMother.useMoveBindings(['tackle']),
 		});
 
 		expect(result.isRight()).toBe(true);
@@ -120,13 +120,13 @@ describe('UseMoveAction', () => {
 	it('saturates target HP at zero', () => {
 		const combat = combatWith(stats({ level: 100 }), 'sprout', stats({ hp: 10 }));
 		const result = PLUGIN.resolve({
+			actionBindings: DuelmonCombatMother.useMoveBindings(),
 			combat,
 			input: {
 				actorId: ATTACKER_ID,
 				moveId: 'ember-burst',
 				target: { id: TARGET_ID, scope: 'combatant' },
 			},
-			moveBindings: DuelmonCombatMother.useMoveBindings(),
 		});
 
 		expect(result.isRight()).toBe(true);
@@ -138,13 +138,13 @@ describe('UseMoveAction', () => {
 		const before = combat.toPrimitives();
 		const [hit, expectedRandomPocket] = combat.randomPocket.chance(0.01);
 		const result = PLUGIN.resolve({
+			actionBindings: DuelmonCombatMother.useMoveBindings(['gamble']),
 			combat,
 			input: {
 				actorId: ATTACKER_ID,
 				moveId: 'gamble',
 				target: { id: TARGET_ID, scope: 'combatant' },
 			},
-			moveBindings: DuelmonCombatMother.useMoveBindings(['gamble']),
 		});
 
 		expect(hit).toBe(false);
@@ -172,13 +172,13 @@ describe('UseMoveAction', () => {
 	it('deals no damage to an immune target without consuming randomness', () => {
 		const combat = combatWith(stats(), 'wisp', stats({ attack: 90, defense: 100, hp: 100, special: 90 }));
 		const result = PLUGIN.resolve({
+			actionBindings: DuelmonCombatMother.useMoveBindings(['tackle']),
 			combat,
 			input: {
 				actorId: ATTACKER_ID,
 				moveId: 'tackle',
 				target: { id: TARGET_ID, scope: 'combatant' },
 			},
-			moveBindings: DuelmonCombatMother.useMoveBindings(['tackle']),
 		});
 
 		expect(result.isRight()).toBe(true);
@@ -206,13 +206,13 @@ describe('UseMoveAction', () => {
 	it('reports an unknown move id as structured invalid input', () => {
 		const combat = DuelmonCombatMother.useMoveCombat();
 		const result = PLUGIN.resolve({
+			actionBindings: DuelmonCombatMother.useMoveBindings(['missing-move']),
 			combat,
 			input: {
 				actorId: ATTACKER_ID,
 				moveId: 'missing-move',
 				target: { id: TARGET_ID, scope: 'combatant' },
 			},
-			moveBindings: DuelmonCombatMother.useMoveBindings(['missing-move']),
 		});
 
 		expect(result.isLeft()).toBe(true);
@@ -223,13 +223,13 @@ describe('UseMoveAction', () => {
 	it('accepts a damaging move with zero power', () => {
 		const combat = DuelmonCombatMother.useMoveCombat();
 		const result = PLUGIN.resolve({
+			actionBindings: DuelmonCombatMother.useMoveBindings(['low-sweep']),
 			combat,
 			input: {
 				actorId: ATTACKER_ID,
 				moveId: 'low-sweep',
 				target: { id: TARGET_ID, scope: 'combatant' },
 			},
-			moveBindings: DuelmonCombatMother.useMoveBindings(['low-sweep']),
 		});
 
 		expect(result.isRight()).toBe(true);
@@ -244,13 +244,13 @@ describe('UseMoveAction', () => {
 		const combat = DuelmonCombatMother.useMoveCombat();
 		const before = combat.toPrimitives();
 		const result = PLUGIN.resolve({
+			actionBindings: DuelmonCombatMother.useMoveBindings(['oath']),
 			combat,
 			input: {
 				actorId: ATTACKER_ID,
 				moveId: 'oath',
 				target: { id: TARGET_ID, scope: 'combatant' },
 			},
-			moveBindings: DuelmonCombatMother.useMoveBindings(['oath']),
 		});
 
 		expect(result.isLeft()).toBe(true);
@@ -262,13 +262,13 @@ describe('UseMoveAction', () => {
 	it('rejects a group target', () => {
 		const combat = DuelmonCombatMother.useMoveCombat();
 		const result = PLUGIN.resolve({
+			actionBindings: DuelmonCombatMother.useMoveBindings(),
 			combat,
 			input: {
 				actorId: ATTACKER_ID,
 				moveId: 'ember-burst',
 				target: { id: 'group-b', scope: 'group' },
 			},
-			moveBindings: DuelmonCombatMother.useMoveBindings(),
 		});
 
 		expect(result.isLeft()).toBe(true);

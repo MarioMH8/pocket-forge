@@ -1,7 +1,7 @@
 {
 	"name": "@pocket-forge/combat-engine",
 	"version": "0.0.0",
-	"description": "Pure combat engine for Pocket Forge. Composes hook-based rules, action resolvers, and Move bindings over neutral combat state.",
+	"description": "Pure combat engine for Pocket Forge. Composes hook-based rules, action resolvers, and action bindings over neutral combat state.",
 	"keywords": [
 		"pocket-forge",
 		"rpg",

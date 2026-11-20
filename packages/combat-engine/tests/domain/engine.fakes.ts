@@ -2,18 +2,18 @@ import Either from '@hexadrop/either';
 import { AttributeMap } from '@pocket-forge/attribute/domain';
 import type { Combat, CombatantGroup } from '@pocket-forge/combat/domain';
 import type {
+	CombatActionBindingSetPrimitives,
 	CombatActionCatalog,
 	CombatActionContext,
 	CombatActionDescriptor,
 	CombatActionResolver,
 	CombatCompletionHook,
-	CombatMoveBindingSetPrimitives,
 	CombatOutcome,
 	CombatRuleData,
 	CombatRuleError,
 	CombatTransition,
 } from '@pocket-forge/combat-engine/domain';
-import { CombatMoveBindingSet, CombatResolutionError, CombatRule } from '@pocket-forge/combat-engine/domain';
+import { CombatActionBindingSet, CombatResolutionError, CombatRule } from '@pocket-forge/combat-engine/domain';
 import { CombatCompositionRule } from '@pocket-forge/combat-engine/rules';
 
 const GROUP_CONSTRAINTS = {
@@ -73,8 +73,8 @@ class FakeActionCatalog implements CombatActionCatalog {
 	}
 }
 
-function moveBindings(overrides?: Partial<CombatMoveBindingSetPrimitives>): CombatMoveBindingSet {
-	return CombatMoveBindingSet.create(
+function actionBindings(overrides?: Partial<CombatActionBindingSetPrimitives>): CombatActionBindingSet {
+	return CombatActionBindingSet.create(
 		{
 			bindings: [{ actionId: 'tackle', config: {}, moveId: 'move-1' }],
 			...overrides,
@@ -103,4 +103,4 @@ class FakeActionResolver implements CombatActionResolver {
 	}
 }
 
-export { FakeActionResolver, FakeCompletionRule, FakeCompositionRule, moveBindings };
+export { actionBindings, FakeActionResolver, FakeCompletionRule, FakeCompositionRule };

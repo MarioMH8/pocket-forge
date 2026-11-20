@@ -1,5 +1,5 @@
+import type CombatActionBindingSet from './action/combat-action-binding-set';
 import type { CombatActionResolver } from './action/combat-action-resolver';
-import type CombatMoveBindingSet from './action/combat-move-binding-set';
 import type CombatRule from './rule/combat-rule';
 
 /**
@@ -9,13 +9,13 @@ import type CombatRule from './rule/combat-rule';
  */
 interface CombatEngineSetupInput {
 	/**
+	 * Action bindings handled by the action resolver.
+	 */
+	readonly actionBindings: CombatActionBindingSet;
+	/**
 	 * Action resolver that resolves the bound actions.
 	 */
 	readonly actions: CombatActionResolver;
-	/**
-	 * Move bindings handled by the action resolver.
-	 */
-	readonly moveBindings: CombatMoveBindingSet;
 	/**
 	 * Rules that participate in the combat.
 	 */
@@ -31,13 +31,13 @@ interface CombatEngineSetupInput {
  */
 class CombatEngineSetup {
 	/**
+	 * Authored action bindings handled by the resolver.
+	 */
+	readonly actionBindings: CombatActionBindingSet;
+	/**
 	 * Action resolver that resolves the bound actions.
 	 */
 	readonly actions: CombatActionResolver;
-	/**
-	 * Authored Move bindings handled by the resolver.
-	 */
-	readonly moveBindings: CombatMoveBindingSet;
 	/**
 	 * Rules that participate in the combat.
 	 */
@@ -46,7 +46,7 @@ class CombatEngineSetup {
 	private constructor(input: CombatEngineSetupInput) {
 		this.rules = Object.freeze([...input.rules]);
 		this.actions = input.actions;
-		this.moveBindings = input.moveBindings;
+		this.actionBindings = input.actionBindings;
 		Object.freeze(this);
 	}
 
@@ -57,7 +57,7 @@ class CombatEngineSetup {
 	 * @returns The immutable setup.
 	 * @example
 	 * ```ts
-	 * const setup = CombatEngineSetup.create({ rules, actions, moveBindings });
+	 * const setup = CombatEngineSetup.create({ rules, actions, actionBindings });
 	 * ```
 	 */
 	static create(input: CombatEngineSetupInput): CombatEngineSetup {

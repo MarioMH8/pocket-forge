@@ -13,7 +13,7 @@ interface CombatActionDescriptor {
 	 */
 	readonly configDefinitions: readonly AttributeDefinition[];
 	/**
-	 * Stable action identifier used by Move bindings.
+	 * Stable action identifier used by action bindings.
 	 */
 	readonly id: string;
 	/**
@@ -32,7 +32,7 @@ interface CombatActionCatalog {
 	/**
 	 * Finds the descriptor registered for an action.
 	 *
-	 * @param actionId - Action identifier declared by a Move binding.
+	 * @param actionId - Action identifier declared by an action binding.
 	 * @returns The matching descriptor, or `undefined` when the action is unknown.
 	 */
 	find(actionId: string): CombatActionDescriptor | undefined;
