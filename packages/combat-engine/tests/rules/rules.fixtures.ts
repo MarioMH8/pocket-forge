@@ -3,13 +3,15 @@ import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain
 import type { Combat, CombatPrimitives } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import { CombatantGroupMother, CombatantMother } from '@pocket-forge/combat/mother/domain';
-import type { CombatRuleset } from '@pocket-forge/combat-engine/domain';
-import { CombatRulesetMother } from '@pocket-forge/combat-engine/mother/domain';
+import type { CombatCompositionRulePrimitives } from '@pocket-forge/combat-engine/domain';
+import { CombatRuleMother } from '@pocket-forge/combat-engine/mother/domain';
+import type { ThresholdCombatCompletionRule } from '@pocket-forge/combat-engine/rules';
 import {
 	COMPLETION_CONFIG_DEFINITIONS,
 	COMPLETION_CONFIG_KEYS,
-	OneVersusOneCombatRuleset,
-} from '@pocket-forge/combat-engine/rulesets';
+	OneVersusOneCombatRule,
+	ThresholdCombatCompletionRule as ThresholdRule,
+} from '@pocket-forge/combat-engine/rules';
 
 const POWER = AttributeDefinitionMother.number({
 	constraints: { max: 100, min: 0 },
@@ -24,11 +26,6 @@ const BANNER = AttributeDefinitionMother.string({
 });
 
 const ATTRIBUTE_DEFINITIONS: readonly AttributeDefinition[] = [POWER, BANNER];
-
-const COMPLETION_ATTRIBUTE_DEFINITIONS: readonly AttributeDefinition[] = [
-	...ATTRIBUTE_DEFINITIONS,
-	...COMPLETION_CONFIG_DEFINITIONS,
-];
 
 const DEFAULT_COMPLETION_ATTRIBUTES: AttributeValues = {
 	[COMPLETION_CONFIG_KEYS.attributeKey]: 'power',
@@ -81,20 +78,22 @@ function builtInCombat(overrides?: Partial<CombatPrimitives>, powers?: PowerOver
 	return CombatEntity.fromPrimitives(combatPrimitives(overrides, powers));
 }
 
-function completionRuleset(attributes: AttributeValues = DEFAULT_COMPLETION_ATTRIBUTES): CombatRuleset {
-	return OneVersusOneCombatRuleset.create(
-		CombatRulesetMother.primitives({
-			attributes: { ...attributes },
-			groupConstraints: { ...OneVersusOneCombatRuleset.CONSTRAINTS },
+function compositionRule(overrides?: Partial<CombatCompositionRulePrimitives>): OneVersusOneCombatRule {
+	return OneVersusOneCombatRule.create(
+		CombatRuleMother.primitives({
+			groupConstraints: { ...OneVersusOneCombatRule.CONSTRAINTS },
+			...overrides,
 		}),
-		[...COMPLETION_ATTRIBUTE_DEFINITIONS]
+		ATTRIBUTE_DEFINITIONS
 	).getRight();
 }
 
-export {
-	ATTRIBUTE_DEFINITIONS,
-	builtInCombat,
-	COMPLETION_ATTRIBUTE_DEFINITIONS,
-	completionRuleset,
-	DEFAULT_COMPLETION_ATTRIBUTES,
-};
+function completionRule(attributes: AttributeValues = DEFAULT_COMPLETION_ATTRIBUTES): ThresholdCombatCompletionRule {
+	return ThresholdRule.create(
+		{ attributes: { ...attributes } },
+		COMPLETION_CONFIG_DEFINITIONS,
+		ATTRIBUTE_DEFINITIONS
+	).getRight();
+}
+
+export { ATTRIBUTE_DEFINITIONS, builtInCombat, completionRule, compositionRule, DEFAULT_COMPLETION_ATTRIBUTES };

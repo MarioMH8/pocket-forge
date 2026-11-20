@@ -2,4 +2,4 @@
 '@pocket-forge/combat-engine': minor
 ---
 
-Add the abstract Combat Ruleset model with format attributes and composition constraints.
+Add the abstract Combat Rule model with its own configuration and hook-based participation.

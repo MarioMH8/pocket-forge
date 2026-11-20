@@ -1,12 +1,13 @@
 import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import {
+	COMPLETION_CONFIG_DEFINITIONS,
 	COMPLETION_CONFIG_KEYS,
 	readThresholdCompletionConfig,
 	ThresholdCombatCompletionRule,
-} from '@pocket-forge/combat-engine/rulesets';
+} from '@pocket-forge/combat-engine/rules';
 import { describe, expect, it } from 'bun:test';
 
-import { ATTRIBUTE_DEFINITIONS, completionRuleset, DEFAULT_COMPLETION_ATTRIBUTES } from './rulesets.fixtures';
+import { ATTRIBUTE_DEFINITIONS, DEFAULT_COMPLETION_ATTRIBUTES } from './rules.fixtures';
 
 function attributes(overrides?: AttributeValues): AttributeValues {
 	return { ...DEFAULT_COMPLETION_ATTRIBUTES, ...overrides };
@@ -114,8 +115,12 @@ describe('readThresholdCompletionConfig', () => {
 });
 
 describe('ThresholdCombatCompletionRule.create', () => {
-	it('produces a rule from valid ruleset attributes', () => {
-		const result = ThresholdCombatCompletionRule.create(completionRuleset(), ATTRIBUTE_DEFINITIONS);
+	it('produces a rule from valid completion primitives', () => {
+		const result = ThresholdCombatCompletionRule.create(
+			{ attributes: { ...DEFAULT_COMPLETION_ATTRIBUTES } },
+			COMPLETION_CONFIG_DEFINITIONS,
+			ATTRIBUTE_DEFINITIONS
+		);
 
 		expect(result.isRight()).toBe(true);
 		expect(result.getRight()).toBeInstanceOf(ThresholdCombatCompletionRule);
@@ -123,7 +128,8 @@ describe('ThresholdCombatCompletionRule.create', () => {
 
 	it('rejects an unknown observed attribute key', () => {
 		const result = ThresholdCombatCompletionRule.create(
-			completionRuleset(attributes({ [COMPLETION_CONFIG_KEYS.attributeKey]: 'unknown' })),
+			{ attributes: attributes({ [COMPLETION_CONFIG_KEYS.attributeKey]: 'unknown' }) },
+			COMPLETION_CONFIG_DEFINITIONS,
 			ATTRIBUTE_DEFINITIONS
 		);
 
@@ -134,7 +140,8 @@ describe('ThresholdCombatCompletionRule.create', () => {
 
 	it('rejects a non-numeric observed attribute definition', () => {
 		const result = ThresholdCombatCompletionRule.create(
-			completionRuleset(attributes({ [COMPLETION_CONFIG_KEYS.attributeKey]: 'banner' })),
+			{ attributes: attributes({ [COMPLETION_CONFIG_KEYS.attributeKey]: 'banner' }) },
+			COMPLETION_CONFIG_DEFINITIONS,
 			ATTRIBUTE_DEFINITIONS
 		);
 

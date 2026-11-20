@@ -5,15 +5,20 @@ import type {
 	CombatActionCatalog,
 	CombatActionContext,
 	CombatActionDescriptor,
-	CombatActionPlugin,
-	CombatActionSetPrimitives,
-	CombatCompletionRule,
+	CombatActionResolver,
+	CombatCompletionHook,
+	CombatMoveBindingSetPrimitives,
 	CombatOutcome,
-	CombatRulesetData,
-	CombatRulesetError,
+	CombatRuleData,
+	CombatRuleError,
 	CombatTransition,
 } from '@pocket-forge/combat-engine/domain';
-import { CombatActionSet, CombatResolutionError, CombatRuleset } from '@pocket-forge/combat-engine/domain';
+import {
+	CombatCompositionRule,
+	CombatMoveBindingSet,
+	CombatResolutionError,
+	CombatRule,
+} from '@pocket-forge/combat-engine/domain';
 
 const GROUP_CONSTRAINTS = {
 	maxCombatantsPerGroup: 6,
@@ -22,10 +27,9 @@ const GROUP_CONSTRAINTS = {
 	minGroups: 1,
 } as const;
 
-const RULESET_DATA: CombatRulesetData = {
+const RULE_DATA: CombatRuleData = {
 	attributes: AttributeMap.fromPrimitives({}),
 	definitions: [],
-	groupConstraints: GROUP_CONSTRAINTS,
 };
 
 const TACKLE: CombatActionDescriptor = {
@@ -34,17 +38,36 @@ const TACKLE: CombatActionDescriptor = {
 };
 
 /**
- * Ruleset fake: a valid ruleset whose `validateGroups` can be swapped per test.
+ * Composition rule fake whose `validateComposition` can be swapped per test.
  */
-class FakeCombatRuleset extends CombatRuleset {
-	validateWith?: (groups: readonly CombatantGroup[]) => Either<CombatRulesetError[], void>;
+class FakeCompositionRule extends CombatCompositionRule {
+	validateWith?: (groups: readonly CombatantGroup[]) => Either<CombatRuleError[], void>;
 
 	constructor() {
-		super(RULESET_DATA);
+		super(RULE_DATA, GROUP_CONSTRAINTS);
 	}
 
-	override validateGroups(groups: readonly CombatantGroup[]): Either<CombatRulesetError[], void> {
-		return this.validateWith?.(groups) ?? Either.right();
+	override validateComposition(groups: readonly CombatantGroup[]): Either<CombatRuleError[], void> {
+		return this.validateWith?.(groups) ?? super.validateComposition(groups);
+	}
+}
+
+/**
+ * Completion rule fake that records evaluated combats and returns a scripted
+ * outcome.
+ */
+class FakeCompletionRule extends CombatRule implements CombatCompletionHook {
+	readonly evaluated: Combat[] = [];
+	outcome: CombatOutcome | undefined = undefined;
+
+	constructor() {
+		super(RULE_DATA);
+	}
+
+	evaluate(combat: Combat): CombatOutcome | undefined {
+		this.evaluated.push(combat);
+
+		return this.outcome;
 	}
 }
 
@@ -54,8 +77,8 @@ class FakeActionCatalog implements CombatActionCatalog {
 	}
 }
 
-function actionSet(overrides?: Partial<CombatActionSetPrimitives>): CombatActionSet {
-	return CombatActionSet.create(
+function moveBindings(overrides?: Partial<CombatMoveBindingSetPrimitives>): CombatMoveBindingSet {
+	return CombatMoveBindingSet.create(
 		{
 			bindings: [{ actionId: 'tackle', config: {}, moveId: 'move-1' }],
 			...overrides,
@@ -67,9 +90,9 @@ function actionSet(overrides?: Partial<CombatActionSetPrimitives>): CombatAction
 type ResolveBehavior = (context: CombatActionContext) => Either<CombatResolutionError[], CombatTransition>;
 
 /**
- * Action plugin fake that records its context and replays a scripted behavior.
+ * Action resolver fake that records its context and replays a scripted behavior.
  */
-class FakeActionPlugin implements CombatActionPlugin {
+class FakeActionResolver implements CombatActionResolver {
 	readonly actions: CombatActionCatalog = new FakeActionCatalog();
 	readonly contexts: CombatActionContext[] = [];
 	resolveWith?: ResolveBehavior;
@@ -84,18 +107,4 @@ class FakeActionPlugin implements CombatActionPlugin {
 	}
 }
 
-/**
- * Completion rule fake that returns a scripted outcome.
- */
-class FakeCompletionRule implements CombatCompletionRule {
-	readonly evaluated: Combat[] = [];
-	outcome: CombatOutcome | undefined = undefined;
-
-	evaluate(combat: Combat): CombatOutcome | undefined {
-		this.evaluated.push(combat);
-
-		return this.outcome;
-	}
-}
-
-export { actionSet, FakeActionPlugin, FakeCombatRuleset, FakeCompletionRule };
+export { FakeActionResolver, FakeCompletionRule, FakeCompositionRule, moveBindings };

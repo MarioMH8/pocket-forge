@@ -1,9 +1,9 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
-import type { CombatCompletionRule } from '@pocket-forge/combat-engine/domain';
-import { CombatActionSet, CombatEngine, CombatSetup } from '@pocket-forge/combat-engine/domain';
-import { CombatRulesetMother } from '@pocket-forge/combat-engine/mother/domain';
-import { OneVersusOneCombatRuleset } from '@pocket-forge/combat-engine/rulesets';
+import type { CombatRule } from '@pocket-forge/combat-engine/domain';
+import { CombatEngine, CombatMoveBindingSet, CombatSetup } from '@pocket-forge/combat-engine/domain';
+import { CombatRuleMother } from '@pocket-forge/combat-engine/mother/domain';
+import { OneVersusOneCombatRule } from '@pocket-forge/combat-engine/rules';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
@@ -16,22 +16,19 @@ function combatantPower(combat: Combat, combatantId: string): AttributeValue | u
 
 describe('Duelmon combat through CombatEngine', () => {
 	it('preserves a modifyAttribute successor across the full composition', () => {
-		const ruleset = OneVersusOneCombatRuleset.create(
-			CombatRulesetMother.primitives({
-				groupConstraints: { ...OneVersusOneCombatRuleset.CONSTRAINTS },
+		const composition = OneVersusOneCombatRule.create(
+			CombatRuleMother.primitives({
+				groupConstraints: { ...OneVersusOneCombatRule.CONSTRAINTS },
 			}),
 			[...DuelmonCombatMother.ATTRIBUTE_DEFINITIONS]
 		).getRight();
 		const plugin = DuelmonCombatMother.plugin();
-		const actionSet = CombatActionSet.create(
+		const moveBindings = CombatMoveBindingSet.create(
 			{ bindings: DuelmonCombatMother.bindings() },
 			plugin.actions
 		).getRight();
-		const completion: CombatCompletionRule = {
-			// eslint-disable-next-line unicorn/no-useless-undefined
-			evaluate: () => undefined,
-		};
-		const engine = new CombatEngine(CombatSetup.create({ actions: plugin, actionSet, completion, ruleset }));
+		const rules: readonly CombatRule[] = [composition];
+		const engine = new CombatEngine(CombatSetup.create({ actions: plugin, moveBindings, rules }));
 		const combat = DuelmonCombatMother.create();
 		const before = combat.toPrimitives();
 

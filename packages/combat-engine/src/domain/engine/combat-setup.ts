@@ -1,7 +1,6 @@
-import type { CombatActionPlugin } from '../action/combat-action-plugin';
-import type CombatActionSet from '../action/combat-action-set';
-import type CombatCompletionRule from '../completion/combat-completion-rule';
-import type CombatRuleset from '../ruleset/combat-ruleset';
+import type { CombatActionResolver } from '../action/combat-action.resolver';
+import type CombatMoveBindingSet from '../action/combat-move-binding-set';
+import type CombatRule from '../rule/combat-rule';
 
 /**
  * Collaborators that compose a {@link CombatSetup}.
@@ -9,53 +8,56 @@ import type CombatRuleset from '../ruleset/combat-ruleset';
  * Each field matches the property of the same name on the resulting setup.
  */
 interface CombatSetupInput {
-	readonly actionSet: CombatActionSet;
-	readonly actions: CombatActionPlugin;
-	readonly completion: CombatCompletionRule;
-	readonly ruleset: CombatRuleset;
+	/**
+	 * Action resolver that resolves the bound actions.
+	 */
+	readonly actions: CombatActionResolver;
+	/**
+	 * Move bindings handled by the action resolver.
+	 */
+	readonly moveBindings: CombatMoveBindingSet;
+	/**
+	 * Rules that participate in the combat.
+	 */
+	readonly rules: readonly CombatRule[];
 }
 
 /**
- * Immutable composition of the four Combat collaborators.
+ * Immutable composition of the Combat collaborators.
  *
  * A setup is a snapshot of the collaborators wired by the app. There is no
- * static compatibility check: a plugin and an action set that do not belong
- * together surface as an unknown action when the plugin resolves.
+ * static compatibility check: a resolver and a binding set that do not belong
+ * together surface as an unknown action when the resolver runs.
  */
 class CombatSetup {
 	/**
-	 * Authored action set bound to Moves.
+	 * Action resolver that resolves the bound actions.
 	 */
-	readonly actionSet: CombatActionSet;
+	readonly actions: CombatActionResolver;
 	/**
-	 * Action plugin that resolves the bound actions.
+	 * Authored Move bindings handled by the resolver.
 	 */
-	readonly actions: CombatActionPlugin;
+	readonly moveBindings: CombatMoveBindingSet;
 	/**
-	 * Completion rule that decides the outcome.
+	 * Rules that participate in the combat.
 	 */
-	readonly completion: CombatCompletionRule;
-	/**
-	 * Combat format the setup follows.
-	 */
-	readonly ruleset: CombatRuleset;
+	readonly rules: readonly CombatRule[];
 
 	private constructor(input: CombatSetupInput) {
-		this.ruleset = input.ruleset;
+		this.rules = Object.freeze([...input.rules]);
 		this.actions = input.actions;
-		this.actionSet = input.actionSet;
-		this.completion = input.completion;
+		this.moveBindings = input.moveBindings;
 		Object.freeze(this);
 	}
 
 	/**
-	 * Wires the four collaborators into an immutable setup.
+	 * Wires the collaborators into an immutable setup.
 	 *
 	 * @param input - Collaborators that compose the setup.
 	 * @returns The immutable setup.
 	 * @example
 	 * ```ts
-	 * const setup = CombatSetup.create({ ruleset, actions, actionSet, completion });
+	 * const setup = CombatSetup.create({ rules, actions, moveBindings });
 	 * ```
 	 */
 	static create(input: CombatSetupInput): CombatSetup {

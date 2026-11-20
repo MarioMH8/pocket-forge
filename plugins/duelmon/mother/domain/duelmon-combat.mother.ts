@@ -3,14 +3,15 @@ import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain
 import type { Combat, CombatantPrimitives, CombatPrimitives } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import { CombatantGroupMother, CombatantMother } from '@pocket-forge/combat/mother/domain';
-import type { CombatActionSet, CombatMoveBindingPrimitives, CombatRuleset } from '@pocket-forge/combat-engine/domain';
-import { CombatActionSet as CombatActionSetEntity } from '@pocket-forge/combat-engine/domain';
-import { CombatRulesetMother } from '@pocket-forge/combat-engine/mother/domain';
+import type { CombatMoveBindingPrimitives, CombatMoveBindingSet, CombatRule } from '@pocket-forge/combat-engine/domain';
+import { CombatMoveBindingSet as CombatMoveBindingSetEntity } from '@pocket-forge/combat-engine/domain';
+import { CombatRuleMother } from '@pocket-forge/combat-engine/mother/domain';
 import {
 	COMPLETION_CONFIG_DEFINITIONS,
 	COMPLETION_CONFIG_KEYS,
-	OneVersusOneCombatRuleset,
-} from '@pocket-forge/combat-engine/rulesets';
+	OneVersusOneCombatRule,
+	ThresholdCombatCompletionRule,
+} from '@pocket-forge/combat-engine/rules';
 import { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import {
 	DuelmonCombatPlugin,
@@ -106,20 +107,6 @@ export default class DuelmonCombatMother {
 	private static catalogCache: DuelmonCatalog | undefined;
 
 	/**
-	 * Builds an action set containing one modifyAttribute binding.
-	 *
-	 * @param config - Binding configuration values.
-	 * @param moveId - Bound move identifier.
-	 * @returns The validated action set.
-	 */
-	static actionSet(config: AttributeValues, moveId = 'move-1'): CombatActionSet {
-		return CombatActionSetEntity.create(
-			{ bindings: [{ actionId: ModifyAttributeAction.ID, config, moveId }] },
-			this.plugin().actions
-		).getRight();
-	}
-
-	/**
 	 * Builds the authored modifyAttribute bindings.
 	 *
 	 * @returns Fresh binding primitives.
@@ -158,18 +145,30 @@ export default class DuelmonCombatMother {
 	}
 
 	/**
-	 * Builds the threshold completion ruleset.
+	 * Builds the threshold completion rule.
 	 *
 	 * @param attributes - Completion configuration attributes.
-	 * @returns The ruleset.
+	 * @returns The completion rule.
 	 */
-	static completionRuleset(attributes: AttributeValues = DEFAULT_COMPLETION_ATTRIBUTES): CombatRuleset {
-		return OneVersusOneCombatRuleset.create(
-			CombatRulesetMother.primitives({
-				attributes: { ...attributes },
-				groupConstraints: { ...OneVersusOneCombatRuleset.CONSTRAINTS },
+	static completionRule(attributes: AttributeValues = DEFAULT_COMPLETION_ATTRIBUTES): CombatRule {
+		return ThresholdCombatCompletionRule.create(
+			{ attributes: { ...attributes } },
+			[...COMPLETION_CONFIG_DEFINITIONS],
+			[...ATTRIBUTE_DEFINITIONS]
+		).getRight();
+	}
+
+	/**
+	 * Builds the `1v1` composition rule.
+	 *
+	 * @returns The composition rule.
+	 */
+	static compositionRule(): CombatRule {
+		return OneVersusOneCombatRule.create(
+			CombatRuleMother.primitives({
+				groupConstraints: { ...OneVersusOneCombatRule.CONSTRAINTS },
 			}),
-			[...COMPLETION_ATTRIBUTE_DEFINITIONS]
+			[...ATTRIBUTE_DEFINITIONS]
 		).getRight();
 	}
 
@@ -198,6 +197,20 @@ export default class DuelmonCombatMother {
 			moves: [],
 			species: { attributes: {}, id: speciesId },
 		};
+	}
+
+	/**
+	 * Builds a Move binding set containing one modifyAttribute binding.
+	 *
+	 * @param config - Binding configuration values.
+	 * @param moveId - Bound move identifier.
+	 * @returns The validated Move binding set.
+	 */
+	static moveBindings(config: AttributeValues, moveId = 'move-1'): CombatMoveBindingSet {
+		return CombatMoveBindingSetEntity.create(
+			{ bindings: [{ actionId: ModifyAttributeAction.ID, config, moveId }] },
+			this.plugin().actions
+		).getRight();
 	}
 
 	/**
@@ -251,13 +264,13 @@ export default class DuelmonCombatMother {
 	}
 
 	/**
-	 * Builds an action set that binds every move to `useMove`.
+	 * Builds a Move binding set that binds every move to `useMove`.
 	 *
 	 * @param moveIds - Move identifiers to bind.
-	 * @returns The validated action set.
+	 * @returns The validated Move binding set.
 	 */
-	static useMoveActionSet(moveIds: readonly string[] = ['ember-burst']): CombatActionSet {
-		return CombatActionSetEntity.create(
+	static useMoveBindings(moveIds: readonly string[] = ['ember-burst']): CombatMoveBindingSet {
+		return CombatMoveBindingSetEntity.create(
 			{
 				bindings: moveIds.map(moveId => ({
 					actionId: UseMoveAction.ID,

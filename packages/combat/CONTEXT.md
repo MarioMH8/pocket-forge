@@ -2,7 +2,7 @@
 
 Defines the neutral combat session model and the vocabulary through which authored rules and external resolution logic interact.
 
-The context spans two packages: `@pocket-forge/combat` holds the neutral state (Combat, Combatant, Combatant Group), and `@pocket-forge/combat-engine` holds the Combat Engine and the extension contracts (action plugin, action set, ruleset, completion rule, transition, event, outcome).
+The context spans two packages: `@pocket-forge/combat` holds the neutral state (Combat, Combatant, Combatant Group), and `@pocket-forge/combat-engine` holds the Combat Engine and the extension contracts (rule, hooks, action resolver, Move binding set, transition, event, outcome).
 
 ## Language
 
@@ -15,39 +15,43 @@ A combat-local participant that carries a Creature snapshot and its own battle a
 _Avoid_: Creature, player
 
 **Combatant Group**:
-A collection of Combatants with its own battle attributes; its cardinality and relationships are defined by the Combat Ruleset, and composition changes happen only through resolved Combat Transitions.
+A collection of Combatants with its own battle attributes; its cardinality and relationships are defined by the Combat Rules, and composition changes happen only through resolved Combat Transitions.
 _Avoid_: Team, side
 
-**Combat Action Plugin**:
-Reusable external logic that registers actions and resolves Move-bound actions into Combat Transitions; the object itself is the identity, with no separate plugin id.
+**Combat Rule**:
+An authored, serializable rule with its own configuration that participates in a Combat through one or more hooks. The concrete class is the identity. A Combat may compose several rules; each rule implements the hooks it cares about.
+_Avoid_: Plugin, battle configuration, format singleton
+
+**Combat Composition Hook**:
+The rule hook that validates which groups and combatants a Combat accepts. It never resolves actions or decides the outcome.
+_Avoid_: Formation check, team validator
+
+**Combat Completion Hook**:
+The rule hook that inspects a Combat snapshot and returns a Combat Outcome when combat should end. It never mutates the Combat.
+_Avoid_: Core victory check, turn resolver
+
+**Combat Action Resolver**:
+Reusable external logic that owns an action catalog and resolves Move-bound actions into Combat Transitions; the object itself is the identity, with no separate resolver id.
 _Avoid_: Combat Plugin, rules engine, embedded move logic
 
-**Combat Ruleset**:
-A concrete combat format that declares format attributes and composition constraints; the class itself is the identity. It does not contain Move bindings, action logic, or victory logic.
-_Avoid_: Plugin, battle configuration, embedded ruleset
-
-**Built-in Combat Rules**:
-The ruleset and completion-rule implementations shipped by `@pocket-forge/combat-engine` under `./rulesets`. Authors import them directly or extend `CombatRuleset` with their own format.
-_Avoid_: Reference rules, default plugin
-
 **Combat Action**:
-Plugin-registered executable logic selected by a Combat Action Set for a Move; it receives an immutable context and returns a Combat Transition.
+Resolver-registered executable logic selected by a Combat Move Binding Set for a Move; it receives an immutable context and returns a Combat Transition.
 _Avoid_: Move function, embedded move logic
 
-**Combat Action Set**:
-Authored data binding Move identifiers to registered Combat Actions and serializable action configuration; it carries no plugin reference, so the app pairs it with the plugin that resolves it.
+**Combat Move Binding Set**:
+Authored data binding Move identifiers to registered Combat Actions and serializable action configuration; it carries no resolver reference, so the app pairs it with the resolver that executes it.
 _Avoid_: Core binding, hardcoded move
 
-**Combat Completion Rule**:
-An external rule that inspects a Combat snapshot and returns a Combat Outcome when combat should end.
-_Avoid_: Core victory check, turn resolver
+**Built-in Combat Rules**:
+The rule implementations shipped by `@pocket-forge/combat-engine` under `./rules`. Authors import them directly or extend `CombatRule` with their own rule.
+_Avoid_: Reference rules, default plugin
 
 **Threshold Combat Completion Rule**:
 The built-in completion rule that ends Combat when a Combatant attribute satisfies a configured comparison against a threshold, under a configured winner policy.
 _Avoid_: Hit-point check, knockout rule
 
 **Combat Engine**:
-A pure orchestrator that composes a ruleset, action plugin, action set, and completion rule; it validates composition, delegates resolution, and evaluates completion. It lives in `@pocket-forge/combat-engine`.
+A pure orchestrator that composes Combat Rules, an action resolver, and a Move binding set; it validates composition, delegates resolution, evaluates completion hooks, and requires agreeing outcomes. It lives in `@pocket-forge/combat-engine`.
 _Avoid_: Game loop, battle manager
 
 **Combat Transition**:

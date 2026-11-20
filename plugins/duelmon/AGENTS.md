@@ -1,6 +1,6 @@
 # @pocket-forge/duelmon agent guide
 
-Duelmon Combat action plugin, authored action set, and a private dataset
+Duelmon Combat action resolver, authored Move binding set, and a private dataset
 extractor for the Pokémon Showdown Gen 1 tables.
 
 - **Package manager:** Bun (`bun`)
@@ -14,7 +14,7 @@ The package only keeps package-exclusive scripts (`build`, `prepublishOnly`, `ex
 
 ## Boundary
 
-This package is a private implementation outside the neutral Combat core. It may import `@pocket-forge/combat/domain`, `@pocket-forge/combat-engine/domain`, `@pocket-forge/combat-engine/rulesets`, and `@pocket-forge/attribute/domain`. Neither `packages/combat` nor `packages/combat-engine` may import it.
+This package is a private implementation outside the neutral Combat core. It may import `@pocket-forge/combat/domain`, `@pocket-forge/combat-engine/domain`, `@pocket-forge/combat-engine/rules`, and `@pocket-forge/attribute/domain`. Neither `packages/combat` nor `packages/combat-engine` may import it.
 
 ## Dataset
 

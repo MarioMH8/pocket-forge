@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-  Private Duelmon Combat plugin and Pokémon Showdown Gen 1 dataset extractor for Pocket Forge.
+  Private Duelmon Combat action resolver and Pokémon Showdown Gen 1 dataset extractor for Pocket Forge.
 </p>
 
 This package is private. It lives outside the neutral Combat core and proves
@@ -11,8 +11,8 @@ that Move logic and authored bindings compose through public extension
 contracts instead of importing implementation details.
 
 - `DuelmonCombatPlugin` resolves the `modifyAttribute` and `useMove` actions.
-- Authored Move-to-action bindings are validated by `CombatActionSet.create`
-  from `@pocket-forge/combat-engine/domain` against the plugin catalog.
+- Authored Move-to-action bindings are validated by `CombatMoveBindingSet.create`
+  from `@pocket-forge/combat-engine/domain` against the resolver catalog.
 - `DuelmonDatasetBuilder.build` turns the pinned Showdown tables into a
   curated, serializable Gen 1 dataset.
 - `DuelmonCatalog.fromDataset` bridges that dataset to neutral `Species` and

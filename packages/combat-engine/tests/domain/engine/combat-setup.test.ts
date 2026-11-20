@@ -1,21 +1,21 @@
 import { CombatSetup } from '@pocket-forge/combat-engine/domain';
 import { describe, expect, it } from 'bun:test';
 
-import { actionSet, FakeActionPlugin, FakeCombatRuleset, FakeCompletionRule } from './engine.fakes';
+import { FakeActionResolver, FakeCompletionRule, FakeCompositionRule, moveBindings } from './engine.fakes';
 
 describe('CombatSetup', () => {
-	it('creates a setup from four collaborators and exposes them unchanged', () => {
+	it('creates a setup from its collaborators and exposes them unchanged', () => {
+		const actions = new FakeActionResolver();
+		const bindings = moveBindings();
+		const composition = new FakeCompositionRule();
 		const completion = new FakeCompletionRule();
-		const ruleset = new FakeCombatRuleset();
-		const actions = new FakeActionPlugin();
-		const set = actionSet();
 
-		const setup = CombatSetup.create({ actions, actionSet: set, completion, ruleset });
+		const setup = CombatSetup.create({ actions, moveBindings: bindings, rules: [composition, completion] });
 
-		expect(setup.ruleset).toBe(ruleset);
 		expect(setup.actions).toBe(actions);
-		expect(setup.actionSet).toBe(set);
-		expect(setup.completion).toBe(completion);
+		expect(setup.moveBindings).toBe(bindings);
+		expect(setup.rules).toEqual([composition, completion]);
 		expect(Object.isFrozen(setup)).toBe(true);
+		expect(Object.isFrozen(setup.rules)).toBe(true);
 	});
 });

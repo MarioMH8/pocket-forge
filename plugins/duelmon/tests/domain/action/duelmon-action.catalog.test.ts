@@ -1,5 +1,5 @@
 import type { CombatMoveBindingPrimitives } from '@pocket-forge/combat-engine/domain';
-import { CombatActionSet } from '@pocket-forge/combat-engine/domain';
+import { CombatMoveBindingSet } from '@pocket-forge/combat-engine/domain';
 import { ModifyAttributeAction, ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
@@ -19,7 +19,7 @@ function binding(overrides?: Partial<CombatMoveBindingPrimitives>): CombatMoveBi
 }
 
 function create(bindings: readonly CombatMoveBindingPrimitives[]) {
-	return CombatActionSet.create({ bindings }, DuelmonCombatMother.plugin().actions);
+	return CombatMoveBindingSet.create({ bindings }, DuelmonCombatMother.plugin().actions);
 }
 
 describe('duelmon combat catalog', () => {

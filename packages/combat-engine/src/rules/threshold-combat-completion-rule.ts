@@ -1,7 +1,13 @@
 import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
-import type { CombatCompletionRule, CombatOutcome, CombatRuleset } from '@pocket-forge/combat-engine/domain';
+import type {
+	CombatCompletionHook,
+	CombatOutcome,
+	CombatRuleData,
+	CombatRulePrimitives,
+} from '@pocket-forge/combat-engine/domain';
+import { CombatRule } from '@pocket-forge/combat-engine/domain';
 
 import ThresholdCombatCompletionRuleError from './threshold-combat-completion-rule.error';
 import type { ThresholdCompletionConfig } from './threshold-completion.config';
@@ -11,38 +17,53 @@ import { COMPLETION_CONFIG_KEYS, readThresholdCompletionConfig } from './thresho
  * Built-in completion rule that ends Combat from a Combatant attribute
  * threshold.
  *
- * It evaluates the injected project attribute catalog, returns a declarative
- * outcome, and never mutates Combat or resolves Moves. The engine owns the
- * `completed` transition and its completion event.
+ * The rule carries its own configuration. It evaluates the injected project
+ * attribute catalog, returns a declarative outcome, and never mutates Combat or
+ * resolves Moves. The engine owns the `completed` transition and the
+ * completion event.
  */
-class ThresholdCombatCompletionRule implements CombatCompletionRule {
+class ThresholdCombatCompletionRule extends CombatRule implements CombatCompletionHook {
 	private readonly config: ThresholdCompletionConfig;
 
-	private constructor(config: ThresholdCompletionConfig) {
+	private constructor(data: CombatRuleData, config: ThresholdCompletionConfig) {
+		super(data);
 		this.config = config;
 	}
 
 	/**
-	 * Reads the authored `completion.*` configuration and resolves the observed
-	 * attribute definition from the injected catalog.
+	 * Reads the authored `completion.*` configuration from the rule primitives
+	 * and resolves the observed attribute from the injected catalog.
 	 *
-	 * @param ruleset - Ruleset that carries the authored completion attributes.
+	 * @param primitives - Serialized rule data carrying the completion config.
+	 * @param definitions - Definitions that govern the completion config.
 	 * @param attributeDefinitions - Project attribute catalog.
 	 * @returns The configured rule, or every validation failure.
 	 * @example
 	 * ```ts
-	 * const result = ThresholdCombatCompletionRule.create(ruleset, definitions);
-	 *
-	 * if (result.isLeft()) {
-	 *   console.error(result.getLeft());
-	 * }
+	 * const result = ThresholdCombatCompletionRule.create(
+	 *   primitives,
+	 *   COMPLETION_CONFIG_DEFINITIONS,
+	 *   attributeDefinitions
+	 * );
 	 * ```
 	 */
 	static create(
-		ruleset: CombatRuleset,
+		primitives: CombatRulePrimitives,
+		definitions: readonly AttributeDefinition[],
 		attributeDefinitions: readonly AttributeDefinition[]
 	): Either<ThresholdCombatCompletionRuleError[], ThresholdCombatCompletionRule> {
-		const config = readThresholdCompletionConfig(ruleset.attributes.toPrimitives());
+		const validated = this.validate(primitives, definitions);
+
+		if (validated.isLeft()) {
+			return Either.left(
+				validated
+					.getLeft()
+					.map(error => new ThresholdCombatCompletionRuleError('invalid-config', error.message, error.path))
+			);
+		}
+
+		const data = validated.getRight();
+		const config = readThresholdCompletionConfig(data.attributes.toPrimitives());
 
 		if (config.isLeft()) {
 			return Either.left(config.getLeft());
@@ -71,13 +92,13 @@ class ThresholdCombatCompletionRule implements CombatCompletionRule {
 			]);
 		}
 
-		return Either.right(new ThresholdCombatCompletionRule(parsed));
+		return Either.right(new ThresholdCombatCompletionRule(data, parsed));
 	}
 
 	/**
-	 * Evaluates the configured attribute threshold against each Combatant Group.
+	 * Evaluates the configured attribute threshold.
 	 *
-	 * @param combat - Combat snapshot to inspect. It is never mutated.
+	 * @param combat - Combat snapshot to evaluate. It is never mutated.
 	 * @returns The reached outcome, or `undefined` while combat continues.
 	 */
 	evaluate(combat: Combat): CombatOutcome | undefined {
@@ -105,30 +126,32 @@ class ThresholdCombatCompletionRule implements CombatCompletionRule {
 			return { status: 'victory', winnerGroupId: thresholdGroup.id };
 		}
 
-		const opponent = combat.groups.find(group => group.id !== thresholdGroup.id);
+		const opposingGroup = combat.groups.find(group => group.id !== thresholdGroup.id);
 
-		return opponent ? { status: 'victory', winnerGroupId: opponent.id } : { status: 'draw' };
+		if (!opposingGroup) {
+			return { status: 'draw' };
+		}
+
+		return { status: 'victory', winnerGroupId: opposingGroup.id };
 	}
 
-	private satisfies(raw: AttributeValue | undefined): boolean {
-		if (typeof raw !== 'number') {
+	private satisfies(value: AttributeValue | undefined): boolean {
+		if (typeof value !== 'number') {
 			return false;
 		}
 
-		const { comparison, threshold } = this.config;
-
-		switch (comparison) {
+		switch (this.config.comparison) {
 			case 'gt': {
-				return raw > threshold;
+				return value > this.config.threshold;
 			}
 			case 'gte': {
-				return raw >= threshold;
+				return value >= this.config.threshold;
 			}
 			case 'lt': {
-				return raw < threshold;
+				return value < this.config.threshold;
 			}
 			case 'lte': {
-				return raw <= threshold;
+				return value <= this.config.threshold;
 			}
 		}
 	}

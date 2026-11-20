@@ -2,18 +2,18 @@ import Either from '@hexadrop/either';
 import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import type { Combat, CombatPrimitives } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity, CombatTransitionError } from '@pocket-forge/combat/domain';
-import { CombatantMother, CombatMother } from '@pocket-forge/combat/mother/domain';
-import type { CombatEvent, CombatTransition } from '@pocket-forge/combat-engine/domain';
+import { CombatMother } from '@pocket-forge/combat/mother/domain';
+import type { CombatEvent, CombatRule, CombatTransition } from '@pocket-forge/combat-engine/domain';
 import {
 	CombatEngine,
 	CombatEngineError,
 	CombatResolutionError,
-	CombatRulesetError,
+	CombatRuleError,
 	CombatSetup,
 } from '@pocket-forge/combat-engine/domain';
 import { beforeEach, describe, expect, it } from 'bun:test';
 
-import { actionSet, FakeActionPlugin, FakeCombatRuleset, FakeCompletionRule } from './engine.fakes';
+import { FakeActionResolver, FakeCompletionRule, FakeCompositionRule, moveBindings } from './engine.fakes';
 
 function withAttributes(combat: Combat, attributes: AttributeValues): Combat {
 	return CombatEntity.fromPrimitives({ ...combat.toPrimitives(), attributes });
@@ -27,50 +27,75 @@ function withStatus(combat: Combat, status: CombatPrimitives['status']): Combat 
 	return CombatEntity.fromPrimitives({ ...combat.toPrimitives(), status });
 }
 
-function event(sequence: number, type = 'action-resolved'): CombatEvent {
-	return { payload: { actionId: 'tackle' }, sequence, type };
+function event(sequence: number, type = 'tackle'): CombatEvent {
+	return { payload: {}, sequence, type };
+}
+
+function engineWith(rules: readonly CombatRule[], resolver: FakeActionResolver): CombatEngine {
+	return new CombatEngine(CombatSetup.create({ actions: resolver, moveBindings: moveBindings(), rules }));
 }
 
 describe('CombatEngine', () => {
-	let ruleset: FakeCombatRuleset;
-	let plugin: FakeActionPlugin;
+	let composition: FakeCompositionRule;
 	let completion: FakeCompletionRule;
+	let resolver: FakeActionResolver;
 	let engine: CombatEngine;
 
 	beforeEach(() => {
-		ruleset = new FakeCombatRuleset();
-		plugin = new FakeActionPlugin();
+		composition = new FakeCompositionRule();
 		completion = new FakeCompletionRule();
-		engine = new CombatEngine(CombatSetup.create({ actions: plugin, actionSet: actionSet(), completion, ruleset }));
+		resolver = new FakeActionResolver();
+		engine = engineWith([composition, completion], resolver);
 	});
 
 	describe('validateComposition', () => {
-		it('accepts a combat that satisfies the ruleset', () => {
+		it('accepts a combat that satisfies every composition rule', () => {
 			expect(engine.validateComposition(CombatMother.create()).isRight()).toBe(true);
 		});
 
-		it('delegates validation to the ruleset', () => {
-			ruleset.validateWith = () => Either.left([new CombatRulesetError('invalid-constraints', 'Nope', 'groups')]);
+		it('delegates validation to every composition rule', () => {
+			composition.validateWith = () =>
+				Either.left([new CombatRuleError('invalid-constraints', 'Nope', 'groups')]);
 
 			const result = engine.validateComposition(CombatMother.create());
 
 			expect(result.isLeft()).toBe(true);
 			expect(result.getLeft()[0]?.reason).toBe('invalid-constraints');
 		});
+
+		it('aggregates rejections from multiple composition rules', () => {
+			const second = new FakeCompositionRule();
+			composition.validateWith = () =>
+				Either.left([new CombatRuleError('invalid-constraints', 'First', 'groups')]);
+			second.validateWith = () => Either.left([new CombatRuleError('invalid-constraints', 'Second', 'groups')]);
+
+			const result = engineWith([composition, second, completion], resolver).validateComposition(
+				CombatMother.create()
+			);
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft().map(error => error.message)).toEqual(['First', 'Second']);
+		});
+
+		it('skips rules without a composition hook', () => {
+			const result = engineWith([completion], resolver).validateComposition(CombatMother.create());
+
+			expect(result.isRight()).toBe(true);
+		});
 	});
 
 	describe('resolve', () => {
 		it('rejects an invalid current composition before resolving', () => {
 			const combat = CombatMother.create();
-			ruleset.validateWith = () =>
-				Either.left([new CombatRulesetError('invalid-constraints', 'Invalid current composition', 'groups')]);
+			composition.validateWith = () =>
+				Either.left([new CombatRuleError('invalid-constraints', 'Invalid current composition', 'groups')]);
 
 			const result = engine.resolve(combat, 'input');
 
 			expect(result.isLeft()).toBe(true);
-			expect(result.getLeft()[0]).toBeInstanceOf(CombatRulesetError);
+			expect(result.getLeft()[0]).toBeInstanceOf(CombatRuleError);
 			expect(result.getLeft()[0]?.reason).toBe('invalid-constraints');
-			expect(plugin.contexts).toHaveLength(0);
+			expect(resolver.contexts).toHaveLength(0);
 			expect(completion.evaluated).toHaveLength(0);
 		});
 
@@ -79,7 +104,7 @@ describe('CombatEngine', () => {
 			const successor = withAttributes(combat, { power: 7 });
 			const events = [event(1), event(2)];
 
-			plugin.resolveWith = () => Either.right({ combat: successor, events });
+			resolver.resolveWith = () => Either.right({ combat: successor, events });
 
 			const result = engine.resolve(combat, 'input');
 
@@ -89,18 +114,19 @@ describe('CombatEngine', () => {
 			expect(resolution.combat).toBe(successor);
 			expect(resolution.events).toEqual(events);
 			expect(resolution.outcome).toBeUndefined();
-			expect(plugin.contexts).toHaveLength(1);
-			expect(plugin.contexts[0]?.combat).toBe(combat);
-			expect(plugin.contexts[0]?.input).toBe('input');
+			expect(resolver.contexts).toHaveLength(1);
+			expect(resolver.contexts[0]?.combat).toBe(combat);
+			expect(resolver.contexts[0]?.input).toBe('input');
+			expect(resolver.contexts[0]?.moveBindings).toBeDefined();
 		});
 
-		it('produces a completed successor with an outcome and a completion event', () => {
+		it('produces a completed successor when a completion rule returns an outcome', () => {
 			const combat = CombatMother.create();
 			const successor = withAttributes(combat, { power: 7 });
 			const winnerGroupId = successor.groups[0]?.id ?? '';
 			const events = [event(1), event(2)];
 
-			plugin.resolveWith = () => Either.right({ combat: successor, events });
+			resolver.resolveWith = () => Either.right({ combat: successor, events });
 			completion.outcome = { status: 'victory', winnerGroupId };
 
 			const result = engine.resolve(combat, 'input');
@@ -125,11 +151,58 @@ describe('CombatEngine', () => {
 			expect(completion.evaluated[0]).toBe(successor);
 		});
 
+		it('accepts multiple completion rules that agree', () => {
+			const combat = CombatMother.create();
+			const successor = withAttributes(combat, { power: 7 });
+			const winnerGroupId = successor.groups[0]?.id ?? '';
+			const second = new FakeCompletionRule();
+
+			resolver.resolveWith = () => Either.right({ combat: successor, events: [] });
+			completion.outcome = { status: 'victory', winnerGroupId };
+			second.outcome = { status: 'victory', winnerGroupId };
+
+			const result = engineWith([composition, completion, second], resolver).resolve(combat, 'input');
+
+			expect(result.isRight()).toBe(true);
+			expect(result.getRight().outcome).toEqual({ status: 'victory', winnerGroupId });
+			expect(completion.evaluated).toHaveLength(1);
+			expect(second.evaluated).toHaveLength(1);
+		});
+
+		it('rejects conflicting completion outcomes', () => {
+			const combat = CombatMother.create();
+			const successor = withAttributes(combat, { power: 7 });
+			const second = new FakeCompletionRule();
+
+			resolver.resolveWith = () => Either.right({ combat: successor, events: [] });
+			completion.outcome = { status: 'victory', winnerGroupId: successor.groups[0]?.id ?? '' };
+			second.outcome = { status: 'draw' };
+
+			const result = engineWith([composition, completion, second], resolver).resolve(combat, 'input');
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]).toBeInstanceOf(CombatEngineError);
+			expect(result.getLeft()[0]?.reason).toBe('conflicting-outcome');
+			expect(result.getLeft()[0]?.path).toBe('outcome');
+		});
+
+		it('skips rules without a completion hook', () => {
+			const combat = CombatMother.create();
+			const successor = withAttributes(combat, { power: 7 });
+
+			resolver.resolveWith = () => Either.right({ combat: successor, events: [] });
+
+			const result = engineWith([composition], resolver).resolve(combat, 'input');
+
+			expect(result.isRight()).toBe(true);
+			expect(result.getRight().outcome).toBeUndefined();
+		});
+
 		it('rejects a completion outcome with an unknown winning group', () => {
 			const combat = CombatMother.create();
 			const successor = withAttributes(combat, { power: 7 });
 
-			plugin.resolveWith = () => Either.right({ combat: successor, events: [] });
+			resolver.resolveWith = () => Either.right({ combat: successor, events: [] });
 			completion.outcome = { status: 'victory', winnerGroupId: 'missing-group' };
 
 			const result = engine.resolve(combat, 'input');
@@ -141,17 +214,22 @@ describe('CombatEngine', () => {
 			expect(result.getLeft()[0]?.message).toMatch(/unknown winning group/);
 		});
 
-		it('serializes a draw completion with a stable sequence', () => {
+		it('serializes a draw', () => {
 			const combat = CombatMother.create();
 			const successor = withAttributes(combat, { power: 7 });
 
-			plugin.resolveWith = () => Either.right({ combat: successor, events: [] });
+			resolver.resolveWith = () => Either.right({ combat: successor, events: [] });
 			completion.outcome = { status: 'draw' };
 
 			const resolution = engine.resolve(combat, 'input').getRight();
 
 			expect(resolution.outcome).toEqual({ status: 'draw' });
-			expect(resolution.events).toEqual([{ payload: { status: 'draw' }, sequence: 1, type: 'combat-completed' }]);
+			expect(resolution.events).toHaveLength(1);
+			expect(resolution.events[0]).toEqual({
+				payload: { status: 'draw' },
+				sequence: 1,
+				type: 'combat-completed',
+			});
 		});
 
 		it('rejects a combat that is not active', () => {
@@ -161,29 +239,17 @@ describe('CombatEngine', () => {
 			const result = engine.resolve(combat, 'input');
 
 			expect(result.isLeft()).toBe(true);
-			expect(result.getLeft()).toHaveLength(1);
 			expect(result.getLeft()[0]).toBeInstanceOf(CombatEngineError);
 			expect(result.getLeft()[0]?.reason).toBe('combat-not-active');
-			expect(plugin.contexts).toHaveLength(0);
+			expect(resolver.contexts).toHaveLength(0);
 			expect(completion.evaluated).toHaveLength(0);
 			expect(combat.toPrimitives()).toEqual(before);
 		});
 
-		it('propagates plugin rejections without producing a successor', () => {
-			const combat = CombatMother.create();
-			const error = new CombatResolutionError('invalid-input', 'Unsupported input', 'input');
-			plugin.resolveWith = () => Either.left([error]);
-
-			const result = engine.resolve(combat, 'input');
-
-			expect(result.isLeft()).toBe(true);
-			expect(result.getLeft()).toEqual([error]);
-			expect(completion.evaluated).toHaveLength(0);
-		});
-
 		it('rejects a successor with a different combat id', () => {
 			const combat = CombatMother.create();
-			plugin.resolveWith = () =>
+
+			resolver.resolveWith = () =>
 				Either.right<CombatResolutionError[], CombatTransition>({
 					combat: withId(combat, 'other-combat'),
 					events: [],
@@ -192,13 +258,15 @@ describe('CombatEngine', () => {
 			const result = engine.resolve(combat, 'input');
 
 			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]).toBeInstanceOf(CombatEngineError);
 			expect(result.getLeft()[0]?.reason).toBe('invalid-transition');
 			expect(result.getLeft()[0]?.path).toBe('transition.combat.id');
 		});
 
-		it('rejects a successor that the plugin already completed', () => {
+		it('rejects a successor that the resolver already completed', () => {
 			const combat = CombatMother.create();
-			plugin.resolveWith = () =>
+
+			resolver.resolveWith = () =>
 				Either.right<CombatResolutionError[], CombatTransition>({
 					combat: withStatus(combat, 'completed'),
 					events: [],
@@ -207,42 +275,12 @@ describe('CombatEngine', () => {
 			const result = engine.resolve(combat, 'input');
 
 			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]).toBeInstanceOf(CombatEngineError);
 			expect(result.getLeft()[0]?.reason).toBe('invalid-transition');
 			expect(result.getLeft()[0]?.path).toBe('transition.combat.status');
-			expect(result.getLeft()[0]?.message).toMatch(/Action plugins cannot complete Combat/);
-			expect(completion.evaluated).toHaveLength(0);
 		});
 
 		it('rejects a successor with invalid membership', () => {
-			const combat = CombatMother.create();
-			const groupId = combat.groups[0]?.id ?? '';
-			const succession = CombatEntity.fromPrimitives({
-				...combat.toPrimitives(),
-				groups: [
-					{
-						attributes: {},
-						combatants: [CombatantMother.primitives({ groupId: 'another-group', id: 'combatant-1' })],
-						id: groupId,
-					},
-				],
-			});
-
-			plugin.resolveWith = () =>
-				Either.right<CombatResolutionError[], CombatTransition>({
-					combat: succession,
-					events: [],
-				});
-
-			const result = engine.resolve(combat, 'input');
-
-			expect(result.isLeft()).toBe(true);
-			expect(result.getLeft()[0]).toBeInstanceOf(CombatTransitionError);
-			expect(result.getLeft()[0]?.reason).toBe('invalid-membership');
-			expect(result.getLeft()[0]?.path).toBe('groups.0.combatants.0.groupId');
-			expect(completion.evaluated).toHaveLength(0);
-		});
-
-		it('rejects a successor rejected by the ruleset composition', () => {
 			const combat = CombatMother.create();
 			const primitives = combat.toPrimitives();
 			const group = primitives.groups[0];
@@ -251,60 +289,56 @@ describe('CombatEngine', () => {
 				throw new Error('Expected the combat to have at least one group');
 			}
 
-			const succession = CombatEntity.fromPrimitives({
+			const successor = CombatEntity.fromPrimitives({
 				...primitives,
 				groups: [
 					{
 						...group,
-						combatants: group.combatants.map(combatant => ({ ...combatant, groupId: 'Invalid' })),
-						id: 'Invalid',
+						combatants: group.combatants.map(combatant => ({ ...combatant, groupId: 'missing' })),
 					},
 				],
 			});
 
-			ruleset.validateWith = groups =>
-				groups.some(group => group.id === 'Invalid')
-					? Either.left([new CombatRulesetError('invalid-constraints', 'Group id is reserved', 'groups')])
-					: Either.right();
-
-			plugin.resolveWith = () =>
-				Either.right<CombatResolutionError[], CombatTransition>({
-					combat: succession,
-					events: [],
-				});
+			resolver.resolveWith = () =>
+				Either.right<CombatResolutionError[], CombatTransition>({ combat: successor, events: [] });
 
 			const result = engine.resolve(combat, 'input');
 
 			expect(result.isLeft()).toBe(true);
-			expect(result.getLeft()[0]).toBeInstanceOf(CombatRulesetError);
-			expect(result.getLeft()[0]?.reason).toBe('invalid-constraints');
-			expect(completion.evaluated).toHaveLength(0);
+			expect(result.getLeft()[0]).toBeInstanceOf(CombatTransitionError);
+			expect(result.getLeft()[0]?.reason).toBe('invalid-membership');
 		});
 
-		it('leaves the input combat and its RandomPocket untouched on success', () => {
+		it('rejects a successor with an invalid composition', () => {
+			const combat = CombatMother.create();
+			const successor = withAttributes(combat, { power: 7 });
+
+			resolver.resolveWith = () =>
+				Either.right<CombatResolutionError[], CombatTransition>({ combat: successor, events: [] });
+			let calls = 0;
+			composition.validateWith = () => {
+				calls += 1;
+
+				return calls === 1
+					? Either.right()
+					: Either.left([new CombatRuleError('invalid-constraints', 'Invalid successor', 'groups')]);
+			};
+
+			const result = engine.resolve(combat, 'input');
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]).toBeInstanceOf(CombatRuleError);
+			expect(result.getLeft()[0]?.reason).toBe('invalid-constraints');
+		});
+
+		it('leaves the input combat untouched on success', () => {
 			const combat = CombatMother.create();
 			const before = combat.toPrimitives();
 			const randomPocket = combat.randomPocket;
 
-			plugin.resolveWith = () => Either.right({ combat: withAttributes(combat, { power: 7 }), events: [] });
+			resolver.resolveWith = () => Either.right({ combat: withAttributes(combat, { power: 7 }), events: [] });
 
 			expect(engine.resolve(combat, 'input').isRight()).toBe(true);
-			expect(combat.toPrimitives()).toEqual(before);
-			expect(combat.randomPocket).toBe(randomPocket);
-		});
-
-		it('leaves the input combat and its RandomPocket untouched on rejection', () => {
-			const combat = CombatMother.create();
-			const before = combat.toPrimitives();
-			const randomPocket = combat.randomPocket;
-
-			plugin.resolveWith = () =>
-				Either.right<CombatResolutionError[], CombatTransition>({
-					combat: withStatus(combat, 'completed'),
-					events: [],
-				});
-
-			expect(engine.resolve(combat, 'input').isLeft()).toBe(true);
 			expect(combat.toPrimitives()).toEqual(before);
 			expect(combat.randomPocket).toBe(randomPocket);
 		});

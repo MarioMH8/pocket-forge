@@ -3,7 +3,7 @@ import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribu
 import { AttributeMap } from '@pocket-forge/attribute/domain';
 
 import type { CombatActionCatalog } from './combat-action';
-import CombatActionSetError from './combat-action-set.error';
+import CombatMoveBindingSetError from './combat-move-binding-set.error';
 
 /**
  * Plain, serializable representation of a Move binding.
@@ -14,19 +14,19 @@ interface CombatMoveBindingPrimitives {
 	 */
 	readonly actionId: string;
 	/**
-	 * Action configuration values.
+	 * Action configuration.
 	 */
 	readonly config: AttributeValues;
 	/**
-	 * Move identifier authored in a Combat Ruleset.
+	 * Move identifier authored in a Combat Rule.
 	 */
 	readonly moveId: string;
 }
 
 /**
- * Plain, serializable representation of a Combat Action Set.
+ * Plain, serializable representation of a Combat Move Binding Set.
  */
-interface CombatActionSetPrimitives {
+interface CombatMoveBindingSetPrimitives {
 	/**
 	 * Bindings between Moves and registered combat actions.
 	 */
@@ -34,7 +34,7 @@ interface CombatActionSetPrimitives {
 }
 
 /**
- * A validated binding between a Move and a plugin-registered combat action.
+ * A validated binding between a Move and a registered combat action.
  */
 class CombatMoveBinding {
 	/**
@@ -46,7 +46,7 @@ class CombatMoveBinding {
 	 */
 	readonly config: AttributeMap;
 	/**
-	 * Move identifier authored in a Combat Ruleset.
+	 * Move identifier authored in a Combat Rule.
 	 */
 	readonly moveId: string;
 
@@ -60,7 +60,7 @@ class CombatMoveBinding {
 	 * Wraps an already validated configuration into a binding.
 	 *
 	 * @param moveId - Move identifier.
-	 * @param actionId - Registered action identifier.
+	 * @param actionId - Registered combat action identifier.
 	 * @param config - Validated action configuration.
 	 * @returns An immutable binding value.
 	 */
@@ -69,7 +69,7 @@ class CombatMoveBinding {
 	}
 
 	/**
-	 * Hydrates a binding without re-validating its configuration.
+	 * Hydrates a binding without validating its configuration.
 	 *
 	 * @param primitives - Serialized binding data.
 	 * @returns A rehydrated binding value.
@@ -97,13 +97,13 @@ class CombatMoveBinding {
 }
 
 /**
- * Authored set of Move-to-action bindings handled by a Combat Action Plugin.
+ * Authored set of Move-to-action bindings handled by a Combat Action Resolver.
  *
- * The action set is a pure data contract: it validates that every Move binding
- * references a known action with a valid configuration. It never imports Move
- * or plugin packages, and the app decides which plugin resolves it.
+ * The set is a pure data contract: it validates that every Move binding points
+ * to a registered action and carries a valid configuration. It never imports
+ * Move or plugin packages, and the app pairs it with a resolver.
  */
-class CombatActionSet {
+class CombatMoveBindingSet {
 	/**
 	 * Validated Move bindings.
 	 */
@@ -114,39 +114,39 @@ class CombatActionSet {
 	}
 
 	/**
-	 * Validates primitives and builds an immutable action set.
+	 * Validates primitives and builds an immutable binding set.
 	 *
-	 * Validation failures are aggregated instead of thrown: empty binding ids,
-	 * duplicated Move ids, unknown actions, and invalid action configurations.
+	 * Validation failures are aggregated: duplicate Move ids, unknown actions,
+	 * invalid configuration, and empty identifiers are reported together.
 	 *
-	 * @param primitives - Serialized action set data.
-	 * @param catalog - Plugin-owned action catalog.
-	 * @returns A validated action set, or every validation failure.
+	 * @param primitives - Serialized binding set data.
+	 * @param catalog - Action catalog owned by the resolver.
+	 * @returns A validated binding set, or every validation failure.
 	 */
 	static create(
-		primitives: CombatActionSetPrimitives,
+		primitives: CombatMoveBindingSetPrimitives,
 		catalog: CombatActionCatalog
-	): Either<CombatActionSetError[], CombatActionSet> {
-		const errors: CombatActionSetError[] = [];
+	): Either<CombatMoveBindingSetError[], CombatMoveBindingSet> {
+		const errors: CombatMoveBindingSetError[] = [];
 
 		const bindings: CombatMoveBinding[] = [];
 		const seenMoveIds = new Set<string>();
 
 		for (const [index, binding] of primitives.bindings.entries()) {
 			const prefix = `bindings.${String(index)}`;
-			const bindingErrors: CombatActionSetError[] = [];
+			const bindingErrors: CombatMoveBindingSetError[] = [];
 
 			if (!this.isNonEmpty(binding.moveId)) {
 				bindingErrors.push(
-					new CombatActionSetError(
+					new CombatMoveBindingSetError(
 						'invalid-move-id',
-						'Combat action set binding moveId is required',
+						'Combat move binding set binding moveId is required',
 						`${prefix}.moveId`
 					)
 				);
 			} else if (seenMoveIds.has(binding.moveId)) {
 				bindingErrors.push(
-					new CombatActionSetError(
+					new CombatMoveBindingSetError(
 						'duplicate-move-binding',
 						`Duplicated Move id: ${binding.moveId}`,
 						`${prefix}.moveId`
@@ -158,9 +158,9 @@ class CombatActionSet {
 
 			if (!this.isNonEmpty(binding.actionId)) {
 				bindingErrors.push(
-					new CombatActionSetError(
+					new CombatMoveBindingSetError(
 						'invalid-action-id',
-						'Combat action set binding actionId is required',
+						'Combat move binding set binding actionId is required',
 						`${prefix}.actionId`
 					)
 				);
@@ -172,7 +172,7 @@ class CombatActionSet {
 
 			if (!descriptor) {
 				bindingErrors.push(
-					new CombatActionSetError(
+					new CombatMoveBindingSetError(
 						'unknown-action',
 						`Unknown combat action "${binding.actionId}"`,
 						`${prefix}.actionId`
@@ -192,11 +192,13 @@ class CombatActionSet {
 			}
 
 			const config = AttributeMap.create(binding.config, [...descriptor.configDefinitions], 'CombatAction');
-			const messages = descriptor.validateConfig?.(config.toPrimitives()) ?? [];
+			const messages = descriptor.validateConfig?.(config.toPrimitives());
 
-			if (messages.length > 0) {
+			if (messages && messages.length > 0) {
 				errors.push(
-					...messages.map(message => new CombatActionSetError('invalid-config', message, `${prefix}.config`))
+					...messages.map(
+						message => new CombatMoveBindingSetError('invalid-config', message, `${prefix}.config`)
+					)
 				);
 				continue;
 			}
@@ -208,19 +210,19 @@ class CombatActionSet {
 			return Either.left(errors);
 		}
 
-		return Either.right(new CombatActionSet(Object.freeze(bindings)));
+		return Either.right(new CombatMoveBindingSet(Object.freeze(bindings)));
 	}
 
 	/**
-	 * Hydrates an action set without re-validating it.
+	 * Hydrates a binding set without validating it.
 	 *
-	 * @param primitives - Serialized action set data.
-	 * @returns A rehydrated action set.
+	 * @param primitives - Serialized binding set data.
+	 * @returns A rehydrated binding set.
 	 */
-	static fromPrimitives(primitives: CombatActionSetPrimitives): CombatActionSet {
+	static fromPrimitives(primitives: CombatMoveBindingSetPrimitives): CombatMoveBindingSet {
 		const bindings = primitives.bindings.map(binding => CombatMoveBinding.fromPrimitives(binding));
 
-		return new CombatActionSet(Object.freeze(bindings));
+		return new CombatMoveBindingSet(Object.freeze(bindings));
 	}
 
 	private static isNonEmpty(value: string): boolean {
@@ -231,14 +233,14 @@ class CombatActionSet {
 		config: AttributeValues,
 		definitions: readonly AttributeDefinition[],
 		path: string
-	): CombatActionSetError[] {
-		const errors: CombatActionSetError[] = [];
+	): CombatMoveBindingSetError[] {
+		const errors: CombatMoveBindingSetError[] = [];
 		const definitionMap = new Map(definitions.map(definition => [definition.key, definition]));
 
 		for (const key of Object.keys(config)) {
 			if (!definitionMap.has(key)) {
 				errors.push(
-					new CombatActionSetError(
+					new CombatMoveBindingSetError(
 						'invalid-config',
 						`No definition found for action config "${key}"`,
 						`${path}.${key}`
@@ -258,9 +260,9 @@ class CombatActionSet {
 
 			if (value === undefined) {
 				errors.push(
-					new CombatActionSetError(
+					new CombatMoveBindingSetError(
 						'invalid-config',
-						`Action config "${definition.key}" is required but no value or default was provided`,
+						`Attribute "${definition.key}" is required but no value or default was provided`,
 						`${path}.${definition.key}`
 					)
 				);
@@ -271,9 +273,9 @@ class CombatActionSet {
 
 			if (error) {
 				errors.push(
-					new CombatActionSetError(
+					new CombatMoveBindingSetError(
 						'invalid-config',
-						`Invalid value for action config "${definition.key}": ${error.message}`,
+						`Invalid value for attribute "${definition.key}": ${error.message}`,
 						`${path}.${definition.key}`
 					)
 				);
@@ -287,24 +289,24 @@ class CombatActionSet {
 	 * Finds the binding registered for a Move.
 	 *
 	 * @param moveId - Move identifier.
-	 * @returns The matching binding, or `undefined` when the Move is not bound.
+	 * @returns The binding, or `undefined` when the Move is not bound.
 	 */
 	find(moveId: string): CombatMoveBinding | undefined {
 		return this.bindings.find(binding => binding.moveId === moveId);
 	}
 
 	/**
-	 * Serializes this action set into its primitive representation.
+	 * Serializes this binding set into its primitive representation.
 	 *
-	 * @returns A plain {@link CombatActionSetPrimitives} snapshot.
+	 * @returns A plain {@link CombatMoveBindingSetPrimitives} snapshot.
 	 */
-	toPrimitives(): CombatActionSetPrimitives {
+	toPrimitives(): CombatMoveBindingSetPrimitives {
 		return {
 			bindings: this.bindings.map(binding => binding.toPrimitives()),
 		};
 	}
 }
 
-export type { CombatActionSetPrimitives, CombatMoveBindingPrimitives };
+export type { CombatMoveBindingPrimitives, CombatMoveBindingSetPrimitives };
 export { CombatMoveBinding };
-export default CombatActionSet;
+export default CombatMoveBindingSet;

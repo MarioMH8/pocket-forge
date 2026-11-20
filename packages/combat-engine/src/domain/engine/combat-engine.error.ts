@@ -1,20 +1,19 @@
 import DomainError from '@hexadrop/error';
 
 /**
- * Reasons the Combat Engine can reject a resolution before or after the
- * action plugin runs.
+ * Reasons the Combat Engine can reject a resolution.
  */
-type CombatEngineErrorReason = 'combat-not-active' | 'invalid-outcome' | 'invalid-transition';
+type CombatEngineErrorReason = 'combat-not-active' | 'conflicting-outcome' | 'invalid-outcome' | 'invalid-transition';
 
 /**
  * Structured rejection produced by the Combat Engine.
  *
  * The engine returns these values instead of throwing, so a rejected
- * resolution yields no successor, no events, and consumes no randomness.
+ * resolution leaves the input Combat untouched and produces no events.
  */
 class CombatEngineError extends DomainError {
 	/**
-	 * Optional dot-separated path to the offending composition element.
+	 * Dot-separated path to the offending value.
 	 */
 	readonly path: string | undefined;
 	/**

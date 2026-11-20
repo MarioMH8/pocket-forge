@@ -2,7 +2,7 @@ import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribu
 
 /**
  * Declaration of a single executable action registered by a Combat Action
- * Plugin.
+ * Resolver.
  *
  * Descriptors are catalog-owned: they declare the configuration schema of an
  * action and never embed Move-specific rules in the Combat core.
@@ -13,7 +13,7 @@ interface CombatActionDescriptor {
 	 */
 	readonly configDefinitions: readonly AttributeDefinition[];
 	/**
-	 * Stable action identifier used by Combat Ruleset bindings.
+	 * Stable action identifier used by Move bindings.
 	 */
 	readonly id: string;
 	/**
@@ -26,13 +26,13 @@ interface CombatActionDescriptor {
 }
 
 /**
- * Lookup surface exposed by a Combat Action Plugin.
+ * Lookup surface exposed by a Combat Action Resolver.
  */
 interface CombatActionCatalog {
 	/**
 	 * Finds the descriptor registered for an action.
 	 *
-	 * @param actionId - Action identifier declared by a ruleset binding.
+	 * @param actionId - Action identifier declared by a Move binding.
 	 * @returns The matching descriptor, or `undefined` when the action is unknown.
 	 */
 	find(actionId: string): CombatActionDescriptor | undefined;

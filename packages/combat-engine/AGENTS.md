@@ -1,18 +1,18 @@
 # @pocket-forge/combat-engine agent guide
 
-Pure combat engine and extension framework: the Combat Engine, Combat Setup, action plugin and action set contracts, the Combat Ruleset base, the completion rule contract, and the built-in rulesets.
+Pure combat engine and extension framework. The Combat Engine, Combat Setup, the Combat Rule base and its hook contracts, the action resolver and Move binding contracts, and the built-in rules.
 
 - **Package manager:** Bun (`bun`)
-- **Build:** `bun run prepublishOnly` (at package folder)
-- **Test:** `bun test packages/combat-engine` (at root)
+- **Build:** `bun run build` (at package folder)
+- **Test:** `bun test packages/combat-engine --conditions=development` (at root)
 - **Type-check:** `bun run typecheck` (at root)
 - **Lint:** `bun run lint:fix` (at root)
 
-The package only keeps package-exclusive scripts (`prepublishOnly`); everything else runs from the repo root.
+The package only keeps package-exclusive scripts (`build`, `prepublishOnly`); everything else runs from the repo root.
 
 ## Boundary
 
-This package orchestrates neutral combat state from `@pocket-forge/combat`. It must never import `@pocket-forge/duelmon` or another concrete plugin; concrete formats and action plugins live outside the neutral core. The Combat glossary lives in [packages/combat/CONTEXT.md](../combat/CONTEXT.md).
+This package orchestrates neutral combat state from `@pocket-forge/combat`. It must not import `@pocket-forge/duelmon` or another concrete plugin; concrete rules and action resolvers live outside the neutral core. The Combat glossary lives in [packages/combat/CONTEXT.md](../combat/CONTEXT.md).
 
 ## Conventions
 

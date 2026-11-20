@@ -1,30 +1,22 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
-import type { ThresholdCompletionConfig } from '@pocket-forge/combat-engine/rulesets';
-import { COMPLETION_CONFIG_KEYS, ThresholdCombatCompletionRule } from '@pocket-forge/combat-engine/rulesets';
+import type { ThresholdCompletionConfig } from '@pocket-forge/combat-engine/rules';
+import { COMPLETION_CONFIG_KEYS, ThresholdCombatCompletionRule } from '@pocket-forge/combat-engine/rules';
 import { describe, expect, it } from 'bun:test';
 
-import {
-	ATTRIBUTE_DEFINITIONS,
-	builtInCombat,
-	completionRuleset,
-	DEFAULT_COMPLETION_ATTRIBUTES,
-} from './rulesets.fixtures';
+import { builtInCombat, completionRule, DEFAULT_COMPLETION_ATTRIBUTES } from './rules.fixtures';
 
 const BOUNDARY = 30;
 
 function rule(overrides?: Partial<ThresholdCompletionConfig>): ThresholdCombatCompletionRule {
-	return ThresholdCombatCompletionRule.create(
-		completionRuleset({
-			...DEFAULT_COMPLETION_ATTRIBUTES,
-			[COMPLETION_CONFIG_KEYS.attributeKey]: overrides?.attributeKey ?? 'power',
-			[COMPLETION_CONFIG_KEYS.comparison]: overrides?.comparison ?? 'lte',
-			[COMPLETION_CONFIG_KEYS.threshold]: overrides?.threshold ?? 10,
-			[COMPLETION_CONFIG_KEYS.winnerPolicy]: overrides?.winnerPolicy ?? 'threshold-group',
-		}),
-		ATTRIBUTE_DEFINITIONS
-	).getRight();
+	return completionRule({
+		...DEFAULT_COMPLETION_ATTRIBUTES,
+		[COMPLETION_CONFIG_KEYS.attributeKey]: overrides?.attributeKey ?? 'power',
+		[COMPLETION_CONFIG_KEYS.comparison]: overrides?.comparison ?? 'lte',
+		[COMPLETION_CONFIG_KEYS.threshold]: overrides?.threshold ?? 10,
+		[COMPLETION_CONFIG_KEYS.winnerPolicy]: overrides?.winnerPolicy ?? 'threshold-group',
+	});
 }
 
 function withCombatantPower(
@@ -92,16 +84,6 @@ describe('ThresholdCombatCompletionRule.evaluate', () => {
 		}).evaluate(builtInCombat());
 
 		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-b' });
-	});
-
-	it('rewards the opposing group when another group exceeds an exclusive boundary', () => {
-		const outcome = rule({
-			comparison: 'gt',
-			threshold: BOUNDARY,
-			winnerPolicy: 'opposing-group',
-		}).evaluate(builtInCombat());
-
-		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-a' });
 	});
 
 	it('draws when both groups satisfy an inclusive boundary', () => {

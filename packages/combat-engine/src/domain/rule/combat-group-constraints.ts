@@ -1,5 +1,5 @@
 /**
- * Generic composition constraints declared by a Combat Ruleset.
+ * Generic composition constraints declared by a Combat Composition Rule.
  *
  * Constraints describe how many Combatant Groups a format requires and how
  * many Combatants each group may hold. They never reference Moves, actions, or

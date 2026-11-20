@@ -31,4 +31,4 @@ packages/<name>/
 - `src/` contains **only production code** — no tests, no mothers, no mocks.
 - `tests/`, `mother/`, and `mock/` are **development-only** and excluded from the published `dist/`.
 - Every subdirectory has a barrel `index.ts` so imports work as `@pocket-forge/<package>/<layer>`.
-- A package may publish additional implementation entrypoints beside the layers, such as `src/rulesets/` in `@pocket-forge/combat-engine`. They get their own `package.json` export and are not part of `./domain`.
+- A package may publish additional implementation entrypoints beside the layers, such as `src/rules/` in `@pocket-forge/combat-engine`. They get their own `package.json` export and are not part of `./domain`.

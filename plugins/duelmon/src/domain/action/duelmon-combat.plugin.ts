@@ -2,7 +2,7 @@ import Either from '@hexadrop/either';
 import type { AttributeDefinition } from '@pocket-forge/attribute/domain';
 import type {
 	CombatActionContext,
-	CombatActionPlugin,
+	CombatActionResolver,
 	CombatResolutionError,
 	CombatTransition,
 } from '@pocket-forge/combat-engine/domain';
@@ -26,7 +26,7 @@ import type { UseMoveMechanics } from './use-move/use-move.mechanics';
  * and saturate against the attribute catalog, resolve moves and species
  * through the dataset catalog, and keep generation rules behind the seam.
  */
-class DuelmonCombatPlugin implements CombatActionPlugin {
+class DuelmonCombatPlugin implements CombatActionResolver {
 	/**
 	 * Actions registered by this plugin.
 	 */
@@ -89,7 +89,7 @@ class DuelmonCombatPlugin implements CombatActionPlugin {
 		}
 
 		const input = parsedInput.getRight();
-		const binding = context.actionSet.find(input.moveId);
+		const binding = context.moveBindings.find(input.moveId);
 
 		if (!binding) {
 			return DuelmonErrors.fail(
@@ -105,7 +105,7 @@ class DuelmonCombatPlugin implements CombatActionPlugin {
 			return DuelmonErrors.fail(
 				'invalid-action',
 				`Move "${input.moveId}" is bound to unsupported action "${binding.actionId}"`,
-				'actionSet.bindings'
+				'moveBindings.bindings'
 			);
 		}
 

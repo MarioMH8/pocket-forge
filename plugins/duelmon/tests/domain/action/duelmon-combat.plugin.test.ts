@@ -1,7 +1,7 @@
 import type { AttributeValue, AttributeValues } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
-import type { CombatActionSet } from '@pocket-forge/combat-engine/domain';
-import { CombatActionSet as CombatActionSetEntity } from '@pocket-forge/combat-engine/domain';
+import type { CombatMoveBindingSet } from '@pocket-forge/combat-engine/domain';
+import { CombatMoveBindingSet as CombatMoveBindingSetEntity } from '@pocket-forge/combat-engine/domain';
 import { ModifyAttributeAction, ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
@@ -19,8 +19,8 @@ function config(overrides: AttributeValues): AttributeValues {
 	};
 }
 
-function actionSet(overrides: AttributeValues, moveId = MOVE_ID): CombatActionSet {
-	return DuelmonCombatMother.actionSet(config(overrides), moveId);
+function moveBindings(overrides: AttributeValues, moveId = MOVE_ID): CombatMoveBindingSet {
+	return DuelmonCombatMother.moveBindings(config(overrides), moveId);
 }
 
 function combatPower(combat: Combat): AttributeValue | undefined {
@@ -43,12 +43,12 @@ describe('DuelmonCombatPlugin', () => {
 		it('sets a combat attribute and emits a serializable success event', () => {
 			const combat = DuelmonCombatMother.create();
 			const before = combat.toPrimitives();
-			const set = actionSet({ [ModifyAttributeConfig.KEYS.amount]: 75 });
+			const set = moveBindings({ [ModifyAttributeConfig.KEYS.amount]: 75 });
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat,
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combat' } },
+				moveBindings: set,
 			});
 
 			expect(result.isRight()).toBe(true);
@@ -77,15 +77,15 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('sets a group attribute', () => {
 			const combat = DuelmonCombatMother.create();
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 55,
 				[ModifyAttributeConfig.KEYS.scope]: 'group',
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat,
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'group-a', scope: 'group' } },
+				moveBindings: set,
 			});
 
 			expect(result.isRight()).toBe(true);
@@ -98,15 +98,15 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('sets a combatant attribute', () => {
 			const combat = DuelmonCombatMother.create();
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 15,
 				[ModifyAttributeConfig.KEYS.scope]: 'combatant',
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat,
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'combatant-a', scope: 'combatant' } },
+				moveBindings: set,
 			});
 
 			expect(result.isRight()).toBe(true);
@@ -116,12 +116,12 @@ describe('DuelmonCombatPlugin', () => {
 		it('rejects a set value outside the definition constraints', () => {
 			const combat = DuelmonCombatMother.create();
 			const before = combat.toPrimitives();
-			const set = actionSet({ [ModifyAttributeConfig.KEYS.amount]: 200 });
+			const set = moveBindings({ [ModifyAttributeConfig.KEYS.amount]: 200 });
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat,
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combat' } },
+				moveBindings: set,
 			});
 
 			expect(result.isLeft()).toBe(true);
@@ -134,16 +134,16 @@ describe('DuelmonCombatPlugin', () => {
 	describe('modifyAttribute add and subtract', () => {
 		it('adds to a group attribute', () => {
 			const combat = DuelmonCombatMother.create();
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 15,
 				[ModifyAttributeConfig.KEYS.operation]: 'add',
 				[ModifyAttributeConfig.KEYS.scope]: 'group',
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat,
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'group-a', scope: 'group' } },
+				moveBindings: set,
 			});
 
 			expect(result.isRight()).toBe(true);
@@ -153,16 +153,16 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('subtracts from a combatant attribute', () => {
 			const combat = DuelmonCombatMother.create();
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 12,
 				[ModifyAttributeConfig.KEYS.operation]: 'subtract',
 				[ModifyAttributeConfig.KEYS.scope]: 'combatant',
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat,
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'combatant-a', scope: 'combatant' } },
+				moveBindings: set,
 			});
 
 			expect(result.isRight()).toBe(true);
@@ -171,16 +171,16 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('saturates an add at the definition maximum', () => {
 			const combat = DuelmonCombatMother.create(undefined, { group: 95 });
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 20,
 				[ModifyAttributeConfig.KEYS.operation]: 'add',
 				[ModifyAttributeConfig.KEYS.scope]: 'group',
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat,
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'group-a', scope: 'group' } },
+				moveBindings: set,
 			});
 
 			expect(result.isRight()).toBe(true);
@@ -189,16 +189,16 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('saturates a subtract at the definition minimum', () => {
 			const combat = DuelmonCombatMother.create(undefined, { combatant: 5 });
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 20,
 				[ModifyAttributeConfig.KEYS.operation]: 'subtract',
 				[ModifyAttributeConfig.KEYS.scope]: 'combatant',
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat,
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'combatant-a', scope: 'combatant' } },
+				moveBindings: set,
 			});
 
 			expect(result.isRight()).toBe(true);
@@ -209,7 +209,7 @@ describe('DuelmonCombatPlugin', () => {
 			const combat = DuelmonCombatMother.create();
 
 			for (const operation of ['add', 'subtract'] as const) {
-				const set = actionSet({
+				const set = moveBindings({
 					[ModifyAttributeConfig.KEYS.amount]: 1,
 					[ModifyAttributeConfig.KEYS.attributeKey]: 'banner',
 					[ModifyAttributeConfig.KEYS.operation]: operation,
@@ -217,9 +217,9 @@ describe('DuelmonCombatPlugin', () => {
 				});
 
 				const result = PLUGIN.resolve({
-					actionSet: set,
 					combat,
 					input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'combatant-a', scope: 'combatant' } },
+					moveBindings: set,
 				});
 
 				expect(result.isLeft()).toBe(true);
@@ -230,12 +230,12 @@ describe('DuelmonCombatPlugin', () => {
 
 	describe('targeting and binding validation', () => {
 		it('rejects an unknown Move binding', () => {
-			const set = actionSet({ [ModifyAttributeConfig.KEYS.amount]: 1 });
+			const set = moveBindings({ [ModifyAttributeConfig.KEYS.amount]: 1 });
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, moveId: 'missing-move', target: { scope: 'combat' } },
+				moveBindings: set,
 			});
 
 			expect(result.isLeft()).toBe(true);
@@ -244,26 +244,26 @@ describe('DuelmonCombatPlugin', () => {
 		});
 
 		it('rejects a binding to another action', () => {
-			const set = CombatActionSetEntity.fromPrimitives({
+			const set = CombatMoveBindingSetEntity.fromPrimitives({
 				bindings: [{ actionId: 'otherAction', config: {}, moveId: MOVE_ID }],
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combat' } },
+				moveBindings: set,
 			});
 
 			expect(result.isLeft()).toBe(true);
 			expect(result.getLeft()[0]?.reason).toBe('invalid-action');
-			expect(result.getLeft()[0]?.path).toBe('actionSet.bindings');
+			expect(result.getLeft()[0]?.path).toBe('moveBindings.bindings');
 		});
 
 		it('rejects an unknown actor', () => {
 			const result = PLUGIN.resolve({
-				actionSet: actionSet({ [ModifyAttributeConfig.KEYS.amount]: 1 }),
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: 'missing-actor', moveId: MOVE_ID, target: { scope: 'combat' } },
+				moveBindings: moveBindings({ [ModifyAttributeConfig.KEYS.amount]: 1 }),
 			});
 
 			expect(result.isLeft()).toBe(true);
@@ -272,15 +272,15 @@ describe('DuelmonCombatPlugin', () => {
 		});
 
 		it('rejects a target scope that does not match the binding', () => {
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 1,
 				[ModifyAttributeConfig.KEYS.scope]: 'group',
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combat' } },
+				moveBindings: set,
 			});
 
 			expect(result.isLeft()).toBe(true);
@@ -289,15 +289,15 @@ describe('DuelmonCombatPlugin', () => {
 		});
 
 		it('rejects a missing group target id', () => {
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 1,
 				[ModifyAttributeConfig.KEYS.scope]: 'group',
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'group' } },
+				moveBindings: set,
 			});
 
 			expect(result.isLeft()).toBe(true);
@@ -306,45 +306,45 @@ describe('DuelmonCombatPlugin', () => {
 		});
 
 		it('rejects an unknown group target id', () => {
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 1,
 				[ModifyAttributeConfig.KEYS.scope]: 'group',
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'missing-group', scope: 'group' } },
+				moveBindings: set,
 			});
 
 			expect(result.getLeft()[0]?.reason).toBe('invalid-target');
 		});
 
 		it('rejects a missing combatant target id', () => {
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 1,
 				[ModifyAttributeConfig.KEYS.scope]: 'combatant',
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combatant' } },
+				moveBindings: set,
 			});
 
 			expect(result.getLeft()[0]?.reason).toBe('invalid-target');
 		});
 
 		it('rejects an unknown combatant target id', () => {
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 1,
 				[ModifyAttributeConfig.KEYS.scope]: 'combatant',
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'missing-combatant', scope: 'combatant' } },
+				moveBindings: set,
 			});
 
 			expect(result.getLeft()[0]?.reason).toBe('invalid-target');
@@ -352,9 +352,9 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('ignores a combat target id', () => {
 			const result = PLUGIN.resolve({
-				actionSet: actionSet({ [ModifyAttributeConfig.KEYS.amount]: 60 }),
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: 'ignored', scope: 'combat' } },
+				moveBindings: moveBindings({ [ModifyAttributeConfig.KEYS.amount]: 60 }),
 			});
 
 			expect(result.isRight()).toBe(true);
@@ -362,15 +362,15 @@ describe('DuelmonCombatPlugin', () => {
 		});
 
 		it('rejects an unknown attribute key', () => {
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 1,
 				[ModifyAttributeConfig.KEYS.attributeKey]: 'missing',
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combat' } },
+				moveBindings: set,
 			});
 
 			expect(result.isLeft()).toBe(true);
@@ -380,10 +380,10 @@ describe('DuelmonCombatPlugin', () => {
 	});
 
 	describe('input validation', () => {
-		const set = actionSet({ [ModifyAttributeConfig.KEYS.amount]: 1 });
+		const set = moveBindings({ [ModifyAttributeConfig.KEYS.amount]: 1 });
 
 		it('rejects a non-object input', () => {
-			const result = PLUGIN.resolve({ actionSet: set, combat: DuelmonCombatMother.create(), input: 'nope' });
+			const result = PLUGIN.resolve({ combat: DuelmonCombatMother.create(), input: 'nope', moveBindings: set });
 
 			expect(result.getLeft()[0]?.reason).toBe('invalid-input');
 			expect(result.getLeft()[0]?.path).toBe('input');
@@ -391,9 +391,9 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('rejects a missing actor id', () => {
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { moveId: MOVE_ID, target: { scope: 'combat' } },
+				moveBindings: set,
 			});
 
 			expect(result.getLeft()[0]?.reason).toBe('invalid-input');
@@ -402,9 +402,9 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('rejects a missing move id', () => {
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, target: { scope: 'combat' } },
+				moveBindings: set,
 			});
 
 			expect(result.getLeft()[0]?.reason).toBe('invalid-input');
@@ -413,9 +413,9 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('rejects a target without an object shape', () => {
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: 'combat' },
+				moveBindings: set,
 			});
 
 			expect(result.getLeft()[0]?.reason).toBe('invalid-input');
@@ -424,9 +424,9 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('rejects an unknown target scope', () => {
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'team' } },
+				moveBindings: set,
 			});
 
 			expect(result.getLeft()[0]?.reason).toBe('invalid-input');
@@ -435,9 +435,9 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('rejects an empty target id', () => {
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat: DuelmonCombatMother.create(),
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { id: ' ', scope: 'group' } },
+				moveBindings: set,
 			});
 
 			expect(result.getLeft()[0]?.reason).toBe('invalid-input');
@@ -449,15 +449,15 @@ describe('DuelmonCombatPlugin', () => {
 		it('applies the change and advances the RandomPocket exactly once on success', () => {
 			const combat = DuelmonCombatMother.create();
 			const [draw, expectedRandomPocket] = combat.randomPocket.chance(1);
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 75,
 				[ModifyAttributeConfig.KEYS.probability]: 1,
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat,
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combat' } },
+				moveBindings: set,
 			});
 
 			expect(draw).toBe(true);
@@ -474,15 +474,15 @@ describe('DuelmonCombatPlugin', () => {
 			const combat = DuelmonCombatMother.create();
 			const before = combat.toPrimitives();
 			const [, expectedRandomPocket] = combat.randomPocket.chance(0);
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 75,
 				[ModifyAttributeConfig.KEYS.probability]: 0,
 			});
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat,
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combat' } },
+				moveBindings: set,
 			});
 
 			expect(result.isRight()).toBe(true);
@@ -506,12 +506,12 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('does not draw when probability is absent', () => {
 			const combat = DuelmonCombatMother.create();
-			const set = actionSet({ [ModifyAttributeConfig.KEYS.amount]: 75 });
+			const set = moveBindings({ [ModifyAttributeConfig.KEYS.amount]: 75 });
 
 			const result = PLUGIN.resolve({
-				actionSet: set,
 				combat,
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combat' } },
+				moveBindings: set,
 			});
 
 			expect(result.isRight()).toBe(true);
@@ -521,15 +521,15 @@ describe('DuelmonCombatPlugin', () => {
 
 		it('replays deterministically from the same Combat and RandomPocket state', () => {
 			const combat = DuelmonCombatMother.create();
-			const set = actionSet({
+			const set = moveBindings({
 				[ModifyAttributeConfig.KEYS.amount]: 10,
 				[ModifyAttributeConfig.KEYS.operation]: 'add',
 				[ModifyAttributeConfig.KEYS.probability]: 0.5,
 			});
 			const context = {
-				actionSet: set,
 				combat,
 				input: { actorId: ACTOR_ID, moveId: MOVE_ID, target: { scope: 'combat' } },
+				moveBindings: set,
 			};
 
 			const first = PLUGIN.resolve(context).getRight();

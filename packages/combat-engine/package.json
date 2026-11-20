@@ -1,15 +1,15 @@
 {
 	"name": "@pocket-forge/combat-engine",
 	"version": "0.0.0",
-	"description": "Pure combat engine and extension framework for Pocket Forge. Composes rulesets, action plugins, action sets, and completion rules over neutral combat state.",
+	"description": "Pure combat engine for Pocket Forge. Composes hook-based rules, action resolvers, and Move bindings over neutral combat state.",
 	"keywords": [
 		"pocket-forge",
 		"rpg",
 		"game-development",
 		"combat",
 		"engine",
-		"ruleset",
-		"plugin"
+		"rule",
+		"hook"
 	],
 	"repository": {
 		"type": "git",
@@ -35,10 +35,10 @@
 			"types": "./dist/domain/index.d.mts",
 			"default": "./dist/domain/index.mjs"
 		},
-		"./rulesets": {
-			"development": "./src/rulesets/index.ts",
-			"types": "./dist/rulesets/index.d.mts",
-			"default": "./dist/rulesets/index.mjs"
+		"./rules": {
+			"development": "./src/rules/index.ts",
+			"types": "./dist/rules/index.d.mts",
+			"default": "./dist/rules/index.mjs"
 		},
 		"./mother/domain": {
 			"development": "./mother/domain/index.ts"

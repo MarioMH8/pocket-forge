@@ -1,7 +1,7 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
+import type { CombatRule } from '@pocket-forge/combat-engine/domain';
 import { CombatEngine, CombatSetup } from '@pocket-forge/combat-engine/domain';
-import { ThresholdCombatCompletionRule } from '@pocket-forge/combat-engine/rulesets';
 import { ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
@@ -15,19 +15,17 @@ function combatantPower(combat: Combat, combatantId: string): AttributeValue | u
 
 describe('Duelmon completion through CombatEngine', () => {
 	it('completes combat when the threshold rule is reached', () => {
-		const ruleset = DuelmonCombatMother.completionRuleset();
+		const composition = DuelmonCombatMother.compositionRule();
+		const completion = DuelmonCombatMother.completionRule();
 		const plugin = DuelmonCombatMother.plugin();
-		const actionSet = DuelmonCombatMother.actionSet({
+		const moveBindings = DuelmonCombatMother.moveBindings({
 			[ModifyAttributeConfig.KEYS.amount]: 25,
 			[ModifyAttributeConfig.KEYS.attributeKey]: 'power',
 			[ModifyAttributeConfig.KEYS.operation]: 'subtract',
 			[ModifyAttributeConfig.KEYS.scope]: 'combatant',
 		});
-		const completion = ThresholdCombatCompletionRule.create(
-			ruleset,
-			DuelmonCombatMother.ATTRIBUTE_DEFINITIONS
-		).getRight();
-		const engine = new CombatEngine(CombatSetup.create({ actions: plugin, actionSet, completion, ruleset }));
+		const rules: readonly CombatRule[] = [composition, completion];
+		const engine = new CombatEngine(CombatSetup.create({ actions: plugin, moveBindings, rules }));
 		const combat = DuelmonCombatMother.create();
 		const input = {
 			actorId: 'combatant-a',

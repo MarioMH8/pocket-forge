@@ -1,7 +1,7 @@
 {
 	"name": "@pocket-forge/duelmon",
 	"version": "0.0.0",
-	"description": "Duelmon Combat action plugin, authored action set, and private Pokémon Showdown Gen 1 dataset extractor for Pocket Forge.",
+	"description": "Duelmon Combat action resolver, authored Move binding set, and private Pokémon Showdown Gen 1 dataset extractor for Pocket Forge.",
 	"keywords": [
 		"pocket-forge",
 		"rpg",

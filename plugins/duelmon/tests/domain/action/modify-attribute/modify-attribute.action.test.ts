@@ -22,13 +22,13 @@ function combatantPower(combat: Combat, combatantId: string): AttributeValue | u
 
 function resolve(overrides: Record<string, AttributeValue>, target = DuelmonTarget.create('combatant', ACTOR_ID)) {
 	const combat = DuelmonCombatMother.create();
-	const actionSet = DuelmonCombatMother.actionSet({
+	const moveBindings = DuelmonCombatMother.moveBindings({
 		[ModifyAttributeConfig.KEYS.attributeKey]: 'power',
 		[ModifyAttributeConfig.KEYS.operation]: 'add',
 		[ModifyAttributeConfig.KEYS.scope]: 'combatant',
 		...overrides,
 	});
-	const binding = actionSet.find(MOVE_ID);
+	const binding = moveBindings.find(MOVE_ID);
 
 	if (!binding) {
 		throw new Error('Missing binding');
@@ -38,7 +38,7 @@ function resolve(overrides: Record<string, AttributeValue>, target = DuelmonTarg
 
 	return {
 		combat,
-		result: ACTION.resolve({ actionSet, combat, input }, input, binding),
+		result: ACTION.resolve({ combat, input, moveBindings }, input, binding),
 	};
 }
 
@@ -97,20 +97,20 @@ describe('ModifyAttributeAction', () => {
 
 	it('rejects an unknown actor before touching the target', () => {
 		const combat = DuelmonCombatMother.create();
-		const actionSet = DuelmonCombatMother.actionSet({
+		const moveBindings = DuelmonCombatMother.moveBindings({
 			[ModifyAttributeConfig.KEYS.amount]: 1,
 			[ModifyAttributeConfig.KEYS.attributeKey]: 'power',
 			[ModifyAttributeConfig.KEYS.operation]: 'add',
 			[ModifyAttributeConfig.KEYS.scope]: 'combatant',
 		});
-		const binding = actionSet.find(MOVE_ID);
+		const binding = moveBindings.find(MOVE_ID);
 
 		if (!binding) {
 			throw new Error('Missing binding');
 		}
 
 		const input = DuelmonCombatInput.create('missing-actor', MOVE_ID, DuelmonTarget.create('combatant', ACTOR_ID));
-		const result = ACTION.resolve({ actionSet, combat, input }, input, binding);
+		const result = ACTION.resolve({ combat, input, moveBindings }, input, binding);
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-input');

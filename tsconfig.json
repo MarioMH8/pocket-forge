@@ -34,7 +34,7 @@
 				"./packages/*/src/infrastructure/index.ts",
 				"./plugins/*/src/infrastructure/index.ts"
 			],
-			"@pocket-forge/*/rulesets": ["./packages/*/src/rulesets/index.ts"]
+			"@pocket-forge/*/rules": ["./packages/*/src/rules/index.ts"]
 		},
 		"types": ["bun"]
 	},

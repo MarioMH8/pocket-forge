@@ -3,8 +3,10 @@ import type { CombatTransitionError } from '@pocket-forge/combat/domain';
 import { Combat } from '@pocket-forge/combat/domain';
 
 import type CombatEvent from '../combat-event';
+import type { CombatOutcome } from '../combat-outcome';
 import type CombatResolutionError from '../combat-resolution.error';
-import type CombatRulesetError from '../ruleset/combat-ruleset.error';
+import { isCompletionHook, isCompositionHook } from '../rule/combat-rule';
+import type CombatRuleError from '../rule/combat-rule.error';
 import CombatEngineError from './combat-engine.error';
 import type CombatResolution from './combat-resolution';
 import type CombatSetup from './combat-setup';
@@ -12,16 +14,31 @@ import type CombatSetup from './combat-setup';
 /**
  * Every rejection the Combat Engine can return.
  */
-type CombatEngineFailure = CombatEngineError | CombatResolutionError | CombatRulesetError | CombatTransitionError;
+type CombatEngineFailure = CombatEngineError | CombatResolutionError | CombatRuleError | CombatTransitionError;
 
 /**
- * Pure orchestrator that composes a Combat Ruleset, an action plugin, an action
- * set, and a completion rule through a validated {@link CombatSetup}.
+ * Returns whether two outcomes describe the same result.
+ *
+ * @param left - First outcome.
+ * @param right - Second outcome.
+ * @returns Whether both outcomes agree.
+ */
+function isSameOutcome(left: CombatOutcome, right: CombatOutcome): boolean {
+	if (left.status === 'draw' || right.status === 'draw') {
+		return left.status === right.status;
+	}
+
+	return left.winnerGroupId === right.winnerGroupId;
+}
+
+/**
+ * Pure orchestrator that composes rules, an action resolver, and Move bindings
+ * through an immutable {@link CombatSetup}.
  *
  * The engine validates each combat's composition, delegates action resolution
- * to the setup's plugin, validates the proposed successor, evaluates the
- * setup's completion rule, and returns a resolution. It performs no I/O, knows
- * no concrete implementation, and never mutates the input Combat.
+ * to the resolver, validates the proposed successor, evaluates every completion
+ * hook, and returns a resolution. It performs no I/O, knows no concrete
+ * implementation, and never mutates the input Combat.
  */
 class CombatEngine {
 	private readonly setup: CombatSetup;
@@ -39,11 +56,11 @@ class CombatEngine {
 	 *
 	 * Rejections leave the input Combat and its RandomPocket untouched and
 	 * produce no events. A completed resolution carries the successor snapshot,
-	 * the ordered plugin events, and an optional completion outcome with its
-	 * `combat-completed` event.
+	 * the ordered events, and the agreed outcome with its `combat-completed`
+	 * event.
 	 *
 	 * @param combat - Active Combat snapshot to resolve.
-	 * @param input - Plugin-owned input shape.
+	 * @param input - Resolver-owned input shape.
 	 * @returns The resolution, or every rejection.
 	 */
 	resolve(combat: Combat, input: unknown): Either<CombatEngineFailure[], CombatResolution> {
@@ -59,7 +76,7 @@ class CombatEngine {
 			return Either.left(composition.getLeft());
 		}
 
-		const resolved = this.setup.actions.resolve({ actionSet: this.setup.actionSet, combat, input });
+		const resolved = this.setup.actions.resolve({ combat, input, moveBindings: this.setup.moveBindings });
 
 		if (resolved.isLeft()) {
 			return Either.left(resolved.getLeft());
@@ -82,7 +99,7 @@ class CombatEngine {
 			return Either.left([
 				new CombatEngineError(
 					'invalid-transition',
-					'Action plugins cannot complete Combat',
+					'Action resolvers cannot complete Combat',
 					'transition.combat.status'
 				),
 			]);
@@ -100,7 +117,13 @@ class CombatEngine {
 			return Either.left(successorComposition.getLeft());
 		}
 
-		const outcome = this.setup.completion.evaluate(successor);
+		const evaluated = this.evaluateCompletion(successor);
+
+		if (evaluated.isLeft()) {
+			return Either.left(evaluated.getLeft());
+		}
+
+		const outcome = evaluated.getRight();
 
 		if (outcome?.status === 'victory' && successor.groups.every(group => group.id !== outcome.winnerGroupId)) {
 			return Either.left([
@@ -143,13 +166,72 @@ class CombatEngine {
 	}
 
 	/**
-	 * Validates a Combat composition against the configured ruleset.
+	 * Validates a Combat composition against every composition hook.
 	 *
 	 * @param combat - Combat snapshot to validate.
-	 * @returns No value on success, or every ruleset rejection.
+	 * @returns No value on success, or every rule rejection.
 	 */
-	validateComposition(combat: Combat): Either<CombatRulesetError[], void> {
-		return this.setup.ruleset.validateGroups(combat.groups);
+	validateComposition(combat: Combat): Either<CombatRuleError[], void> {
+		const errors: CombatRuleError[] = [];
+
+		for (const rule of this.setup.rules) {
+			if (!isCompositionHook(rule)) {
+				continue;
+			}
+
+			const validation = rule.validateComposition(combat.groups);
+
+			if (validation.isLeft()) {
+				errors.push(...validation.getLeft());
+			}
+		}
+
+		if (errors.length > 0) {
+			return Either.left(errors);
+		}
+
+		return Either.right();
+	}
+
+	/**
+	 * Evaluates every completion hook and requires them to agree.
+	 *
+	 * @param combat - Combat snapshot to evaluate.
+	 * @returns The agreed outcome, `undefined` when no rule completes, or a
+	 * conflict rejection.
+	 */
+	private evaluateCompletion(combat: Combat): Either<CombatEngineError[], CombatOutcome | undefined> {
+		const outcomes: CombatOutcome[] = [];
+
+		for (const rule of this.setup.rules) {
+			if (!isCompletionHook(rule)) {
+				continue;
+			}
+
+			const outcome = rule.evaluate(combat);
+
+			if (outcome) {
+				outcomes.push(outcome);
+			}
+		}
+
+		const [first] = outcomes;
+
+		if (!first) {
+			return Either.right(undefined);
+		}
+
+		if (outcomes.some(outcome => !isSameOutcome(first, outcome))) {
+			return Either.left([
+				new CombatEngineError(
+					'conflicting-outcome',
+					'Completion rules returned conflicting outcomes',
+					'outcome'
+				),
+			]);
+		}
+
+		return Either.right(first);
 	}
 }
 
