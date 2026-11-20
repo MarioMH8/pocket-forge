@@ -2,9 +2,8 @@ import Either from '@hexadrop/either';
 import type { AttributeDefinition } from '@pocket-forge/attribute/domain';
 import type { CombatRuleData, CombatRuleError } from '@pocket-forge/combat-engine/domain';
 
-import type { CombatCompositionRulePrimitives } from './combat-composition-rule';
+import type { CombatCompositionRulePrimitives, CombatGroupConstraints } from './combat-composition-rule';
 import CombatCompositionRule from './combat-composition-rule';
-import type CombatGroupConstraints from './combat-group-constraints';
 
 /**
  * Built-in `1v1` combat rule: exactly two groups with one combatant each.

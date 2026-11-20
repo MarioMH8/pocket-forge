@@ -10,8 +10,8 @@ import type {
 import { CombatRule } from '@pocket-forge/combat-engine/domain';
 
 import ThresholdCombatCompletionRuleError from './threshold-combat-completion-rule.error';
-import type { ThresholdCompletionConfig } from './threshold-completion.config';
-import { COMPLETION_CONFIG_KEYS, readThresholdCompletionConfig } from './threshold-completion.config';
+import type { ThresholdCompletionConfig } from './threshold-combat-completion-rule-config';
+import { COMPLETION_CONFIG_KEYS, readThresholdCompletionConfig } from './threshold-combat-completion-rule-config';
 
 /**
  * Built-in completion rule that ends Combat from a Combatant attribute

@@ -3,7 +3,31 @@ import type { CombatantGroup } from '@pocket-forge/combat/domain';
 import type { CombatCompositionHook, CombatRuleData, CombatRulePrimitives } from '@pocket-forge/combat-engine/domain';
 import { CombatRule, CombatRuleError } from '@pocket-forge/combat-engine/domain';
 
-import type CombatGroupConstraints from './combat-group-constraints';
+/**
+ * Generic composition constraints declared by a Combat Composition Rule.
+ *
+ * Constraints describe how many Combatant Groups a format requires and how
+ * many Combatants each group may hold. They never reference Moves, actions, or
+ * victory conditions.
+ */
+interface CombatGroupConstraints {
+	/**
+	 * Maximum number of Combatants allowed in a single group.
+	 */
+	readonly maxCombatantsPerGroup: number;
+	/**
+	 * Maximum number of groups allowed in a combat.
+	 */
+	readonly maxGroups: number;
+	/**
+	 * Minimum number of Combatants required in a single group.
+	 */
+	readonly minCombatantsPerGroup: number;
+	/**
+	 * Minimum number of groups required in a combat.
+	 */
+	readonly minGroups: number;
+}
 
 const CONSTRAINT_FIELDS = ['maxCombatantsPerGroup', 'maxGroups', 'minCombatantsPerGroup', 'minGroups'] as const;
 
@@ -215,5 +239,5 @@ abstract class CombatCompositionRule extends CombatRule implements CombatComposi
 	}
 }
 
-export type { CombatCompositionRulePrimitives };
+export type { CombatCompositionRulePrimitives, CombatGroupConstraints };
 export default CombatCompositionRule;
