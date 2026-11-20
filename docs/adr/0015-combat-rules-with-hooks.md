@@ -8,7 +8,7 @@ A Combat Rule is an authored, serializable rule with its own configuration. The 
 
 The action plugin and action set are renamed to `CombatActionResolver` and `CombatMoveBindingSet` to match what they do: the resolver owns an action catalog and executes bound actions; the binding set is authored data that binds Move identifiers to registered actions and configuration. The two remain separate from rules because actions are per-Move behavior while rules are format and victory policy.
 
-This changes the engine composition: `CombatSetup` now carries `rules`, `actions`, and `moveBindings`. When more than one completion hook returns an outcome, the engine requires the outcomes to agree; conflicting outcomes are rejected as `conflicting-outcome` rather than resolved by order. The built-in rules move to `@pocket-forge/combat-engine/rules`.
+This changes the engine composition: `CombatEngineSetup` now carries `rules`, `actions`, and `moveBindings`. When more than one completion hook returns an outcome, the engine requires the outcomes to agree; conflicting outcomes are rejected as `conflicting-outcome` rather than resolved by order. The built-in rules move to `@pocket-forge/combat-engine/rules`.
 
 ## Considered Options
 
@@ -21,7 +21,7 @@ This changes the engine composition: `CombatSetup` now carries `rules`, `actions
 
 - `CombatRule` carries its own `attributes` and `definitions`; concrete rules extend it and implement `CombatCompositionHook` and/or `CombatCompletionHook`.
 - `CombatCompositionRule` is the base for composition rules; it owns `groupConstraints` and implements the composition hook. It lives in `./rules`, not in `./domain`: the domain keeps the engine contracts (`CombatRule`, `CombatCompositionHook`, `CombatCompletionHook`) while concrete rules and their helpers live in `./rules`. Hook detection is exposed as `CombatRule.isCompositionHook` and `CombatRule.isCompletionHook`. Built-in rules are grouped into `rules/composition` and `rules/completion`.
-- `CombatSetup` is `{ rules, actions, moveBindings }`. `CombatEngine` validates composition by running every composition hook, evaluates every completion hook after the action resolves, and requires agreeing outcomes.
+- `CombatEngineSetup` is `{ rules, actions, moveBindings }`. `CombatEngine` validates composition by running every composition hook, evaluates every completion hook after the action resolves, and requires agreeing outcomes.
 - `CombatActionResolver` replaces `CombatActionPlugin`; `CombatMoveBindingSet` replaces `CombatActionSet`; the `CombatMoveBinding` row keeps its name.
 - The built-in `OneVersusOneCombatRule`, `TwoVersusTwoCombatRule`, and `ThresholdCombatCompletionRule` live under `@pocket-forge/combat-engine/rules`.
 - `@pocket-forge/combat-engine/rulesets` is removed; importers move to `./rules`.

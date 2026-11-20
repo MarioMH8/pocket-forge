@@ -8,12 +8,12 @@ export type { CombatEngineFailure } from './combat-engine';
 export { default as CombatEngine } from './combat-engine';
 export type { CombatEngineErrorReason } from './combat-engine.error';
 export { default as CombatEngineError } from './combat-engine.error';
+export type { CombatEngineSetupInput } from './combat-engine-setup';
+export { default as CombatSetup } from './combat-engine-setup';
 export { default as CombatOutcome } from './combat-outcome';
-export { default as CombatResolution } from './combat-resolution/combat-resolution';
-export type { CombatResolutionErrorReason } from './combat-resolution/combat-resolution.error';
-export { default as CombatResolutionError } from './combat-resolution/combat-resolution.error';
-export type { CombatSetupInput } from './combat-setup';
-export { default as CombatSetup } from './combat-setup';
+export { default as CombatResolution } from './combat-resolution';
+export type { CombatResolutionErrorReason } from './combat-resolution.error';
+export { default as CombatResolutionError } from './combat-resolution.error';
 export { default as CombatTransition } from './combat-transition';
 export {
 	COMBAT_EVENT_TYPES,

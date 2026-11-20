@@ -1,7 +1,7 @@
 import type { Combat } from '@pocket-forge/combat/domain';
 
-import type CombatOutcome from '../combat-outcome';
-import type { CombatEvent } from '../event/combat-event';
+import type CombatOutcome from './combat-outcome';
+import type { CombatEvent } from './event';
 
 /**
  * Result of resolving one action through the Combat Engine.

@@ -3,12 +3,12 @@ import type { CombatTransitionError } from '@pocket-forge/combat/domain';
 import { Combat } from '@pocket-forge/combat/domain';
 
 import CombatEngineError from './combat-engine.error';
+import type CombatEngineSetup from './combat-engine-setup';
 import type CombatOutcome from './combat-outcome';
-import CombatResolution from './combat-resolution/combat-resolution';
-import type CombatResolutionError from './combat-resolution/combat-resolution.error';
-import type CombatSetup from './combat-setup';
-import type { CombatEvent } from './event/combat-event';
-import CombatEvents from './event/combat-event';
+import CombatResolution from './combat-resolution';
+import type CombatResolutionError from './combat-resolution.error';
+import type { CombatEvent } from './event';
+import { CombatEvents } from './event';
 import CombatRule from './rule/combat-rule';
 import type CombatRuleError from './rule/combat-rule.error';
 
@@ -19,7 +19,7 @@ type CombatEngineFailure = CombatEngineError | CombatResolutionError | CombatRul
 
 /**
  * Pure orchestrator that composes rules, an action resolver, and Move bindings
- * through an immutable {@link CombatSetup}.
+ * through an immutable {@link CombatEngineSetup}.
  *
  * The engine validates each combat's composition, delegates action resolution
  * to the resolver, validates the proposed successor, evaluates every completion
@@ -27,9 +27,9 @@ type CombatEngineFailure = CombatEngineError | CombatResolutionError | CombatRul
  * implementation, and never mutates the input Combat.
  */
 class CombatEngine {
-	private readonly setup: CombatSetup;
+	private readonly setup: CombatEngineSetup;
 
-	constructor(setup: CombatSetup) {
+	constructor(setup: CombatEngineSetup) {
 		this.setup = setup;
 	}
 

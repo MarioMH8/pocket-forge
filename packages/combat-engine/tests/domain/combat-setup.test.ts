@@ -3,7 +3,7 @@ import { describe, expect, it } from 'bun:test';
 
 import { FakeActionResolver, FakeCompletionRule, FakeCompositionRule, moveBindings } from './engine.fakes';
 
-describe('CombatSetup', () => {
+describe('CombatEngineSetup', () => {
 	it('creates a setup from its collaborators and exposes them unchanged', () => {
 		const actions = new FakeActionResolver();
 		const bindings = moveBindings();

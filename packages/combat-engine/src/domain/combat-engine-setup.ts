@@ -3,11 +3,11 @@ import type CombatMoveBindingSet from './action/combat-move-binding-set';
 import type CombatRule from './rule/combat-rule';
 
 /**
- * Collaborators that compose a {@link CombatSetup}.
+ * Collaborators that compose a {@link CombatEngineSetup}.
  *
  * Each field matches the property of the same name on the resulting setup.
  */
-interface CombatSetupInput {
+interface CombatEngineSetupInput {
 	/**
 	 * Action resolver that resolves the bound actions.
 	 */
@@ -29,7 +29,7 @@ interface CombatSetupInput {
  * static compatibility check: a resolver and a binding set that do not belong
  * together surface as an unknown action when the resolver runs.
  */
-class CombatSetup {
+class CombatEngineSetup {
 	/**
 	 * Action resolver that resolves the bound actions.
 	 */
@@ -43,7 +43,7 @@ class CombatSetup {
 	 */
 	readonly rules: readonly CombatRule[];
 
-	private constructor(input: CombatSetupInput) {
+	private constructor(input: CombatEngineSetupInput) {
 		this.rules = Object.freeze([...input.rules]);
 		this.actions = input.actions;
 		this.moveBindings = input.moveBindings;
@@ -57,13 +57,13 @@ class CombatSetup {
 	 * @returns The immutable setup.
 	 * @example
 	 * ```ts
-	 * const setup = CombatSetup.create({ rules, actions, moveBindings });
+	 * const setup = CombatEngineSetup.create({ rules, actions, moveBindings });
 	 * ```
 	 */
-	static create(input: CombatSetupInput): CombatSetup {
-		return new CombatSetup(input);
+	static create(input: CombatEngineSetupInput): CombatEngineSetup {
+		return new CombatEngineSetup(input);
 	}
 }
 
-export type { CombatSetupInput };
-export default CombatSetup;
+export type { CombatEngineSetupInput };
+export default CombatEngineSetup;

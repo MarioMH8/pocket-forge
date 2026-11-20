@@ -16,7 +16,7 @@ This package orchestrates neutral combat state from `@pocket-forge/combat`. It m
 
 ## Structure
 
-- `./domain` holds the engine and its contracts: `CombatEngine`, `CombatSetup`, `CombatRule`, the hook interfaces, the action resolver and Move binding contracts, events, outcomes, and resolution errors. It must stay free of concrete rules.
+- `./domain` holds the engine and its contracts: `CombatEngine`, `CombatEngineSetup`, `CombatRule`, the hook interfaces, the action resolver and Move binding contracts, events, outcomes, and resolution errors. It must stay free of concrete rules.
 - `./rules` holds the built-in rule implementations: `rules/composition` (composition base, group constraints, `1v1`, `2v2`) and `rules/completion` (threshold completion rule and its configuration).
 
 ## Conventions
