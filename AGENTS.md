@@ -12,6 +12,7 @@ Shared root tasks (PRs, branches, changesets, commits) are at the repo root.
 ## Task guides
 
 - [Development](docs/agents/development.md) — targeted validation.
+- [Planning](docs/agents/planning.md) — Discussions, draft items, and promotion to approved issues.
 - [Release process](docs/agents/release-process.md) — changesets, beta snapshots, stable releases, and hotfixes.
 - [Pull requests](docs/agents/pull-requests.md) — approved-issue, labeling, checklist, and merge requirements.
 - [Branches and commits](docs/agents/branches-and-commits.md) — GitFlow branches, naming, conventions, and hooks.

@@ -2,6 +2,12 @@
 
 Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all operations.
 
+## Pre-issue planning
+
+Open-ended ideas are explored in GitHub Discussions. Concrete tasks are shaped as draft items in the `pocket planning` project before becoming issues. Drafts are not issues: they have no number and do not appear in `gh issue list`. See [planning.md](planning.md) for the lifecycle and the promotion procedure.
+
+Promoted issues are created with `status:approved` already applied. Do not send them through triage again.
+
 ## Conventions
 
 - **Create an issue**: `gh issue create --title "..." --body "..."`. Use a heredoc for multi-line bodies.

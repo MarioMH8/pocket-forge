@@ -1,6 +1,6 @@
 name: "Feature request"
 description: "Suggest an idea to improve the project"
-title: "feat: "
+
 labels: ["type:feature", "status:needs-review"]
 body:
   - type: markdown
