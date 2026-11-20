@@ -1,5 +1,5 @@
-import type { CombatEvent, CombatOutcome, KnownCombatEvent } from '@pocket-forge/combat-engine/domain';
-import { COMBAT_EVENT_TYPES, CombatEvents } from '@pocket-forge/combat-engine/domain';
+import type { CombatEvent, KnownCombatEvent } from '@pocket-forge/combat-engine/domain';
+import { COMBAT_EVENT_TYPES, CombatEvents, CombatOutcome } from '@pocket-forge/combat-engine/domain';
 import { describe, expect, it } from 'bun:test';
 
 describe('CombatEvent', () => {
@@ -16,7 +16,7 @@ describe('CombatEvent', () => {
 
 describe('CombatEvents', () => {
 	it('builds a known victory event', () => {
-		const event: KnownCombatEvent = CombatEvents.completed({ status: 'victory', winnerGroupId: 'group-1' }, 2);
+		const event: KnownCombatEvent = CombatEvents.completed(CombatOutcome.victory('group-1'), 2);
 
 		expect(event).toEqual({
 			payload: { status: 'victory', winnerGroupId: 'group-1' },
@@ -28,8 +28,8 @@ describe('CombatEvents', () => {
 
 describe('CombatOutcome', () => {
 	it('discriminates victory from draw', () => {
-		const victory: CombatOutcome = { status: 'victory', winnerGroupId: 'group-1' };
-		const draw: CombatOutcome = { status: 'draw' };
+		const victory = CombatOutcome.victory('group-1');
+		const draw = CombatOutcome.draw();
 
 		expect(victory.status).toBe('victory');
 		expect(draw.status).toBe('draw');

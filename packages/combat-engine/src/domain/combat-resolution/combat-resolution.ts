@@ -1,6 +1,6 @@
 import type { Combat } from '@pocket-forge/combat/domain';
 
-import type { CombatOutcome } from '../combat-outcome';
+import type CombatOutcome from '../combat-outcome';
 import type { CombatEvent } from '../event/combat-event';
 
 /**

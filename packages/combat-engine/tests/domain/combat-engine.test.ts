@@ -7,6 +7,7 @@ import type { CombatEvent, CombatRule } from '@pocket-forge/combat-engine/domain
 import {
 	CombatEngine,
 	CombatEngineError,
+	CombatOutcome,
 	CombatRuleError,
 	CombatSetup,
 	CombatTransition,
@@ -127,7 +128,7 @@ describe('CombatEngine', () => {
 			const events = [event(1), event(2)];
 
 			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, events));
-			completion.outcome = { status: 'victory', winnerGroupId };
+			completion.outcome = CombatOutcome.victory(winnerGroupId);
 
 			const result = engine.resolve(combat, 'input');
 
@@ -138,7 +139,7 @@ describe('CombatEngine', () => {
 			expect(resolution.combat.id).toBe(combat.id);
 			expect(resolution.combat.attributes.toPrimitives()).toEqual({ power: 7 });
 			expect(resolution.combat.randomPocket).toBe(successor.randomPocket);
-			expect(resolution.outcome).toEqual({ status: 'victory', winnerGroupId });
+			expect(resolution.outcome).toEqual(CombatOutcome.victory(winnerGroupId));
 			expect(resolution.events).toHaveLength(3);
 			expect(resolution.events[0]).toEqual(events[0]);
 			expect(resolution.events[1]).toEqual(events[1]);
@@ -158,13 +159,13 @@ describe('CombatEngine', () => {
 			const second = new FakeCompletionRule();
 
 			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
-			completion.outcome = { status: 'victory', winnerGroupId };
-			second.outcome = { status: 'victory', winnerGroupId };
+			completion.outcome = CombatOutcome.victory(winnerGroupId);
+			second.outcome = CombatOutcome.victory(winnerGroupId);
 
 			const result = engineWith([composition, completion, second], resolver).resolve(combat, 'input');
 
 			expect(result.isRight()).toBe(true);
-			expect(result.getRight().outcome).toEqual({ status: 'victory', winnerGroupId });
+			expect(result.getRight().outcome).toEqual(CombatOutcome.victory(winnerGroupId));
 			expect(completion.evaluated).toHaveLength(1);
 			expect(second.evaluated).toHaveLength(1);
 		});
@@ -175,8 +176,8 @@ describe('CombatEngine', () => {
 			const second = new FakeCompletionRule();
 
 			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
-			completion.outcome = { status: 'victory', winnerGroupId: successor.groups[0]?.id ?? '' };
-			second.outcome = { status: 'draw' };
+			completion.outcome = CombatOutcome.victory(successor.groups[0]?.id ?? '');
+			second.outcome = CombatOutcome.draw();
 
 			const result = engineWith([composition, completion, second], resolver).resolve(combat, 'input');
 
@@ -203,7 +204,7 @@ describe('CombatEngine', () => {
 			const successor = withAttributes(combat, { power: 7 });
 
 			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
-			completion.outcome = { status: 'victory', winnerGroupId: 'missing-group' };
+			completion.outcome = CombatOutcome.victory('missing-group');
 
 			const result = engine.resolve(combat, 'input');
 
@@ -219,11 +220,11 @@ describe('CombatEngine', () => {
 			const successor = withAttributes(combat, { power: 7 });
 
 			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
-			completion.outcome = { status: 'draw' };
+			completion.outcome = CombatOutcome.draw();
 
 			const resolution = engine.resolve(combat, 'input').getRight();
 
-			expect(resolution.outcome).toEqual({ status: 'draw' });
+			expect(resolution.outcome).toEqual(CombatOutcome.draw());
 			expect(resolution.events).toHaveLength(1);
 			expect(resolution.events[0]).toEqual({
 				payload: { status: 'draw' },

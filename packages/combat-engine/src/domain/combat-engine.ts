@@ -3,7 +3,7 @@ import type { CombatTransitionError } from '@pocket-forge/combat/domain';
 import { Combat } from '@pocket-forge/combat/domain';
 
 import CombatEngineError from './combat-engine.error';
-import type { CombatOutcome } from './combat-outcome';
+import type CombatOutcome from './combat-outcome';
 import CombatResolution from './combat-resolution/combat-resolution';
 import type CombatResolutionError from './combat-resolution/combat-resolution.error';
 import type CombatSetup from './combat-setup';
@@ -41,11 +41,11 @@ class CombatEngine {
 	 * @returns Whether both outcomes describe the same result.
 	 */
 	private static isSameOutcome(left: CombatOutcome, right: CombatOutcome): boolean {
-		if (left.status === 'draw' || right.status === 'draw') {
-			return left.status === right.status;
+		if (left.isVictory() && right.isVictory()) {
+			return left.winnerGroupId === right.winnerGroupId;
 		}
 
-		return left.winnerGroupId === right.winnerGroupId;
+		return left.status === right.status;
 	}
 
 	private static nextSequence(events: readonly CombatEvent[]): number {
@@ -126,7 +126,7 @@ class CombatEngine {
 
 		const outcome = evaluated.getRight();
 
-		if (outcome?.status === 'victory' && successor.groups.every(group => group.id !== outcome.winnerGroupId)) {
+		if (outcome?.isVictory() && successor.groups.every(group => group.id !== outcome.winnerGroupId)) {
 			return Either.left([
 				new CombatEngineError(
 					'invalid-outcome',

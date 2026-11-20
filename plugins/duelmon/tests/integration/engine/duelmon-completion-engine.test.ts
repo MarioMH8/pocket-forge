@@ -1,7 +1,7 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
 import type { CombatRule } from '@pocket-forge/combat-engine/domain';
-import { CombatEngine, CombatSetup } from '@pocket-forge/combat-engine/domain';
+import { CombatEngine, CombatOutcome, CombatSetup } from '@pocket-forge/combat-engine/domain';
 import { ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
@@ -39,7 +39,7 @@ describe('Duelmon completion through CombatEngine', () => {
 
 		const resolution = result.getRight();
 		expect(resolution.combat.status).toBe('completed');
-		expect(resolution.outcome).toEqual({ status: 'victory', winnerGroupId: 'group-a' });
+		expect(resolution.outcome).toEqual(CombatOutcome.victory('group-a'));
 		expect(combatantPower(resolution.combat, 'combatant-a')).toBe(5);
 		expect(resolution.events.map(event => event.type)).toEqual(['attribute-modified', 'combat-completed']);
 		expect(resolution.events.map(event => event.sequence)).toEqual([1, 2]);

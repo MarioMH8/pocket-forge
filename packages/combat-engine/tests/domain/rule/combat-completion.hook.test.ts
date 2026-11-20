@@ -1,8 +1,8 @@
 import { AttributeMap } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
 import { CombatMother } from '@pocket-forge/combat/mother/domain';
-import type { CombatCompletionHook, CombatOutcome, CombatRuleData } from '@pocket-forge/combat-engine/domain';
-import { CombatRule } from '@pocket-forge/combat-engine/domain';
+import type { CombatCompletionHook, CombatRuleData } from '@pocket-forge/combat-engine/domain';
+import { CombatOutcome, CombatRule } from '@pocket-forge/combat-engine/domain';
 import { describe, expect, it } from 'bun:test';
 
 const RULE_DATA: CombatRuleData = {
@@ -18,7 +18,7 @@ class LastGroupRule extends CombatRule implements CombatCompletionHook {
 	evaluateCompletion(combat: Combat): CombatOutcome | undefined {
 		const last = combat.groups.at(-1);
 
-		return last ? { status: 'victory', winnerGroupId: last.id } : undefined;
+		return last ? CombatOutcome.victory(last.id) : undefined;
 	}
 }
 
@@ -28,7 +28,7 @@ class DrawRule extends CombatRule implements CombatCompletionHook {
 	}
 
 	evaluateCompletion(_combat: Combat): CombatOutcome {
-		return { status: 'draw' };
+		return CombatOutcome.draw();
 	}
 }
 
@@ -51,11 +51,11 @@ describe('CombatCompletionHook', () => {
 			throw new Error('Expected the combat to have a group');
 		}
 
-		expect(new LastGroupRule().evaluateCompletion(combat)).toEqual({ status: 'victory', winnerGroupId: last.id });
+		expect(new LastGroupRule().evaluateCompletion(combat)).toEqual(CombatOutcome.victory(last.id));
 	});
 
 	it('returns a draw outcome', () => {
-		expect(new DrawRule().evaluateCompletion(CombatMother.create())).toEqual({ status: 'draw' });
+		expect(new DrawRule().evaluateCompletion(CombatMother.create())).toEqual(CombatOutcome.draw());
 	});
 
 	it('returns undefined while combat continues', () => {

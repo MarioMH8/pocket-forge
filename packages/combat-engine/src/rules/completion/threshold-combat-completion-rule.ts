@@ -1,13 +1,8 @@
 import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
-import type {
-	CombatCompletionHook,
-	CombatOutcome,
-	CombatRuleData,
-	CombatRulePrimitives,
-} from '@pocket-forge/combat-engine/domain';
-import { CombatRule } from '@pocket-forge/combat-engine/domain';
+import type { CombatCompletionHook, CombatRuleData, CombatRulePrimitives } from '@pocket-forge/combat-engine/domain';
+import { CombatOutcome, CombatRule } from '@pocket-forge/combat-engine/domain';
 
 import ThresholdCombatCompletionRuleError from './threshold-combat-completion-rule.error';
 import ThresholdCompletionConfig, { COMPLETION_CONFIG_KEYS } from './threshold-combat-completion-rule-config';
@@ -112,7 +107,7 @@ class ThresholdCombatCompletionRule extends CombatRule implements CombatCompleti
 		}
 
 		if (satisfying.length > 1) {
-			return { status: 'draw' };
+			return CombatOutcome.draw();
 		}
 
 		const [thresholdGroup] = satisfying;
@@ -122,16 +117,16 @@ class ThresholdCombatCompletionRule extends CombatRule implements CombatCompleti
 		}
 
 		if (this.config.winnerPolicy === 'threshold-group') {
-			return { status: 'victory', winnerGroupId: thresholdGroup.id };
+			return CombatOutcome.victory(thresholdGroup.id);
 		}
 
 		const opposingGroup = combat.groups.find(group => group.id !== thresholdGroup.id);
 
 		if (!opposingGroup) {
-			return { status: 'draw' };
+			return CombatOutcome.draw();
 		}
 
-		return { status: 'victory', winnerGroupId: opposingGroup.id };
+		return CombatOutcome.victory(opposingGroup.id);
 	}
 
 	private satisfies(value: AttributeValue | undefined): boolean {

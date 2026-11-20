@@ -1,7 +1,7 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
 import type { CombatMoveBindingPrimitives, CombatRule, CombatRulePrimitives } from '@pocket-forge/combat-engine/domain';
-import { CombatEngine, CombatMoveBindingSet, CombatSetup } from '@pocket-forge/combat-engine/domain';
+import { CombatEngine, CombatMoveBindingSet, CombatOutcome, CombatSetup } from '@pocket-forge/combat-engine/domain';
 import type { CombatCompositionRulePrimitives } from '@pocket-forge/combat-engine/rules';
 import { OneVersusOneCombatRule, ThresholdCombatCompletionRule } from '@pocket-forge/combat-engine/rules';
 import { ModifyAttributeAction, ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
@@ -180,7 +180,7 @@ describe('Extensible combat scenario', () => {
 		const resolution = result.getRight();
 
 		expect(resolution.combat.status).toBe('completed');
-		expect(resolution.outcome).toEqual({ status: 'victory', winnerGroupId: 'group-a' });
+		expect(resolution.outcome).toEqual(CombatOutcome.victory('group-a'));
 		expect(resolution.events.map(event => event.type)).toEqual(['attribute-modified', 'combat-completed']);
 		expect(resolution.events.map(event => event.sequence)).toEqual([1, 2]);
 		expect(resolution.events[1]?.payload).toEqual({ status: 'victory', winnerGroupId: 'group-a' });

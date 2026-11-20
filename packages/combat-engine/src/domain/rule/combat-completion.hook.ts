@@ -1,6 +1,6 @@
 import type { Combat } from '@pocket-forge/combat/domain';
 
-import type { CombatOutcome } from '../combat-outcome';
+import type CombatOutcome from '../combat-outcome';
 
 /**
  * Rule hook that decides whether a Combat has reached an outcome.

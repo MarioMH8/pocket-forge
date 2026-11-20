@@ -1,6 +1,6 @@
 import type { AttributeValues } from '@pocket-forge/attribute/domain';
 
-import type { CombatOutcome } from '../combat-outcome';
+import type CombatOutcome from '../combat-outcome';
 import COMBAT_EVENT_TYPES from './catalog';
 import type { CombatCompletedEvent } from './combat-completed.event';
 
@@ -37,11 +37,12 @@ class CombatEvents {
 	 * @returns The serializable completion event.
 	 */
 	static completed(outcome: CombatOutcome, sequence: number): CombatCompletedEvent {
+		const payload = outcome.isVictory()
+			? { status: 'victory' as const, winnerGroupId: outcome.winnerGroupId }
+			: { status: 'draw' as const };
+
 		return {
-			payload:
-				outcome.status === 'victory'
-					? { status: 'victory', winnerGroupId: outcome.winnerGroupId }
-					: { status: 'draw' },
+			payload,
 			sequence,
 			type: COMBAT_EVENT_TYPES.combatCompleted,
 		};
