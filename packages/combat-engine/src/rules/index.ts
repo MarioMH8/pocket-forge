@@ -4,12 +4,11 @@ export { default as ThresholdCombatCompletionRuleError } from './completion/thre
 export type {
 	CompletionComparison,
 	CompletionWinnerPolicy,
-	ThresholdCompletionConfig,
 } from './completion/threshold-combat-completion-rule-config';
 export {
 	COMPLETION_CONFIG_DEFINITIONS,
 	COMPLETION_CONFIG_KEYS,
-	readThresholdCompletionConfig,
+	default as ThresholdCompletionConfig,
 } from './completion/threshold-combat-completion-rule-config';
 export type { CombatCompositionRulePrimitives, CombatGroupConstraints } from './composition/combat-composition-rule';
 export { default as CombatCompositionRule } from './composition/combat-composition-rule';

@@ -5,7 +5,7 @@ import { Combat } from '@pocket-forge/combat/domain';
 import type CombatEvent from '../combat-event';
 import type { CombatOutcome } from '../combat-outcome';
 import type CombatResolutionError from '../combat-resolution.error';
-import { isCompletionHook, isCompositionHook } from '../rule/combat-rule';
+import CombatRule from '../rule/combat-rule';
 import type CombatRuleError from '../rule/combat-rule.error';
 import CombatEngineError from './combat-engine.error';
 import type CombatResolution from './combat-resolution';
@@ -15,21 +15,6 @@ import type CombatSetup from './combat-setup';
  * Every rejection the Combat Engine can return.
  */
 type CombatEngineFailure = CombatEngineError | CombatResolutionError | CombatRuleError | CombatTransitionError;
-
-/**
- * Returns whether two outcomes describe the same result.
- *
- * @param left - First outcome.
- * @param right - Second outcome.
- * @returns Whether both outcomes agree.
- */
-function isSameOutcome(left: CombatOutcome, right: CombatOutcome): boolean {
-	if (left.status === 'draw' || right.status === 'draw') {
-		return left.status === right.status;
-	}
-
-	return left.winnerGroupId === right.winnerGroupId;
-}
 
 /**
  * Pure orchestrator that composes rules, an action resolver, and Move bindings
@@ -45,6 +30,21 @@ class CombatEngine {
 
 	constructor(setup: CombatSetup) {
 		this.setup = setup;
+	}
+
+	/**
+	 * Compares two outcomes for agreement.
+	 *
+	 * @param left - First outcome.
+	 * @param right - Second outcome.
+	 * @returns Whether both outcomes describe the same result.
+	 */
+	private static isSameOutcome(left: CombatOutcome, right: CombatOutcome): boolean {
+		if (left.status === 'draw' || right.status === 'draw') {
+			return left.status === right.status;
+		}
+
+		return left.winnerGroupId === right.winnerGroupId;
 	}
 
 	private static nextSequence(events: readonly CombatEvent[]): number {
@@ -175,7 +175,7 @@ class CombatEngine {
 		const errors: CombatRuleError[] = [];
 
 		for (const rule of this.setup.rules) {
-			if (!isCompositionHook(rule)) {
+			if (!CombatRule.isCompositionHook(rule)) {
 				continue;
 			}
 
@@ -204,7 +204,7 @@ class CombatEngine {
 		const outcomes: CombatOutcome[] = [];
 
 		for (const rule of this.setup.rules) {
-			if (!isCompletionHook(rule)) {
+			if (!CombatRule.isCompletionHook(rule)) {
 				continue;
 			}
 
@@ -221,7 +221,7 @@ class CombatEngine {
 			return Either.right(undefined);
 		}
 
-		if (outcomes.some(outcome => !isSameOutcome(first, outcome))) {
+		if (outcomes.some(outcome => !CombatEngine.isSameOutcome(first, outcome))) {
 			return Either.left([
 				new CombatEngineError(
 					'conflicting-outcome',

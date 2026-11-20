@@ -33,6 +33,26 @@ abstract class CombatRule {
 	}
 
 	/**
+	 * Narrows a rule to one that evaluates combat completion.
+	 *
+	 * @param rule - Rule to inspect.
+	 * @returns Whether the rule implements {@link CombatCompletionHook}.
+	 */
+	static isCompletionHook(rule: CombatRule): rule is CombatCompletionHook & CombatRule {
+		return 'evaluate' in rule && typeof rule.evaluate === 'function';
+	}
+
+	/**
+	 * Narrows a rule to one that validates combat composition.
+	 *
+	 * @param rule - Rule to inspect.
+	 * @returns Whether the rule implements {@link CombatCompositionHook}.
+	 */
+	static isCompositionHook(rule: CombatRule): rule is CombatCompositionHook & CombatRule {
+		return 'validateComposition' in rule && typeof rule.validateComposition === 'function';
+	}
+
+	/**
 	 * Validates primitives against the supplied definitions.
 	 *
 	 * Every key must have a definition, every required definition must have a
@@ -129,25 +149,4 @@ abstract class CombatRule {
 	}
 }
 
-/**
- * Narrows a rule to one that validates combat composition.
- *
- * @param rule - Rule to inspect.
- * @returns Whether the rule implements {@link CombatCompositionHook}.
- */
-function isCompositionHook(rule: CombatRule): rule is CombatCompositionHook & CombatRule {
-	return 'validateComposition' in rule && typeof rule.validateComposition === 'function';
-}
-
-/**
- * Narrows a rule to one that evaluates combat completion.
- *
- * @param rule - Rule to inspect.
- * @returns Whether the rule implements {@link CombatCompletionHook}.
- */
-function isCompletionHook(rule: CombatRule): rule is CombatCompletionHook & CombatRule {
-	return 'evaluate' in rule && typeof rule.evaluate === 'function';
-}
-
-export { isCompletionHook, isCompositionHook };
 export default CombatRule;

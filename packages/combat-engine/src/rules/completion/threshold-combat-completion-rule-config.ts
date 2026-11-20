@@ -33,28 +33,6 @@ type CompletionComparison = (typeof COMPLETION_COMPARISONS)[number];
  */
 type CompletionWinnerPolicy = (typeof COMPLETION_WINNER_POLICIES)[number];
 
-/**
- * Validated threshold completion configuration.
- */
-interface ThresholdCompletionConfig {
-	/**
-	 * Combatant attribute observed by the rule.
-	 */
-	readonly attributeKey: string;
-	/**
-	 * Comparison applied between the observed value and the threshold.
-	 */
-	readonly comparison: CompletionComparison;
-	/**
-	 * Numeric boundary that triggers completion.
-	 */
-	readonly threshold: number;
-	/**
-	 * Group that wins when the threshold is satisfied.
-	 */
-	readonly winnerPolicy: CompletionWinnerPolicy;
-}
-
 const COMPLETION_ATTRIBUTE_KEY_DEFINITION = AttributeDefinition.create({
 	constraints: { minLength: 1 },
 	key: COMPLETION_CONFIG_KEYS.attributeKey,
@@ -93,124 +71,183 @@ const COMPLETION_CONFIG_DEFINITIONS: readonly AttributeDefinition[] = [
 	COMPLETION_WINNER_POLICY_DEFINITION,
 ];
 
-function completionConfigPath(key: string): string {
-	return `attributes.${key}`;
-}
-
-function isCompletionComparison(value: unknown): value is CompletionComparison {
-	return typeof value === 'string' && (COMPLETION_COMPARISONS as readonly string[]).includes(value);
-}
-
-function isCompletionWinnerPolicy(value: unknown): value is CompletionWinnerPolicy {
-	return typeof value === 'string' && (COMPLETION_WINNER_POLICIES as readonly string[]).includes(value);
-}
-
 /**
- * Validates one authored `completion.*` value against its definition.
+ * Validated threshold completion configuration.
  *
- * Missing required keys and definition violations are reported as structured
- * failures instead of thrown, and non-finite thresholds are rejected here
- * because the shared number validator accepts `Infinity`.
- *
- * @param attributes - Authored ruleset attributes.
- * @param definition - Completion definition that governs the value.
- * @returns Every violation for this definition, or an empty list.
+ * Owns the configuration contract and the validation that produces it. The
+ * factory returns an aggregated {@link Either}; failures are never thrown.
  */
-function validateCompletionValue(
-	attributes: AttributeValues,
-	definition: AttributeDefinition
-): ThresholdCombatCompletionRuleError[] {
-	const raw = attributes[definition.key];
-	const path = completionConfigPath(definition.key);
+class ThresholdCompletionConfig {
+	/**
+	 * Comparisons supported by the rule.
+	 */
+	static readonly COMPARISONS = COMPLETION_COMPARISONS;
+	/**
+	 * Definitions that govern the configuration values.
+	 */
+	static readonly DEFINITIONS = COMPLETION_CONFIG_DEFINITIONS;
+	/**
+	 * Keys authored on the rule.
+	 */
+	static readonly KEYS = COMPLETION_CONFIG_KEYS;
+	/**
+	 * Winner policies supported by the rule.
+	 */
+	static readonly WINNER_POLICIES = COMPLETION_WINNER_POLICIES;
 
-	if (raw === undefined) {
-		return definition.required
-			? [
-					new ThresholdCombatCompletionRuleError(
-						'invalid-config',
-						`Attribute "${definition.key}" is required`,
-						path
-					),
-				]
-			: [];
+	/**
+	 * Combatant attribute observed by the rule.
+	 */
+	readonly attributeKey: string;
+	/**
+	 * Comparison applied between the observed value and the threshold.
+	 */
+	readonly comparison: CompletionComparison;
+	/**
+	 * Numeric boundary that triggers completion.
+	 */
+	readonly threshold: number;
+	/**
+	 * Group that wins when the threshold is satisfied.
+	 */
+	readonly winnerPolicy: CompletionWinnerPolicy;
+
+	private constructor(data: {
+		readonly attributeKey: string;
+		readonly comparison: CompletionComparison;
+		readonly threshold: number;
+		readonly winnerPolicy: CompletionWinnerPolicy;
+	}) {
+		this.attributeKey = data.attributeKey;
+		this.comparison = data.comparison;
+		this.threshold = data.threshold;
+		this.winnerPolicy = data.winnerPolicy;
 	}
 
-	const error = definition.validateValue(raw);
+	/**
+	 * Reads and validates threshold completion configuration from ruleset
+	 * attributes.
+	 *
+	 * Only `completion.*` keys are inspected; every other ruleset attribute is
+	 * ignored. Failures are aggregated so authored content can report every
+	 * problem at once.
+	 *
+	 * @param attributes - Authored ruleset attributes.
+	 * @returns The validated configuration, or every validation failure.
+	 */
+	static create(
+		attributes: AttributeValues
+	): Either<ThresholdCombatCompletionRuleError[], ThresholdCompletionConfig> {
+		const errors = this.DEFINITIONS.flatMap(definition => this.validateValue(attributes, definition));
 
-	if (error) {
-		return [
-			new ThresholdCombatCompletionRuleError(
-				'invalid-config',
-				`Invalid value for attribute "${definition.key}": ${error.message}`,
-				path
-			),
-		];
+		if (errors.length > 0) {
+			return Either.left(errors);
+		}
+
+		const attributeKey = attributes[this.KEYS.attributeKey];
+		const comparison = attributes[this.KEYS.comparison];
+		const threshold = attributes[this.KEYS.threshold];
+		const winnerPolicy = attributes[this.KEYS.winnerPolicy];
+
+		if (
+			typeof attributeKey !== 'string' ||
+			typeof threshold !== 'number' ||
+			!Number.isFinite(threshold) ||
+			!this.isComparison(comparison) ||
+			!this.isWinnerPolicy(winnerPolicy)
+		) {
+			return Either.left([
+				new ThresholdCombatCompletionRuleError(
+					'invalid-config',
+					'Completion configuration is incomplete',
+					'attributes'
+				),
+			]);
+		}
+
+		return Either.right(new ThresholdCompletionConfig({ attributeKey, comparison, threshold, winnerPolicy }));
 	}
 
-	if (typeof raw === 'number' && !Number.isFinite(raw)) {
-		return [
-			new ThresholdCombatCompletionRuleError(
-				'invalid-config',
-				`Attribute "${definition.key}" must be a finite number`,
-				path
-			),
-		];
+	/**
+	 * Narrows a value to a supported comparison.
+	 *
+	 * @param value - Value to inspect.
+	 * @returns Whether the value is a supported comparison.
+	 */
+	static isComparison(value: unknown): value is CompletionComparison {
+		return typeof value === 'string' && (COMPLETION_COMPARISONS as readonly string[]).includes(value);
 	}
 
-	return [];
+	/**
+	 * Narrows a value to a supported winner policy.
+	 *
+	 * @param value - Value to inspect.
+	 * @returns Whether the value is a supported winner policy.
+	 */
+	static isWinnerPolicy(value: unknown): value is CompletionWinnerPolicy {
+		return typeof value === 'string' && (COMPLETION_WINNER_POLICIES as readonly string[]).includes(value);
+	}
+
+	private static path(key: string): string {
+		return `attributes.${key}`;
+	}
+
+	/**
+	 * Validates one authored `completion.*` value against its definition.
+	 *
+	 * Missing required keys and definition violations are reported as structured
+	 * failures instead of thrown, and non-finite thresholds are rejected here
+	 * because the shared number validator accepts `Infinity`.
+	 *
+	 * @param attributes - Authored ruleset attributes.
+	 * @param definition - Completion definition that governs the value.
+	 * @returns Every violation for this definition, or an empty list.
+	 */
+	private static validateValue(
+		attributes: AttributeValues,
+		definition: AttributeDefinition
+	): ThresholdCombatCompletionRuleError[] {
+		const raw = attributes[definition.key];
+		const path = this.path(definition.key);
+
+		if (raw === undefined) {
+			return definition.required
+				? [
+						new ThresholdCombatCompletionRuleError(
+							'invalid-config',
+							`Attribute "${definition.key}" is required`,
+							path
+						),
+					]
+				: [];
+		}
+
+		const error = definition.validateValue(raw);
+
+		if (error) {
+			return [
+				new ThresholdCombatCompletionRuleError(
+					'invalid-config',
+					`Invalid value for attribute "${definition.key}": ${error.message}`,
+					path
+				),
+			];
+		}
+
+		if (typeof raw === 'number' && !Number.isFinite(raw)) {
+			return [
+				new ThresholdCombatCompletionRuleError(
+					'invalid-config',
+					`Attribute "${definition.key}" must be a finite number`,
+					path
+				),
+			];
+		}
+
+		return [];
+	}
 }
 
-/**
- * Reads and validates threshold completion configuration from ruleset
- * attributes.
- *
- * Only `completion.*` keys are inspected; every other ruleset attribute is
- * ignored. Failures are aggregated so authored content can report every
- * problem at once.
- *
- * @param attributes - Authored ruleset attributes.
- * @returns The validated configuration, or every validation failure.
- */
-function readThresholdCompletionConfig(
-	attributes: AttributeValues
-): Either<ThresholdCombatCompletionRuleError[], ThresholdCompletionConfig> {
-	const errors = COMPLETION_CONFIG_DEFINITIONS.flatMap(definition => validateCompletionValue(attributes, definition));
-
-	if (errors.length > 0) {
-		return Either.left(errors);
-	}
-
-	const attributeKey = attributes[COMPLETION_CONFIG_KEYS.attributeKey];
-	const comparison = attributes[COMPLETION_CONFIG_KEYS.comparison];
-	const threshold = attributes[COMPLETION_CONFIG_KEYS.threshold];
-	const winnerPolicy = attributes[COMPLETION_CONFIG_KEYS.winnerPolicy];
-
-	if (
-		typeof attributeKey !== 'string' ||
-		typeof threshold !== 'number' ||
-		!Number.isFinite(threshold) ||
-		!isCompletionComparison(comparison) ||
-		!isCompletionWinnerPolicy(winnerPolicy)
-	) {
-		return Either.left([
-			new ThresholdCombatCompletionRuleError(
-				'invalid-config',
-				'Completion configuration is incomplete',
-				'attributes'
-			),
-		]);
-	}
-
-	return Either.right({ attributeKey, comparison, threshold, winnerPolicy });
-}
-
-export type { CompletionComparison, CompletionWinnerPolicy, ThresholdCompletionConfig };
-export {
-	COMPLETION_COMPARISONS,
-	COMPLETION_CONFIG_DEFINITIONS,
-	COMPLETION_CONFIG_KEYS,
-	COMPLETION_WINNER_POLICIES,
-	isCompletionComparison,
-	isCompletionWinnerPolicy,
-	readThresholdCompletionConfig,
-};
+export type { CompletionComparison, CompletionWinnerPolicy };
+export { COMPLETION_COMPARISONS, COMPLETION_CONFIG_DEFINITIONS, COMPLETION_CONFIG_KEYS, COMPLETION_WINNER_POLICIES };
+export default ThresholdCompletionConfig;

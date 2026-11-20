@@ -18,7 +18,7 @@ export type { CombatSetupInput } from './engine/combat-setup';
 export { default as CombatSetup } from './engine/combat-setup';
 export type { default as CombatCompletionHook } from './rule/combat-completion.hook';
 export type { default as CombatCompositionHook } from './rule/combat-composition.hook';
-export { default as CombatRule, isCompletionHook, isCompositionHook } from './rule/combat-rule';
+export { default as CombatRule } from './rule/combat-rule';
 export type { CombatRuleErrorReason } from './rule/combat-rule.error';
 export { default as CombatRuleError } from './rule/combat-rule.error';
 export type { CombatRuleData, CombatRulePrimitives } from './rule/combat-rule.types';

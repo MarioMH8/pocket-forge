@@ -2,8 +2,8 @@ import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import {
 	COMPLETION_CONFIG_DEFINITIONS,
 	COMPLETION_CONFIG_KEYS,
-	readThresholdCompletionConfig,
 	ThresholdCombatCompletionRule,
+	ThresholdCompletionConfig,
 } from '@pocket-forge/combat-engine/rules';
 import { describe, expect, it } from 'bun:test';
 
@@ -17,12 +17,12 @@ function without(key: string): AttributeValues {
 	return Object.fromEntries(Object.entries(DEFAULT_COMPLETION_ATTRIBUTES).filter(([entryKey]) => entryKey !== key));
 }
 
-describe('readThresholdCompletionConfig', () => {
+describe('ThresholdCompletionConfig.create', () => {
 	it('accepts a complete configuration and ignores non-completion attributes', () => {
-		const result = readThresholdCompletionConfig(attributes({ 'unrelated.key': 'ignored' }));
+		const result = ThresholdCompletionConfig.create(attributes({ 'unrelated.key': 'ignored' }));
 
 		expect(result.isRight()).toBe(true);
-		expect(result.getRight()).toEqual({
+		expect(result.getRight()).toMatchObject({
 			attributeKey: 'power',
 			comparison: 'lte',
 			threshold: 10,
@@ -31,7 +31,7 @@ describe('readThresholdCompletionConfig', () => {
 	});
 
 	it('rejects a missing attribute key', () => {
-		const result = readThresholdCompletionConfig(without(COMPLETION_CONFIG_KEYS.attributeKey));
+		const result = ThresholdCompletionConfig.create(without(COMPLETION_CONFIG_KEYS.attributeKey));
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-config');
@@ -39,7 +39,7 @@ describe('readThresholdCompletionConfig', () => {
 	});
 
 	it('rejects a missing comparison', () => {
-		const result = readThresholdCompletionConfig(without(COMPLETION_CONFIG_KEYS.comparison));
+		const result = ThresholdCompletionConfig.create(without(COMPLETION_CONFIG_KEYS.comparison));
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-config');
@@ -47,7 +47,7 @@ describe('readThresholdCompletionConfig', () => {
 	});
 
 	it('rejects a missing threshold', () => {
-		const result = readThresholdCompletionConfig(without(COMPLETION_CONFIG_KEYS.threshold));
+		const result = ThresholdCompletionConfig.create(without(COMPLETION_CONFIG_KEYS.threshold));
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-config');
@@ -55,7 +55,7 @@ describe('readThresholdCompletionConfig', () => {
 	});
 
 	it('rejects a missing winner policy', () => {
-		const result = readThresholdCompletionConfig(without(COMPLETION_CONFIG_KEYS.winnerPolicy));
+		const result = ThresholdCompletionConfig.create(without(COMPLETION_CONFIG_KEYS.winnerPolicy));
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-config');
@@ -63,7 +63,7 @@ describe('readThresholdCompletionConfig', () => {
 	});
 
 	it('rejects an invalid comparison', () => {
-		const result = readThresholdCompletionConfig(attributes({ [COMPLETION_CONFIG_KEYS.comparison]: 'eq' }));
+		const result = ThresholdCompletionConfig.create(attributes({ [COMPLETION_CONFIG_KEYS.comparison]: 'eq' }));
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-config');
@@ -71,7 +71,7 @@ describe('readThresholdCompletionConfig', () => {
 	});
 
 	it('rejects an invalid winner policy', () => {
-		const result = readThresholdCompletionConfig(
+		const result = ThresholdCompletionConfig.create(
 			attributes({ [COMPLETION_CONFIG_KEYS.winnerPolicy]: 'first-group' })
 		);
 
@@ -81,7 +81,7 @@ describe('readThresholdCompletionConfig', () => {
 	});
 
 	it('rejects an infinite threshold', () => {
-		const result = readThresholdCompletionConfig(attributes({ [COMPLETION_CONFIG_KEYS.threshold]: Infinity }));
+		const result = ThresholdCompletionConfig.create(attributes({ [COMPLETION_CONFIG_KEYS.threshold]: Infinity }));
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-config');
@@ -89,7 +89,7 @@ describe('readThresholdCompletionConfig', () => {
 	});
 
 	it('rejects a NaN threshold', () => {
-		const result = readThresholdCompletionConfig(attributes({ [COMPLETION_CONFIG_KEYS.threshold]: NaN }));
+		const result = ThresholdCompletionConfig.create(attributes({ [COMPLETION_CONFIG_KEYS.threshold]: NaN }));
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-config');
@@ -97,7 +97,7 @@ describe('readThresholdCompletionConfig', () => {
 	});
 
 	it('aggregates every invalid completion value', () => {
-		const result = readThresholdCompletionConfig({
+		const result = ThresholdCompletionConfig.create({
 			[COMPLETION_CONFIG_KEYS.attributeKey]: '',
 			[COMPLETION_CONFIG_KEYS.comparison]: 'eq',
 			[COMPLETION_CONFIG_KEYS.threshold]: NaN,

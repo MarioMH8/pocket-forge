@@ -10,8 +10,7 @@ import type {
 import { CombatRule } from '@pocket-forge/combat-engine/domain';
 
 import ThresholdCombatCompletionRuleError from './threshold-combat-completion-rule.error';
-import type { ThresholdCompletionConfig } from './threshold-combat-completion-rule-config';
-import { COMPLETION_CONFIG_KEYS, readThresholdCompletionConfig } from './threshold-combat-completion-rule-config';
+import ThresholdCompletionConfig, { COMPLETION_CONFIG_KEYS } from './threshold-combat-completion-rule-config';
 
 /**
  * Built-in completion rule that ends Combat from a Combatant attribute
@@ -63,7 +62,7 @@ class ThresholdCombatCompletionRule extends CombatRule implements CombatCompleti
 		}
 
 		const data = validated.getRight();
-		const config = readThresholdCompletionConfig(data.attributes.toPrimitives());
+		const config = ThresholdCompletionConfig.create(data.attributes.toPrimitives());
 
 		if (config.isLeft()) {
 			return Either.left(config.getLeft());
