@@ -28,7 +28,7 @@ class DuelmonCatalogMapper {
 	 */
 	static moves(
 		entries: readonly DuelmonMove[],
-		definitions: readonly AttributeDefinition[] = DuelmonAttributeDefinitions.move
+		definitions: readonly AttributeDefinition[] = DuelmonAttributeDefinitions.MOVE
 	): Either<DuelmonCatalogError[], readonly Move[]> {
 		const errors: DuelmonCatalogError[] = [];
 		const moves: Move[] = [];
@@ -95,7 +95,7 @@ class DuelmonCatalogMapper {
 	 */
 	static species(
 		entries: readonly DuelmonSpecies[],
-		definitions: readonly AttributeDefinition[] = DuelmonAttributeDefinitions.species
+		definitions: readonly AttributeDefinition[] = DuelmonAttributeDefinitions.SPECIES
 	): Either<DuelmonCatalogError[], readonly Species[]> {
 		const errors: DuelmonCatalogError[] = [];
 		const species: Species[] = [];

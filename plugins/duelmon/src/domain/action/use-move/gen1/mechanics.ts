@@ -3,8 +3,8 @@ import type { CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 import type RandomPocket from '@pocket-forge/rng/domain';
 
 import type { UseMoveInput, UseMoveMechanics, UseMoveOutcome } from '../use-move.mechanics';
-import { Gen1BattleStats } from './gen1-battle-stats';
-import { Gen1Damage } from './gen1-damage';
+import { Gen1BattleStats } from './battle-stats';
+import { Gen1Damage } from './damage';
 
 const MIN_RANDOM_FACTOR = 217;
 const MAX_RANDOM_FACTOR = 255;

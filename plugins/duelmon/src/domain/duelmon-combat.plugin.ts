@@ -8,14 +8,14 @@ import type {
 } from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 
-import { DuelmonErrors } from './duelmon.errors';
-import type DuelmonAction from './duelmon-action';
-import { DuelmonActionCatalog } from './duelmon-action.catalog';
-import type DuelmonActionResolver from './duelmon-action.resolver';
-import { DuelmonCombatInput } from './duelmon-combat.input';
-import { ModifyAttributeAction } from './modify-attribute/modify-attribute.action';
-import { UseMoveAction } from './use-move/use-move.action';
-import type { UseMoveMechanics } from './use-move/use-move.mechanics';
+import type DuelmonAction from './action/duelmon-action';
+import { DuelmonActionCatalog } from './action/duelmon-action.catalog';
+import type DuelmonActionResolver from './action/duelmon-action.resolver';
+import { ModifyAttributeAction } from './action/modify-attribute/modify-attribute.action';
+import { UseMoveAction } from './action/use-move/use-move.action';
+import type { UseMoveMechanics } from './action/use-move/use-move.mechanics';
+import { DuelmonCombatInput } from './support/duelmon-combat.input';
+import { DuelmonFailure } from './support/duelmon-failure';
 
 /**
  * Duelmon Combat plugin.
@@ -92,7 +92,7 @@ class DuelmonCombatPlugin implements CombatActionResolver {
 		const binding = context.actionBindings.find(input.moveId);
 
 		if (!binding) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-action',
 				`No combat action is bound to Move "${input.moveId}"`,
 				'input.moveId'
@@ -102,7 +102,7 @@ class DuelmonCombatPlugin implements CombatActionResolver {
 		const resolver = this.resolvers.get(binding.actionId);
 
 		if (!resolver) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-action',
 				`Move "${input.moveId}" is bound to unsupported action "${binding.actionId}"`,
 				'actionBindings.bindings'

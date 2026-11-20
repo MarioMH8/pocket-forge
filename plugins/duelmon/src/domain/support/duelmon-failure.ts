@@ -5,7 +5,7 @@ import { CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 /**
  * Result helpers for Duelmon action resolutions.
  */
-class DuelmonErrors {
+class DuelmonFailure {
 	/**
 	 * Builds a single-failure result.
 	 *
@@ -23,6 +23,6 @@ class DuelmonErrors {
 	}
 }
 
-export { DuelmonErrors };
+export { DuelmonFailure };
 
-export default DuelmonErrors;
+export default DuelmonFailure;

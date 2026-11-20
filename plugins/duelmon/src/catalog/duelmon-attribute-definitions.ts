@@ -13,17 +13,9 @@ import { DuelmonTypes } from '@pocket-forge/duelmon-dataset';
  */
 class DuelmonAttributeDefinitions {
 	/**
-	 * Move categories accepted by the dataset catalog.
-	 */
-	static readonly MOVE_CATEGORIES: readonly DuelmonMoveCategory[] = DuelmonTypes.MOVE_CATEGORIES;
-	/**
-	 * Gen 1 types accepted by the dataset catalog.
-	 */
-	static readonly TYPES: readonly DuelmonType[] = DuelmonTypes.ALL;
-	/**
 	 * Attributes that describe a neutral Move built from the dataset.
 	 */
-	static readonly move: readonly AttributeDefinition[] = Object.freeze([
+	static readonly MOVE: readonly AttributeDefinition[] = Object.freeze([
 		AttributeDefinitionEntity.create({
 			constraints: { validValues: [...DuelmonTypes.ALL] },
 			key: 'type',
@@ -69,9 +61,14 @@ class DuelmonAttributeDefinitions {
 	]);
 
 	/**
+	 * Move categories accepted by the dataset catalog.
+	 */
+	static readonly MOVE_CATEGORIES: readonly DuelmonMoveCategory[] = DuelmonTypes.MOVE_CATEGORIES;
+
+	/**
 	 * Attributes that describe a neutral Species built from the dataset.
 	 */
-	static readonly species: readonly AttributeDefinition[] = Object.freeze([
+	static readonly SPECIES: readonly AttributeDefinition[] = Object.freeze([
 		AttributeDefinitionEntity.create({
 			constraints: { itemType: 'string', maxLength: 2, minLength: 1 },
 			key: 'types',
@@ -109,6 +106,11 @@ class DuelmonAttributeDefinitions {
 			type: 'number',
 		}),
 	]);
+
+	/**
+	 * Gen 1 types accepted by the dataset catalog.
+	 */
+	static readonly TYPES: readonly DuelmonType[] = DuelmonTypes.ALL;
 }
 
 export { DuelmonAttributeDefinitions };

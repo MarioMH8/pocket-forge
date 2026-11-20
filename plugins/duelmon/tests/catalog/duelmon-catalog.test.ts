@@ -1,5 +1,5 @@
 import { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
-import { DuelmonDatasetMother } from '@pocket-forge/duelmon/mother/domain';
+import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
 function catalog(): DuelmonCatalog {

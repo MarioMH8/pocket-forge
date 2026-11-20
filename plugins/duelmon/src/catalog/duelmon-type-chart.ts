@@ -2,12 +2,13 @@ import Either from '@hexadrop/either';
 import type { DuelmonType } from '@pocket-forge/duelmon-dataset';
 import { DuelmonTypes } from '@pocket-forge/duelmon-dataset';
 
+import type { UnknownRecord } from '../domain/support/duelmon-record';
+import { DuelmonRecord } from '../domain/support/duelmon-record';
 import { DuelmonCatalogError } from './duelmon-catalog.error';
 
 const EFFECTIVENESS = [1, 2, 0.5, 0] as const;
 
 type TypeChartPrimitives = Readonly<Record<string, Readonly<Record<string, number>>>>;
-type UnknownRecord = Record<string, unknown>;
 type MultiplierTable = ReadonlyMap<DuelmonType, ReadonlyMap<DuelmonType, number>>;
 
 /**
@@ -37,7 +38,7 @@ class DuelmonTypeChart {
 		for (const defenderType of DuelmonTypes.ALL) {
 			const relations: unknown = typechart[defenderType];
 
-			if (!this.isRecord(relations)) {
+			if (!DuelmonRecord.isRecord(relations)) {
 				errors.push(
 					new DuelmonCatalogError(
 						'invalid-type-chart',
@@ -52,10 +53,6 @@ class DuelmonTypeChart {
 		}
 
 		return errors.length > 0 ? Either.left(errors) : Either.right(new DuelmonTypeChart(table));
-	}
-
-	private static isRecord(value: unknown): value is UnknownRecord {
-		return typeof value === 'object' && value !== null && !Array.isArray(value);
 	}
 
 	private static readRow(

@@ -5,7 +5,7 @@ import type { Combatant } from '@pocket-forge/combat/domain';
 import type { CombatResolutionError, CombatResolutionErrorReason } from '@pocket-forge/combat-engine/domain';
 import { CombatResolutionError as CombatResolutionErrorValue } from '@pocket-forge/combat-engine/domain';
 
-import { DuelmonCombatAttributes } from '../../combat-attributes';
+import { DuelmonCombatAttributes } from '../../../support/combat-attributes';
 
 const BATTLE_STAT_KEYS = ['level', 'hp', 'attack', 'defense', 'special'] as const;
 

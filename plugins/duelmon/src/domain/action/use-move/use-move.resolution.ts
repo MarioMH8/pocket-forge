@@ -7,10 +7,10 @@ import { DuelmonTypes } from '@pocket-forge/duelmon-dataset';
 import type { Move } from '@pocket-forge/move/domain';
 import type { Species } from '@pocket-forge/species/domain';
 
-import { DuelmonErrors } from '../duelmon.errors';
-import type { DuelmonCombatInput } from '../duelmon-combat.input';
-import type { ResolvedDuelmonTarget } from '../duelmon-target';
-import { DuelmonTarget } from '../duelmon-target';
+import type { DuelmonCombatInput } from '../../support/duelmon-combat.input';
+import { DuelmonFailure } from '../../support/duelmon-failure';
+import type { ResolvedDuelmonTarget } from '../../support/duelmon-target';
+import { DuelmonTarget } from '../../support/duelmon-target';
 import type { UseMoveAttributes } from './use-move.mechanics';
 
 const STATUS_CATEGORY = 'Status';
@@ -30,7 +30,7 @@ function readMoveAttributes(move: Move, moveId: string): Either<CombatResolution
 		!DuelmonTypes.is(type) ||
 		!DuelmonTypes.isCategory(category)
 	) {
-		return DuelmonErrors.fail('invalid-action', `Move "${moveId}" has invalid catalog attributes`, 'input.moveId');
+		return DuelmonFailure.fail('invalid-action', `Move "${moveId}" has invalid catalog attributes`, 'input.moveId');
 	}
 
 	return Either.right({ accuracy, alwaysHits, category, power, type });
@@ -44,14 +44,14 @@ function readSpeciesTypes(
 	const types = species.attributes.toPrimitives()['types'];
 
 	if (!Array.isArray(types)) {
-		return DuelmonErrors.fail(reason, `Species "${species.id}" has invalid types`, path);
+		return DuelmonFailure.fail(reason, `Species "${species.id}" has invalid types`, path);
 	}
 
 	const parsed: DuelmonType[] = [];
 
 	for (const type of types) {
 		if (!DuelmonTypes.is(type)) {
-			return DuelmonErrors.fail(reason, `Species "${species.id}" has invalid types`, path);
+			return DuelmonFailure.fail(reason, `Species "${species.id}" has invalid types`, path);
 		}
 
 		parsed.push(type);
@@ -138,7 +138,7 @@ class UseMoveResolution {
 		const target = resolvedTarget.combatant;
 
 		if (!target) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-target',
 				'Target scope "combatant" requires a combatant id',
 				'input.target.id'
@@ -148,13 +148,13 @@ class UseMoveResolution {
 		const attacker = DuelmonTarget.findCombatant(combat, input.actorId);
 
 		if (!attacker) {
-			return DuelmonErrors.fail('invalid-input', `Unknown combatant actor "${input.actorId}"`, 'input.actorId');
+			return DuelmonFailure.fail('invalid-input', `Unknown combatant actor "${input.actorId}"`, 'input.actorId');
 		}
 
 		const move = catalog.findMove(input.moveId);
 
 		if (!move) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-input',
 				`Unknown Move "${input.moveId}" in the Duelmon catalog`,
 				'input.moveId'
@@ -170,7 +170,7 @@ class UseMoveResolution {
 		const attributes = moveAttributes.getRight();
 
 		if (attributes.category === STATUS_CATEGORY) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'rejected',
 				`Move "${input.moveId}" does not have a damaging category`,
 				'input.moveId'
@@ -180,7 +180,7 @@ class UseMoveResolution {
 		const attackerSpecies = catalog.findSpecies(attacker.creature.species.id);
 
 		if (!attackerSpecies) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-input',
 				`Unknown species "${attacker.creature.species.id}" for attacker "${attacker.id}"`,
 				`combatants.${attacker.id}.creature.species.id`
@@ -190,7 +190,7 @@ class UseMoveResolution {
 		const targetSpecies = catalog.findSpecies(target.creature.species.id);
 
 		if (!targetSpecies) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-target',
 				`Unknown species "${target.creature.species.id}" for target "${target.id}"`,
 				`combatants.${target.id}.creature.species.id`

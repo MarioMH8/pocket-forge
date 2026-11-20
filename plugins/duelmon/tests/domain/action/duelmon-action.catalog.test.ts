@@ -45,7 +45,7 @@ describe('duelmon combat catalog', () => {
 		expect(result.getLeft()[0]?.reason).toBe('invalid-config');
 	});
 
-	it('rejects a duplicated move binding', () => {
+	it('rejects a duplicated action binding', () => {
 		const result = create([binding(), binding()]);
 
 		expect(result.isLeft()).toBe(true);

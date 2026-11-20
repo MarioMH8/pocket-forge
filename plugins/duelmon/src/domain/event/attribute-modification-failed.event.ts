@@ -1,8 +1,8 @@
 import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import type { CombatEvent } from '@pocket-forge/combat-engine/domain';
 
-import type { DuelmonTargetScope } from '../action/duelmon-target';
-import { DUELMON_COMBAT_EVENT_TYPES } from './duelmon-combat-event-catalog';
+import type { DuelmonTargetScope } from '../support/duelmon-target';
+import { DUELMON_COMBAT_EVENT_TYPES } from './catalog';
 
 /**
  * Payload of the `attribute-modification-failed` event.

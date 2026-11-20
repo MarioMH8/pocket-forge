@@ -1,18 +1,13 @@
 import Either from '@hexadrop/either';
 import type { CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 
-import { DuelmonErrors } from './duelmon.errors';
+import { DuelmonFailure } from './duelmon-failure';
+import { DuelmonRecord } from './duelmon-record';
 import type { DuelmonTarget } from './duelmon-target';
 import { DuelmonTarget as DuelmonTargetValue } from './duelmon-target';
 
-type UnknownRecord = Record<string, unknown>;
-
 function isNonEmptyString(value: unknown): value is string {
 	return typeof value === 'string' && value.trim().length > 0;
-}
-
-function isRecord(value: unknown): value is UnknownRecord {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -68,14 +63,14 @@ class DuelmonCombatInput {
 	 * @returns The validated input, or structured `invalid-input` failures.
 	 */
 	static parse(value: unknown): Either<CombatResolutionError[], DuelmonCombatInput> {
-		if (!isRecord(value)) {
-			return DuelmonErrors.fail('invalid-input', 'Duelmon combat input must be an object', 'input');
+		if (!DuelmonRecord.isRecord(value)) {
+			return DuelmonFailure.fail('invalid-input', 'Duelmon combat input must be an object', 'input');
 		}
 
 		const { actorId, moveId, target } = value;
 
 		if (!isNonEmptyString(actorId)) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-input',
 				'Duelmon combat input actorId must be a non-empty string',
 				'input.actorId'
@@ -83,7 +78,7 @@ class DuelmonCombatInput {
 		}
 
 		if (!isNonEmptyString(moveId)) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-input',
 				'Duelmon combat input moveId must be a non-empty string',
 				'input.moveId'

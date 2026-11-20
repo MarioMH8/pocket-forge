@@ -25,8 +25,7 @@ import {
 	ModifyAttributeConfig,
 	UseMoveAction,
 } from '@pocket-forge/duelmon/domain';
-
-import DuelmonDatasetMother from './duelmon-dataset.mother';
+import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domain';
 
 const POWER = AttributeDefinitionMother.number({
 	constraints: { max: 100, min: 0 },

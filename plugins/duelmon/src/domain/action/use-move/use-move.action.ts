@@ -12,11 +12,11 @@ import { CombatTransition } from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type RandomPocket from '@pocket-forge/rng/domain';
 
-import { DuelmonCombatEvents } from '../../event/duelmon-combat-event';
-import { DuelmonCombatAttributes } from '../combat-attributes';
-import { DuelmonErrors } from '../duelmon.errors';
+import { DuelmonCombatEvents } from '../../event/combat-event';
+import { DuelmonCombatAttributes } from '../../support/combat-attributes';
+import type { DuelmonCombatInput } from '../../support/duelmon-combat.input';
+import { DuelmonFailure } from '../../support/duelmon-failure';
 import type DuelmonAction from '../duelmon-action';
-import type { DuelmonCombatInput } from '../duelmon-combat.input';
 import type { UseMoveMechanics } from './use-move.mechanics';
 import { UseMoveResolution } from './use-move.resolution';
 
@@ -116,7 +116,7 @@ class UseMoveAction implements DuelmonAction {
 		const hpDefinition = this.attributeDefinitions.find(entry => entry.key === HP_KEY);
 
 		if (hpDefinition?.type !== 'number') {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-action',
 				'The "useMove" action requires a numeric "hp" attribute definition',
 				'attributeDefinitions'
@@ -126,7 +126,7 @@ class UseMoveAction implements DuelmonAction {
 		const currentHp = DuelmonCombatAttributes.readNumber(move.resolvedTarget.values, HP_KEY);
 
 		if (currentHp === undefined) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-target',
 				`Combatant "${move.target.id}" is missing numeric "${HP_KEY}" attribute`,
 				`combatants.${move.target.id}.${HP_KEY}`

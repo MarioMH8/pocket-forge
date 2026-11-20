@@ -3,9 +3,9 @@ import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeDefinition } from '@pocket-forge/attribute/domain';
 import type { CombatActionBinding, CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 
-import { DuelmonErrors } from '../duelmon.errors';
-import type { DuelmonTargetScope } from '../duelmon-target';
-import { DuelmonTarget } from '../duelmon-target';
+import { DuelmonFailure } from '../../support/duelmon-failure';
+import type { DuelmonTargetScope } from '../../support/duelmon-target';
+import { DuelmonTarget } from '../../support/duelmon-target';
 
 /**
  * Configuration keys authored on a `modifyAttribute` binding.
@@ -204,7 +204,7 @@ class ModifyAttributeConfig {
 	}
 
 	private static invalid(binding: CombatActionBinding): Either<CombatResolutionError[], never> {
-		return DuelmonErrors.fail(
+		return DuelmonFailure.fail(
 			'invalid-action',
 			`Action "${binding.actionId}" has an invalid configuration`,
 			'actionSet.bindings'

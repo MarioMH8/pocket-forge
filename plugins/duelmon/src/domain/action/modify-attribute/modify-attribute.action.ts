@@ -9,12 +9,12 @@ import type {
 } from '@pocket-forge/combat-engine/domain';
 import { CombatTransition } from '@pocket-forge/combat-engine/domain';
 
-import { DuelmonCombatEvents } from '../../event/duelmon-combat-event';
-import { DuelmonCombatAttributes } from '../combat-attributes';
-import { DuelmonErrors } from '../duelmon.errors';
+import { DuelmonCombatEvents } from '../../event/combat-event';
+import { DuelmonCombatAttributes } from '../../support/combat-attributes';
+import type { DuelmonCombatInput } from '../../support/duelmon-combat.input';
+import { DuelmonFailure } from '../../support/duelmon-failure';
+import { DuelmonTarget } from '../../support/duelmon-target';
 import type DuelmonAction from '../duelmon-action';
-import type { DuelmonCombatInput } from '../duelmon-combat.input';
-import { DuelmonTarget } from '../duelmon-target';
 import { ModifyAttributeConfig } from './modify-attribute.config';
 
 /**
@@ -58,7 +58,7 @@ class ModifyAttributeAction implements DuelmonAction {
 		binding: CombatActionBinding
 	): Either<CombatResolutionError[], CombatTransition> {
 		if (!DuelmonTarget.findCombatant(context.combat, input.actorId)) {
-			return DuelmonErrors.fail('invalid-input', `Unknown combatant actor "${input.actorId}"`, 'input.actorId');
+			return DuelmonFailure.fail('invalid-input', `Unknown combatant actor "${input.actorId}"`, 'input.actorId');
 		}
 
 		const parsedConfig = ModifyAttributeConfig.fromBinding(binding);
@@ -78,7 +78,7 @@ class ModifyAttributeAction implements DuelmonAction {
 		const definition = this.attributeDefinitions.find(entry => entry.key === config.attributeKey);
 
 		if (!definition) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-target',
 				`Attribute "${config.attributeKey}" is not defined for scope "${config.scope}"`,
 				`config.${ModifyAttributeConfig.KEYS.attributeKey}`
@@ -86,7 +86,7 @@ class ModifyAttributeAction implements DuelmonAction {
 		}
 
 		if ((config.operation === 'add' || config.operation === 'subtract') && definition.type !== 'number') {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-target',
 				`Attribute "${config.attributeKey}" must be numeric for the "${config.operation}" operation`,
 				`config.${ModifyAttributeConfig.KEYS.operation}`
@@ -105,7 +105,7 @@ class ModifyAttributeAction implements DuelmonAction {
 		const validationError = definition.validateValue(nextValue);
 
 		if (validationError) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'rejected',
 				`Invalid value for attribute "${config.attributeKey}": ${validationError.message}`,
 				`config.${ModifyAttributeConfig.KEYS.amount}`

@@ -3,9 +3,8 @@ import type { AttributeValue, AttributeValues } from '@pocket-forge/attribute/do
 import type { Combat, Combatant, CombatantGroup, CombatPrimitives } from '@pocket-forge/combat/domain';
 import type { CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 
-import { DuelmonErrors } from './duelmon.errors';
-
-type UnknownRecord = Record<string, unknown>;
+import { DuelmonFailure } from './duelmon-failure';
+import { DuelmonRecord } from './duelmon-record';
 
 /**
  * Scopes supported by Duelmon actions.
@@ -147,10 +146,6 @@ function isNonEmptyString(value: unknown): value is string {
 	return typeof value === 'string' && value.trim().length > 0;
 }
 
-function isRecord(value: unknown): value is UnknownRecord {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 /**
  * Scope selection carried by the Duelmon plugin input.
  *
@@ -223,14 +218,18 @@ class DuelmonTarget {
 	 * @returns The validated target, or structured `invalid-input` failures.
 	 */
 	static parse(value: unknown): Either<CombatResolutionError[], DuelmonTarget> {
-		if (!isRecord(value)) {
-			return DuelmonErrors.fail('invalid-input', 'Duelmon combat input target must be an object', 'input.target');
+		if (!DuelmonRecord.isRecord(value)) {
+			return DuelmonFailure.fail(
+				'invalid-input',
+				'Duelmon combat input target must be an object',
+				'input.target'
+			);
 		}
 
 		const scope = value['scope'];
 
 		if (!this.isScope(scope)) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-input',
 				'Duelmon combat input target scope must be one of: combat, group, combatant',
 				'input.target.scope'
@@ -240,7 +239,7 @@ class DuelmonTarget {
 		const id = value['id'];
 
 		if (id !== undefined && !isNonEmptyString(id)) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-input',
 				'Duelmon combat input target id must be a non-empty string when provided',
 				'input.target.id'
@@ -260,7 +259,7 @@ class DuelmonTarget {
 	 */
 	resolve(combat: Combat, expectedScope: DuelmonTargetScope): Either<CombatResolutionError[], ResolvedDuelmonTarget> {
 		if (this.scope !== expectedScope) {
-			return DuelmonErrors.fail(
+			return DuelmonFailure.fail(
 				'invalid-target',
 				`Action targets scope "${expectedScope}", received "${this.scope}"`,
 				'input.target.scope'
@@ -273,7 +272,7 @@ class DuelmonTarget {
 			}
 			case 'combatant': {
 				if (!this.id) {
-					return DuelmonErrors.fail(
+					return DuelmonFailure.fail(
 						'invalid-target',
 						'Target scope "combatant" requires a combatant id',
 						'input.target.id'
@@ -283,14 +282,14 @@ class DuelmonTarget {
 				const combatant = DuelmonTarget.findCombatant(combat, this.id);
 
 				if (!combatant) {
-					return DuelmonErrors.fail('invalid-target', `Unknown combatant "${this.id}"`, 'input.target.id');
+					return DuelmonFailure.fail('invalid-target', `Unknown combatant "${this.id}"`, 'input.target.id');
 				}
 
 				return Either.right(ResolvedDuelmonTarget.fromCombatant(combatant));
 			}
 			case 'group': {
 				if (!this.id) {
-					return DuelmonErrors.fail(
+					return DuelmonFailure.fail(
 						'invalid-target',
 						'Target scope "group" requires a group id',
 						'input.target.id'
@@ -300,7 +299,7 @@ class DuelmonTarget {
 				const group = combat.groups.find(groupEntry => groupEntry.id === this.id);
 
 				if (!group) {
-					return DuelmonErrors.fail(
+					return DuelmonFailure.fail(
 						'invalid-target',
 						`Unknown combatant group "${this.id}"`,
 						'input.target.id'
