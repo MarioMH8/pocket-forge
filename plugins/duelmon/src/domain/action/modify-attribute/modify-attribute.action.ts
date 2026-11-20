@@ -1,13 +1,8 @@
 import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValue } from '@pocket-forge/attribute/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
-import type {
-	CombatActionContext,
-	CombatActionDescriptor,
-	CombatMoveBinding,
-	CombatResolutionError,
-} from '@pocket-forge/combat-engine/domain';
-import { CombatTransition } from '@pocket-forge/combat-engine/domain';
+import type { CombatActionContext, CombatMoveBinding, CombatResolutionError } from '@pocket-forge/combat-engine/domain';
+import { CombatActionDescriptor, CombatTransition } from '@pocket-forge/combat-engine/domain';
 
 import { DuelmonCombatEvents } from '../../event/duelmon-combat-event';
 import { DuelmonCombatAttributes } from '../combat-attributes';
@@ -37,11 +32,9 @@ class ModifyAttributeAction implements DuelmonAction {
 	constructor(attributeDefinitions: readonly AttributeDefinition[]) {
 		this.attributeDefinitions = attributeDefinitions;
 		this.id = ModifyAttributeAction.ID;
-		this.descriptor = {
-			configDefinitions: ModifyAttributeConfig.DEFINITIONS,
-			id: this.id,
-			validateConfig: config => ModifyAttributeConfig.validate(config),
-		};
+		this.descriptor = CombatActionDescriptor.create(this.id, ModifyAttributeConfig.DEFINITIONS, config =>
+			ModifyAttributeConfig.validate(config)
+		);
 	}
 
 	/**

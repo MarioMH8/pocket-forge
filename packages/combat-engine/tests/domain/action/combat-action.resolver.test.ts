@@ -3,17 +3,18 @@ import { CombatMother } from '@pocket-forge/combat/mother/domain';
 import type {
 	CombatActionCatalog,
 	CombatActionContext,
-	CombatActionDescriptor,
 	CombatActionResolver,
 	CombatMoveBindingSetPrimitives,
 } from '@pocket-forge/combat-engine/domain';
-import { CombatMoveBindingSet, CombatResolutionError, CombatTransition } from '@pocket-forge/combat-engine/domain';
+import {
+	CombatActionDescriptor,
+	CombatMoveBindingSet,
+	CombatResolutionError,
+	CombatTransition,
+} from '@pocket-forge/combat-engine/domain';
 import { describe, expect, it } from 'bun:test';
 
-const TACKLE: CombatActionDescriptor = {
-	configDefinitions: [],
-	id: 'tackle',
-};
+const TACKLE = CombatActionDescriptor.create('tackle');
 
 class TestActionCatalog implements CombatActionCatalog {
 	find(actionId: string): CombatActionDescriptor | undefined {

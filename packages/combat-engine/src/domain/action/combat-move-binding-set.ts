@@ -192,9 +192,9 @@ class CombatMoveBindingSet {
 			}
 
 			const config = AttributeMap.create(binding.config, [...descriptor.configDefinitions], 'CombatAction');
-			const messages = descriptor.validateConfig?.(config.toPrimitives());
+			const messages = descriptor.validate(config.toPrimitives());
 
-			if (messages && messages.length > 0) {
+			if (messages.length > 0) {
 				errors.push(
 					...messages.map(
 						message => new CombatMoveBindingSetError('invalid-config', message, `${prefix}.config`)

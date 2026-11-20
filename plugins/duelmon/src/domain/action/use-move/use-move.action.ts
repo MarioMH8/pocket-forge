@@ -2,13 +2,8 @@ import Either from '@hexadrop/either';
 import type { AttributeDefinition } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
-import type {
-	CombatActionContext,
-	CombatActionDescriptor,
-	CombatMoveBinding,
-	CombatResolutionError,
-} from '@pocket-forge/combat-engine/domain';
-import { CombatTransition } from '@pocket-forge/combat-engine/domain';
+import type { CombatActionContext, CombatMoveBinding, CombatResolutionError } from '@pocket-forge/combat-engine/domain';
+import { CombatActionDescriptor, CombatTransition } from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type RandomPocket from '@pocket-forge/rng/domain';
 
@@ -59,10 +54,7 @@ class UseMoveAction implements DuelmonAction {
 		this.mechanics = mechanics;
 		this.attributeDefinitions = attributeDefinitions;
 		this.id = UseMoveAction.ID;
-		this.descriptor = {
-			configDefinitions: [],
-			id: this.id,
-		};
+		this.descriptor = CombatActionDescriptor.create(this.id);
 	}
 
 	/**

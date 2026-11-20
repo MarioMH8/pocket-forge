@@ -7,7 +7,7 @@ import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribu
  * Descriptors are catalog-owned: they declare the configuration schema of an
  * action and never embed Move-specific rules in the Combat core.
  */
-interface CombatActionDescriptor {
+class CombatActionDescriptor {
 	/**
 	 * Definitions that govern the action configuration values.
 	 */
@@ -16,13 +16,44 @@ interface CombatActionDescriptor {
 	 * Stable action identifier used by Move bindings.
 	 */
 	readonly id: string;
+	private readonly validateConfig?: ((config: AttributeValues) => string[]) | undefined;
+
+	private constructor(
+		id: string,
+		configDefinitions: readonly AttributeDefinition[],
+		validateConfig?: (config: AttributeValues) => string[]
+	) {
+		this.configDefinitions = Object.freeze([...configDefinitions]);
+		this.id = id;
+		this.validateConfig = validateConfig;
+		Object.freeze(this);
+	}
+
 	/**
-	 * Optional cross-field validation for the resolved action configuration.
+	 * Creates an action descriptor.
+	 *
+	 * @param id - Stable action identifier used by Move bindings.
+	 * @param configDefinitions - Definitions that govern the configuration values.
+	 * @param validateConfig - Optional cross-field validation for the configuration.
+	 * @returns The immutable action descriptor.
+	 */
+	static create(
+		id: string,
+		configDefinitions: readonly AttributeDefinition[] = [],
+		validateConfig?: (config: AttributeValues) => string[]
+	): CombatActionDescriptor {
+		return new CombatActionDescriptor(id, configDefinitions, validateConfig);
+	}
+
+	/**
+	 * Validates the resolved action configuration.
 	 *
 	 * @param config - Validated configuration values, including defaults.
 	 * @returns Human-readable validation messages, or an empty list.
 	 */
-	readonly validateConfig?: ((config: AttributeValues) => string[]) | undefined;
+	validate(config: AttributeValues): string[] {
+		return this.validateConfig?.(config) ?? [];
+	}
 }
 
 /**
@@ -38,4 +69,5 @@ interface CombatActionCatalog {
 	find(actionId: string): CombatActionDescriptor | undefined;
 }
 
-export type { CombatActionCatalog, CombatActionDescriptor };
+export type { CombatActionCatalog };
+export default CombatActionDescriptor;
