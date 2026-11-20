@@ -2,13 +2,10 @@ import type {
 	AttributeModificationFailedEvent,
 	AttributeModificationFailedPayload,
 } from './attribute-modification-failed.event';
-import { buildAttributeModificationFailedEvent } from './attribute-modification-failed.event';
 import type { AttributeModifiedEvent, AttributeModifiedPayload } from './attribute-modified.event';
-import { buildAttributeModifiedEvent } from './attribute-modified.event';
+import { DUELMON_COMBAT_EVENT_TYPES } from './catalog';
 import type { MoveMissedEvent, MoveMissedPayload } from './move-missed.event';
-import { buildMoveMissedEvent } from './move-missed.event';
 import type { MoveUsedEvent, MoveUsedPayload } from './move-used.event';
-import { buildMoveUsedEvent } from './move-used.event';
 
 /**
  * Events emitted by Duelmon actions.
@@ -30,7 +27,11 @@ class DuelmonCombatEvents {
 		payload: AttributeModificationFailedPayload,
 		sequence: number
 	): AttributeModificationFailedEvent {
-		return buildAttributeModificationFailedEvent(payload, sequence);
+		return {
+			payload,
+			sequence,
+			type: DUELMON_COMBAT_EVENT_TYPES.attributeModificationFailed,
+		};
 	}
 
 	/**
@@ -41,7 +42,11 @@ class DuelmonCombatEvents {
 	 * @returns The serializable modification event.
 	 */
 	static attributeModified(payload: AttributeModifiedPayload, sequence: number): AttributeModifiedEvent {
-		return buildAttributeModifiedEvent(payload, sequence);
+		return {
+			payload,
+			sequence,
+			type: DUELMON_COMBAT_EVENT_TYPES.attributeModified,
+		};
 	}
 
 	/**
@@ -52,7 +57,11 @@ class DuelmonCombatEvents {
 	 * @returns The serializable miss event.
 	 */
 	static moveMissed(payload: MoveMissedPayload, sequence: number): MoveMissedEvent {
-		return buildMoveMissedEvent(payload, sequence);
+		return {
+			payload,
+			sequence,
+			type: DUELMON_COMBAT_EVENT_TYPES.moveMissed,
+		};
 	}
 
 	/**
@@ -63,7 +72,11 @@ class DuelmonCombatEvents {
 	 * @returns The serializable move event.
 	 */
 	static moveUsed(payload: MoveUsedPayload, sequence: number): MoveUsedEvent {
-		return buildMoveUsedEvent(payload, sequence);
+		return {
+			payload,
+			sequence,
+			type: DUELMON_COMBAT_EVENT_TYPES.moveUsed,
+		};
 	}
 }
 

@@ -32,20 +32,4 @@ type AttributeModifiedEvent = CombatEvent<
 	AttributeModifiedPayload
 >;
 
-/**
- * Builds an `attribute-modified` event.
- *
- * @param payload - Successful modification data.
- * @param sequence - Position of the event inside its transition.
- * @returns The serializable modification event.
- */
-function buildAttributeModifiedEvent(payload: AttributeModifiedPayload, sequence: number): AttributeModifiedEvent {
-	return {
-		payload,
-		sequence,
-		type: DUELMON_COMBAT_EVENT_TYPES.attributeModified,
-	};
-}
-
 export type { AttributeModifiedEvent, AttributeModifiedPayload };
-export { buildAttributeModifiedEvent };

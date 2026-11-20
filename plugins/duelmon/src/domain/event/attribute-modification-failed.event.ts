@@ -29,23 +29,4 @@ type AttributeModificationFailedEvent = CombatEvent<
 	AttributeModificationFailedPayload
 >;
 
-/**
- * Builds an `attribute-modification-failed` event.
- *
- * @param payload - Failed modification data.
- * @param sequence - Position of the event inside its transition.
- * @returns The serializable failure event.
- */
-function buildAttributeModificationFailedEvent(
-	payload: AttributeModificationFailedPayload,
-	sequence: number
-): AttributeModificationFailedEvent {
-	return {
-		payload,
-		sequence,
-		type: DUELMON_COMBAT_EVENT_TYPES.attributeModificationFailed,
-	};
-}
-
 export type { AttributeModificationFailedEvent, AttributeModificationFailedPayload };
-export { buildAttributeModificationFailedEvent };

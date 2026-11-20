@@ -26,20 +26,4 @@ declare module '@pocket-forge/combat-engine/domain' {
  */
 type MoveUsedEvent = CombatEvent<typeof DUELMON_COMBAT_EVENT_TYPES.moveUsed, MoveUsedPayload>;
 
-/**
- * Builds a `move-used` event.
- *
- * @param payload - Move resolution data.
- * @param sequence - Position of the event inside its transition.
- * @returns The serializable move event.
- */
-function buildMoveUsedEvent(payload: MoveUsedPayload, sequence: number): MoveUsedEvent {
-	return {
-		payload,
-		sequence,
-		type: DUELMON_COMBAT_EVENT_TYPES.moveUsed,
-	};
-}
-
 export type { MoveUsedEvent, MoveUsedPayload };
-export { buildMoveUsedEvent };

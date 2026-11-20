@@ -24,20 +24,4 @@ declare module '@pocket-forge/combat-engine/domain' {
  */
 type MoveMissedEvent = CombatEvent<typeof DUELMON_COMBAT_EVENT_TYPES.moveMissed, MoveMissedPayload>;
 
-/**
- * Builds a `move-missed` event.
- *
- * @param payload - Miss data.
- * @param sequence - Position of the event inside its transition.
- * @returns The serializable miss event.
- */
-function buildMoveMissedEvent(payload: MoveMissedPayload, sequence: number): MoveMissedEvent {
-	return {
-		payload,
-		sequence,
-		type: DUELMON_COMBAT_EVENT_TYPES.moveMissed,
-	};
-}
-
 export type { MoveMissedEvent, MoveMissedPayload };
-export { buildMoveMissedEvent };
