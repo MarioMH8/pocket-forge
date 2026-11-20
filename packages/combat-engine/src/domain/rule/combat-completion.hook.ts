@@ -10,10 +10,10 @@ import type { CombatOutcome } from '../combat-outcome';
  */
 export default interface CombatCompletionHook {
 	/**
-	 * Evaluates the current combat snapshot.
+	 * Evaluates whether the combat has reached completion.
 	 *
 	 * @param combat - Combat snapshot to inspect. Implementations must not mutate it.
 	 * @returns The reached outcome, or `undefined` while combat continues.
 	 */
-	evaluate(combat: Combat): CombatOutcome | undefined;
+	evaluateCompletion(combat: Combat): CombatOutcome | undefined;
 }

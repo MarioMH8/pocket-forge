@@ -60,7 +60,7 @@ class FakeCompletionRule extends CombatRule implements CombatCompletionHook {
 		super(RULE_DATA);
 	}
 
-	evaluate(combat: Combat): CombatOutcome | undefined {
+	evaluateCompletion(combat: Combat): CombatOutcome | undefined {
 		this.evaluated.push(combat);
 
 		return this.outcome;

@@ -95,12 +95,12 @@ class ThresholdCombatCompletionRule extends CombatRule implements CombatCompleti
 	}
 
 	/**
-	 * Evaluates the configured attribute threshold.
+	 * Evaluates whether the configured attribute threshold is reached.
 	 *
 	 * @param combat - Combat snapshot to evaluate. It is never mutated.
 	 * @returns The reached outcome, or `undefined` while combat continues.
 	 */
-	evaluate(combat: Combat): CombatOutcome | undefined {
+	evaluateCompletion(combat: Combat): CombatOutcome | undefined {
 		const satisfying = combat.groups.filter(group =>
 			group.combatants.some(combatant =>
 				this.satisfies(combatant.attributes.toPrimitives()[this.config.attributeKey])

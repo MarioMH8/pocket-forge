@@ -65,7 +65,7 @@ abstract class CombatRule {
 	 * @returns Whether the rule implements {@link CombatCompletionHook}.
 	 */
 	static isCompletionHook(rule: CombatRule): rule is CombatCompletionHook & CombatRule {
-		return 'evaluate' in rule && typeof rule.evaluate === 'function';
+		return 'evaluateCompletion' in rule && typeof rule.evaluateCompletion === 'function';
 	}
 
 	/**

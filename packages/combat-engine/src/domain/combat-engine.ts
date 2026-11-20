@@ -117,7 +117,7 @@ class CombatEngine {
 			return Either.left(successorComposition.getLeft());
 		}
 
-		const evaluated = this.evaluateCompletion(successor);
+		const evaluated = this.evaluateCompletionHooks(successor);
 
 		if (evaluated.isLeft()) {
 			return Either.left(evaluated.getLeft());
@@ -200,7 +200,7 @@ class CombatEngine {
 	 * @returns The agreed outcome, `undefined` when no rule completes, or a
 	 * conflict rejection.
 	 */
-	private evaluateCompletion(combat: Combat): Either<CombatEngineError[], CombatOutcome | undefined> {
+	private evaluateCompletionHooks(combat: Combat): Either<CombatEngineError[], CombatOutcome | undefined> {
 		const outcomes: CombatOutcome[] = [];
 
 		for (const rule of this.setup.rules) {
@@ -208,7 +208,7 @@ class CombatEngine {
 				continue;
 			}
 
-			const outcome = rule.evaluate(combat);
+			const outcome = rule.evaluateCompletion(combat);
 
 			if (outcome) {
 				outcomes.push(outcome);

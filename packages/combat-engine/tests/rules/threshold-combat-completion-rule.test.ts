@@ -49,9 +49,9 @@ function withCombatantPower(
 	});
 }
 
-describe('ThresholdCombatCompletionRule.evaluate', () => {
+describe('ThresholdCombatCompletionRule.evaluateCompletion', () => {
 	it('returns no outcome before the boundary', () => {
-		const outcome = rule({ comparison: 'lt', threshold: BOUNDARY }).evaluate(builtInCombat());
+		const outcome = rule({ comparison: 'lt', threshold: BOUNDARY }).evaluateCompletion(builtInCombat());
 
 		expect(outcome).toBeUndefined();
 	});
@@ -61,7 +61,7 @@ describe('ThresholdCombatCompletionRule.evaluate', () => {
 			comparison: 'lte',
 			threshold: BOUNDARY,
 			winnerPolicy: 'threshold-group',
-		}).evaluate(builtInCombat());
+		}).evaluateCompletion(builtInCombat());
 
 		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-a' });
 	});
@@ -71,7 +71,7 @@ describe('ThresholdCombatCompletionRule.evaluate', () => {
 			comparison: 'lte',
 			threshold: BOUNDARY,
 			winnerPolicy: 'opposing-group',
-		}).evaluate(builtInCombat());
+		}).evaluateCompletion(builtInCombat());
 
 		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-b' });
 	});
@@ -81,7 +81,7 @@ describe('ThresholdCombatCompletionRule.evaluate', () => {
 			comparison: 'gt',
 			threshold: BOUNDARY,
 			winnerPolicy: 'threshold-group',
-		}).evaluate(builtInCombat());
+		}).evaluateCompletion(builtInCombat());
 
 		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-b' });
 	});
@@ -90,23 +90,23 @@ describe('ThresholdCombatCompletionRule.evaluate', () => {
 		const combat = builtInCombat();
 
 		expect(
-			rule({ comparison: 'gte', threshold: BOUNDARY, winnerPolicy: 'threshold-group' }).evaluate(combat)
+			rule({ comparison: 'gte', threshold: BOUNDARY, winnerPolicy: 'threshold-group' }).evaluateCompletion(combat)
 		).toEqual({ status: 'draw' });
 		expect(
-			rule({ comparison: 'gte', threshold: BOUNDARY, winnerPolicy: 'opposing-group' }).evaluate(combat)
+			rule({ comparison: 'gte', threshold: BOUNDARY, winnerPolicy: 'opposing-group' }).evaluateCompletion(combat)
 		).toEqual({ status: 'draw' });
 	});
 
 	it('skips a combatant without the observed attribute', () => {
 		const combat = withCombatantPower(builtInCombat(), { 'combatant-a': 5 }, 'combatant-b');
-		const outcome = rule({ comparison: 'lte', threshold: 10 }).evaluate(combat);
+		const outcome = rule({ comparison: 'lte', threshold: 10 }).evaluateCompletion(combat);
 
 		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-a' });
 	});
 
 	it('skips a non-numeric observed attribute value', () => {
 		const combat = withCombatantPower(builtInCombat(), { 'combatant-a': 'high', 'combatant-b': 5 });
-		const outcome = rule({ comparison: 'lte', threshold: 10 }).evaluate(combat);
+		const outcome = rule({ comparison: 'lte', threshold: 10 }).evaluateCompletion(combat);
 
 		expect(outcome).toEqual({ status: 'victory', winnerGroupId: 'group-b' });
 	});
@@ -115,7 +115,7 @@ describe('ThresholdCombatCompletionRule.evaluate', () => {
 		const combat = builtInCombat();
 		const before = combat.toPrimitives();
 
-		rule({ comparison: 'lte', threshold: BOUNDARY }).evaluate(combat);
+		rule({ comparison: 'lte', threshold: BOUNDARY }).evaluateCompletion(combat);
 
 		expect(combat.toPrimitives()).toEqual(before);
 	});

@@ -15,7 +15,7 @@ class LastGroupRule extends CombatRule implements CombatCompletionHook {
 		super(RULE_DATA);
 	}
 
-	evaluate(combat: Combat): CombatOutcome | undefined {
+	evaluateCompletion(combat: Combat): CombatOutcome | undefined {
 		const last = combat.groups.at(-1);
 
 		return last ? { status: 'victory', winnerGroupId: last.id } : undefined;
@@ -27,7 +27,7 @@ class DrawRule extends CombatRule implements CombatCompletionHook {
 		super(RULE_DATA);
 	}
 
-	evaluate(_combat: Combat): CombatOutcome {
+	evaluateCompletion(_combat: Combat): CombatOutcome {
 		return { status: 'draw' };
 	}
 }
@@ -37,7 +37,7 @@ class NoOutcomeRule extends CombatRule implements CombatCompletionHook {
 		super(RULE_DATA);
 	}
 
-	evaluate(_combat: Combat): CombatOutcome | undefined {
+	evaluateCompletion(_combat: Combat): CombatOutcome | undefined {
 		return undefined;
 	}
 }
@@ -51,14 +51,14 @@ describe('CombatCompletionHook', () => {
 			throw new Error('Expected the combat to have a group');
 		}
 
-		expect(new LastGroupRule().evaluate(combat)).toEqual({ status: 'victory', winnerGroupId: last.id });
+		expect(new LastGroupRule().evaluateCompletion(combat)).toEqual({ status: 'victory', winnerGroupId: last.id });
 	});
 
 	it('returns a draw outcome', () => {
-		expect(new DrawRule().evaluate(CombatMother.create())).toEqual({ status: 'draw' });
+		expect(new DrawRule().evaluateCompletion(CombatMother.create())).toEqual({ status: 'draw' });
 	});
 
 	it('returns undefined while combat continues', () => {
-		expect(new NoOutcomeRule().evaluate(CombatMother.create())).toBeUndefined();
+		expect(new NoOutcomeRule().evaluateCompletion(CombatMother.create())).toBeUndefined();
 	});
 });
