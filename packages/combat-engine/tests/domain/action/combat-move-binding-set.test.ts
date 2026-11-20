@@ -1,6 +1,10 @@
 import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
-import type { CombatActionCatalog, CombatMoveBindingSetPrimitives } from '@pocket-forge/combat-engine/domain';
-import { CombatActionDescriptor, CombatMoveBindingSet } from '@pocket-forge/combat-engine/domain';
+import type {
+	CombatActionCatalog,
+	CombatActionDescriptor,
+	CombatMoveBindingSetPrimitives,
+} from '@pocket-forge/combat-engine/domain';
+import { CombatMoveBindingSet } from '@pocket-forge/combat-engine/domain';
 import { describe, expect, it } from 'bun:test';
 
 const POWER = AttributeDefinitionMother.number({
@@ -16,7 +20,10 @@ const BANNER = AttributeDefinitionMother.string({
 	required: true,
 });
 
-const TACKLE = CombatActionDescriptor.create('tackle', [POWER, BANNER]);
+const TACKLE: CombatActionDescriptor = {
+	configDefinitions: [POWER, BANNER],
+	id: 'tackle',
+};
 
 class TestActionCatalog implements CombatActionCatalog {
 	constructor(private readonly descriptors: readonly CombatActionDescriptor[]) {}

@@ -4,6 +4,7 @@ import type { Combat, CombatantGroup } from '@pocket-forge/combat/domain';
 import type {
 	CombatActionCatalog,
 	CombatActionContext,
+	CombatActionDescriptor,
 	CombatActionResolver,
 	CombatCompletionHook,
 	CombatMoveBindingSetPrimitives,
@@ -12,12 +13,7 @@ import type {
 	CombatRuleError,
 	CombatTransition,
 } from '@pocket-forge/combat-engine/domain';
-import {
-	CombatActionDescriptor,
-	CombatMoveBindingSet,
-	CombatResolutionError,
-	CombatRule,
-} from '@pocket-forge/combat-engine/domain';
+import { CombatMoveBindingSet, CombatResolutionError, CombatRule } from '@pocket-forge/combat-engine/domain';
 import { CombatCompositionRule } from '@pocket-forge/combat-engine/rules';
 
 const GROUP_CONSTRAINTS = {
@@ -32,7 +28,10 @@ const RULE_DATA: CombatRuleData = {
 	definitions: [],
 };
 
-const TACKLE = CombatActionDescriptor.create('tackle');
+const TACKLE: CombatActionDescriptor = {
+	configDefinitions: [],
+	id: 'tackle',
+};
 
 /**
  * Composition rule fake whose `validateComposition` can be swapped per test.

@@ -46,7 +46,7 @@ describe('ModifyAttributeAction', () => {
 	it('declares its identifier and configuration descriptor', () => {
 		expect(ACTION.id).toBe('modifyAttribute');
 		expect(ACTION.descriptor.id).toBe(ACTION.id);
-		expect(ACTION.descriptor.configDefinitions).toEqual(ModifyAttributeConfig.DEFINITIONS);
+		expect(ACTION.descriptor.configDefinitions).toBe(ModifyAttributeConfig.DEFINITIONS);
 	});
 
 	it('updates the resolved target and emits a success event', () => {
