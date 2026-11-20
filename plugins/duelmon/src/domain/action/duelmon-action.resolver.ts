@@ -6,7 +6,7 @@ import type {
 	CombatTransition,
 } from '@pocket-forge/combat-engine/domain';
 
-import type { DuelmonCombatInput } from '../support/duelmon-combat.input';
+import type { DuelmonCombatInput } from '../support';
 
 /**
  * Resolves one Duelmon action bound to a Move.

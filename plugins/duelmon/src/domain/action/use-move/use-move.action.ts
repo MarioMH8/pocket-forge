@@ -12,10 +12,9 @@ import { CombatTransition } from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type RandomPocket from '@pocket-forge/rng/domain';
 
-import { DuelmonCombatEvents } from '../../event/combat-event';
-import { DuelmonCombatAttributes } from '../../support/combat-attributes';
-import type { DuelmonCombatInput } from '../../support/duelmon-combat.input';
-import { DuelmonFailure } from '../../support/duelmon-failure';
+import { DuelmonCombatEvents } from '../../event';
+import type { DuelmonCombatInput } from '../../support';
+import { DuelmonCombatAttributes, DuelmonFailure } from '../../support';
 import type DuelmonAction from '../duelmon-action';
 import type { UseMoveMechanics } from './use-move.mechanics';
 import { UseMoveResolution } from './use-move.resolution';

@@ -9,11 +9,9 @@ import type {
 } from '@pocket-forge/combat-engine/domain';
 import { CombatTransition } from '@pocket-forge/combat-engine/domain';
 
-import { DuelmonCombatEvents } from '../../event/combat-event';
-import { DuelmonCombatAttributes } from '../../support/combat-attributes';
-import type { DuelmonCombatInput } from '../../support/duelmon-combat.input';
-import { DuelmonFailure } from '../../support/duelmon-failure';
-import { DuelmonTarget } from '../../support/duelmon-target';
+import { DuelmonCombatEvents } from '../../event';
+import type { DuelmonCombatInput } from '../../support';
+import { DuelmonCombatAttributes, DuelmonFailure, DuelmonTarget } from '../../support';
 import type DuelmonAction from '../duelmon-action';
 import { ModifyAttributeConfig } from './modify-attribute.config';
 

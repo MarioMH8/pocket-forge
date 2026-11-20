@@ -7,10 +7,8 @@ import { DuelmonTypes } from '@pocket-forge/duelmon-dataset';
 import type { Move } from '@pocket-forge/move/domain';
 import type { Species } from '@pocket-forge/species/domain';
 
-import type { DuelmonCombatInput } from '../../support/duelmon-combat.input';
-import { DuelmonFailure } from '../../support/duelmon-failure';
-import type { ResolvedDuelmonTarget } from '../../support/duelmon-target';
-import { DuelmonTarget } from '../../support/duelmon-target';
+import type { DuelmonCombatInput, ResolvedDuelmonTarget } from '../../support';
+import { DuelmonFailure, DuelmonTarget } from '../../support';
 import type { UseMoveAttributes } from './use-move.mechanics';
 
 const STATUS_CATEGORY = 'Status';

@@ -1,7 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { DuelmonDatasetBuilder } from '../../duelmon-dataset.builder';
+import { DuelmonDatasetBuilder } from '@pocket-forge/duelmon-dataset';
+
 import type { ExtractOptions } from './extract.options';
 import { loadShowdownTables, resolveShowdownCommit } from './showdown-source';
 

@@ -3,9 +3,8 @@ import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import { AttributeDefinition } from '@pocket-forge/attribute/domain';
 import type { CombatActionBinding, CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 
-import { DuelmonFailure } from '../../support/duelmon-failure';
-import type { DuelmonTargetScope } from '../../support/duelmon-target';
-import { DuelmonTarget } from '../../support/duelmon-target';
+import type { DuelmonTargetScope } from '../../support';
+import { DuelmonFailure, DuelmonTarget } from '../../support';
 
 /**
  * Configuration keys authored on a `modifyAttribute` binding.

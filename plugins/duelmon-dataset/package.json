@@ -38,7 +38,7 @@
 	},
 	"scripts": {
 		"build": "tsdown",
-		"extract": "bun run src/cli/index.ts extract"
+		"extract": "bun run cli/index.ts extract"
 	},
 	"peerDependencies": {
 		"@hexadrop/error": "^2.0.0"

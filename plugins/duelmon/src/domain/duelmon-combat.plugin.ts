@@ -8,14 +8,9 @@ import type {
 } from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 
-import type DuelmonAction from './action/duelmon-action';
-import { DuelmonActionCatalog } from './action/duelmon-action.catalog';
-import type DuelmonActionResolver from './action/duelmon-action.resolver';
-import { ModifyAttributeAction } from './action/modify-attribute/modify-attribute.action';
-import { UseMoveAction } from './action/use-move/use-move.action';
-import type { UseMoveMechanics } from './action/use-move/use-move.mechanics';
-import { DuelmonCombatInput } from './support/duelmon-combat.input';
-import { DuelmonFailure } from './support/duelmon-failure';
+import type { DuelmonAction, DuelmonActionResolver, UseMoveMechanics } from './action';
+import { DuelmonActionCatalog, ModifyAttributeAction, UseMoveAction } from './action';
+import { DuelmonCombatInput, DuelmonFailure } from './support';
 
 /**
  * Duelmon Combat plugin.

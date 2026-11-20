@@ -4,7 +4,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
-import type { ShowdownTables } from '../../duelmon-dataset.builder';
+import type { ShowdownTables } from '@pocket-forge/duelmon-dataset';
 
 const execFileAsync = promisify(execFile);
 

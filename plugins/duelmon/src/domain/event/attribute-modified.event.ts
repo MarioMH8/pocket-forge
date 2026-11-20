@@ -1,8 +1,8 @@
 import type { AttributeValue, AttributeValues } from '@pocket-forge/attribute/domain';
 import type { CombatEvent } from '@pocket-forge/combat-engine/domain';
 
-import type { DuelmonOperation } from '../action/modify-attribute/modify-attribute.config';
-import type { DuelmonTargetScope } from '../support/duelmon-target';
+import type { DuelmonOperation } from '../action';
+import type { DuelmonTargetScope } from '../support';
 import { DUELMON_COMBAT_EVENT_TYPES } from './catalog';
 
 /**

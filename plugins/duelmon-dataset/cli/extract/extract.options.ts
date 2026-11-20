@@ -12,7 +12,7 @@ const DEFAULT_SHOWDOWN_COMMIT = 'c23d2e942c9c0daadb13a7162a385bf78e3c9353';
  */
 const DEFAULT_OUTPUT_LABEL = 'data/generated/dataset.json';
 
-const DEFAULT_OUTPUT_PATH = path.resolve(import.meta.dir, '../../..', DEFAULT_OUTPUT_LABEL);
+const DEFAULT_OUTPUT_PATH = path.resolve(import.meta.dir, '../..', DEFAULT_OUTPUT_LABEL);
 
 const GIT_SHA_PATTERN = /^[0-9a-f]{40}$/;
 

@@ -6,7 +6,7 @@ import {
 	DEFAULT_OUTPUT_PATH,
 	DEFAULT_SHOWDOWN_COMMIT,
 	extractOptionsSchema,
-} from '../../../src/cli/extract/extract.options';
+} from '../../../cli/extract/extract.options';
 
 describe('extractOptionsSchema', () => {
 	it('applies the pinned commit and default output when omitted', () => {
