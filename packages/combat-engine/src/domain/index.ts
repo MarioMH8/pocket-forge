@@ -8,7 +8,17 @@ export type { CombatEngineFailure } from './combat-engine';
 export { default as CombatEngine } from './combat-engine';
 export type { CombatEngineErrorReason } from './combat-engine.error';
 export { default as CombatEngineError } from './combat-engine.error';
-export type { default as CombatEvent } from './combat-event';
+export {
+	COMBAT_EVENT_TYPES,
+	type CombatCompletedEvent,
+	type CombatCompletedPayload,
+	type CombatEvent,
+	type CombatEventMap,
+	CombatEvents,
+	type CombatEventType,
+	type CoreCombatEvent,
+	type KnownCombatEvent,
+} from './combat-event';
 export type { CombatOutcome } from './combat-outcome';
 export type { default as CombatResolution } from './combat-resolution/combat-resolution';
 export type { CombatResolutionErrorReason } from './combat-resolution/combat-resolution.error';

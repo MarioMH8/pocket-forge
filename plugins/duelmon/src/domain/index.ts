@@ -5,6 +5,19 @@ export { DuelmonActionCatalog } from './action/duelmon-action.catalog';
 export type { default as DuelmonActionResolver } from './action/duelmon-action.resolver';
 export { DuelmonCombatInput } from './action/duelmon-combat.input';
 export { DuelmonCombatPlugin } from './action/duelmon-combat.plugin';
+export type {
+	AttributeModificationFailedEvent,
+	AttributeModificationFailedPayload,
+	AttributeModifiedEvent,
+	AttributeModifiedPayload,
+	DuelmonCombatEvent,
+	DuelmonCombatEventType,
+	MoveMissedEvent,
+	MoveMissedPayload,
+	MoveUsedEvent,
+	MoveUsedPayload,
+} from './action/duelmon-combat-events';
+export { DUELMON_COMBAT_EVENT_TYPES, DuelmonCombatEvents } from './action/duelmon-combat-events';
 export type { DuelmonTargetScope } from './action/duelmon-target';
 export { DuelmonTarget, ResolvedDuelmonTarget } from './action/duelmon-target';
 export { ModifyAttributeAction } from './action/modify-attribute/modify-attribute.action';

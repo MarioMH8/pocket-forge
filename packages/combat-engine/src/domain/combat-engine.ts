@@ -3,7 +3,8 @@ import type { CombatTransitionError } from '@pocket-forge/combat/domain';
 import { Combat } from '@pocket-forge/combat/domain';
 
 import CombatEngineError from './combat-engine.error';
-import type CombatEvent from './combat-event';
+import type { CombatEvent } from './combat-event';
+import { CombatEvents } from './combat-event';
 import type { CombatOutcome } from './combat-outcome';
 import type CombatResolution from './combat-resolution/combat-resolution';
 import type CombatResolutionError from './combat-resolution/combat-resolution.error';
@@ -149,14 +150,7 @@ class CombatEngine {
 			return Either.left(completed.getLeft());
 		}
 
-		const completionEvent: CombatEvent = {
-			payload:
-				outcome.status === 'victory'
-					? { status: 'victory', winnerGroupId: outcome.winnerGroupId }
-					: { status: 'draw' },
-			sequence: CombatEngine.nextSequence(transition.events),
-			type: 'combat-completed',
-		};
+		const completionEvent = CombatEvents.completed(outcome, CombatEngine.nextSequence(transition.events));
 
 		return Either.right({
 			combat: completed.getRight(),

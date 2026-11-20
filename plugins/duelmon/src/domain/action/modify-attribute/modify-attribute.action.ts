@@ -1,10 +1,9 @@
 import Either from '@hexadrop/either';
-import type { AttributeDefinition, AttributeValue, AttributeValues } from '@pocket-forge/attribute/domain';
+import type { AttributeDefinition, AttributeValue } from '@pocket-forge/attribute/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import type {
 	CombatActionContext,
 	CombatActionDescriptor,
-	CombatEvent,
 	CombatMoveBinding,
 	CombatResolutionError,
 	CombatTransition,
@@ -14,46 +13,9 @@ import { DuelmonCombatAttributes } from '../combat-attributes';
 import { DuelmonErrors } from '../duelmon.errors';
 import type DuelmonAction from '../duelmon-action';
 import type { DuelmonCombatInput } from '../duelmon-combat.input';
-import type { ResolvedDuelmonTarget } from '../duelmon-target';
+import { DuelmonCombatEvents } from '../duelmon-combat-events';
 import { DuelmonTarget } from '../duelmon-target';
-import type { ModifyAttributeConfig as ModifyAttributeConfigValue } from './modify-attribute.config';
 import { ModifyAttributeConfig } from './modify-attribute.config';
-
-interface EventData {
-	readonly after: AttributeValue;
-	readonly before: AttributeValue | undefined;
-	readonly config: ModifyAttributeConfigValue;
-	readonly succeeded: boolean;
-	readonly target: ResolvedDuelmonTarget;
-}
-
-function buildEvent(actionId: string, { after, before, config, succeeded, target }: EventData): CombatEvent {
-	const identity: AttributeValues = {
-		actionId,
-		attributeKey: config.attributeKey,
-		scope: config.scope,
-		...(target.id !== undefined && { targetId: target.id }),
-	};
-
-	if (!succeeded) {
-		return {
-			payload: { ...identity, probability: config.probability ?? 0 },
-			sequence: 1,
-			type: 'attribute-modification-failed',
-		};
-	}
-
-	return {
-		payload: {
-			...identity,
-			after,
-			...(before !== undefined && { before }),
-			operation: config.operation,
-		},
-		sequence: 1,
-		type: 'attribute-modified',
-	};
-}
 
 /**
  * Resolves the `modifyAttribute` action.
@@ -168,10 +130,33 @@ class ModifyAttributeAction implements DuelmonAction {
 			randomPocket: randomPocket.toPrimitives(),
 		});
 		const before = config.operation === 'set' ? rawCurrent : currentNumeric;
+		const identity = {
+			actionId: this.id,
+			attributeKey: config.attributeKey,
+			scope: config.scope,
+			...(target.id !== undefined && { targetId: target.id }),
+		};
+		const event = isSucceeded
+			? DuelmonCombatEvents.attributeModified(
+					{
+						...identity,
+						after: nextValue,
+						...(before !== undefined && { before }),
+						operation: config.operation,
+					},
+					1
+				)
+			: DuelmonCombatEvents.attributeModificationFailed(
+					{
+						...identity,
+						probability: config.probability ?? 0,
+					},
+					1
+				);
 
 		return Either.right({
 			combat,
-			events: [buildEvent(this.id, { after: nextValue, before, config, succeeded: isSucceeded, target })],
+			events: [event],
 		});
 	}
 }

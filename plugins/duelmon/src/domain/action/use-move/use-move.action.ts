@@ -5,7 +5,6 @@ import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import type {
 	CombatActionContext,
 	CombatActionDescriptor,
-	CombatEvent,
 	CombatMoveBinding,
 	CombatResolutionError,
 	CombatTransition,
@@ -17,40 +16,11 @@ import { DuelmonCombatAttributes } from '../combat-attributes';
 import { DuelmonErrors } from '../duelmon.errors';
 import type DuelmonAction from '../duelmon-action';
 import type { DuelmonCombatInput } from '../duelmon-combat.input';
+import { DuelmonCombatEvents } from '../duelmon-combat-events';
 import type { UseMoveMechanics } from './use-move.mechanics';
 import { UseMoveResolution } from './use-move.resolution';
 
 const HP_KEY = 'hp';
-
-function moveUsedEvent(
-	actionId: string,
-	attackerId: string,
-	moveId: string,
-	targetId: string,
-	damage: number,
-	effectiveness: number
-): CombatEvent {
-	return {
-		payload: {
-			actionId,
-			attackerId,
-			damage,
-			effectiveness,
-			moveId,
-			targetId,
-		},
-		sequence: 1,
-		type: 'move-used',
-	};
-}
-
-function moveMissedEvent(actionId: string, attackerId: string, moveId: string, targetId: string): CombatEvent {
-	return {
-		payload: { actionId, attackerId, moveId, targetId },
-		sequence: 1,
-		type: 'move-missed',
-	};
-}
 
 function combatAfter(combat: Combat, randomPocket: RandomPocket): Combat {
 	return CombatEntity.fromPrimitives({
@@ -128,7 +98,19 @@ class UseMoveAction implements DuelmonAction {
 		if (move.effectiveness === 0) {
 			return Either.right({
 				combat: context.combat,
-				events: [moveUsedEvent(this.id, move.attacker.id, move.moveId, move.target.id, 0, 0)],
+				events: [
+					DuelmonCombatEvents.moveUsed(
+						{
+							actionId: this.id,
+							attackerId: move.attacker.id,
+							damage: 0,
+							effectiveness: 0,
+							moveId: move.moveId,
+							targetId: move.target.id,
+						},
+						1
+					),
+				],
 			});
 		}
 
@@ -172,7 +154,17 @@ class UseMoveAction implements DuelmonAction {
 		if (!result.hit) {
 			return Either.right({
 				combat: combatAfter(context.combat, result.randomPocket),
-				events: [moveMissedEvent(this.id, move.attacker.id, move.moveId, move.target.id)],
+				events: [
+					DuelmonCombatEvents.moveMissed(
+						{
+							actionId: this.id,
+							attackerId: move.attacker.id,
+							moveId: move.moveId,
+							targetId: move.target.id,
+						},
+						1
+					),
+				],
 			});
 		}
 
@@ -189,13 +181,16 @@ class UseMoveAction implements DuelmonAction {
 				randomPocket: result.randomPocket.toPrimitives(),
 			}),
 			events: [
-				moveUsedEvent(
-					this.id,
-					move.attacker.id,
-					move.moveId,
-					move.target.id,
-					result.damage,
-					move.effectiveness
+				DuelmonCombatEvents.moveUsed(
+					{
+						actionId: this.id,
+						attackerId: move.attacker.id,
+						damage: result.damage,
+						effectiveness: move.effectiveness,
+						moveId: move.moveId,
+						targetId: move.target.id,
+					},
+					1
 				),
 			],
 		});

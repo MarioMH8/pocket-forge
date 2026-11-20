@@ -1,4 +1,5 @@
-import type { CombatEvent, CombatOutcome } from '@pocket-forge/combat-engine/domain';
+import type { CombatEvent, CombatOutcome, KnownCombatEvent } from '@pocket-forge/combat-engine/domain';
+import { COMBAT_EVENT_TYPES, CombatEvents } from '@pocket-forge/combat-engine/domain';
 import { describe, expect, it } from 'bun:test';
 
 describe('CombatEvent', () => {
@@ -10,6 +11,18 @@ describe('CombatEvent', () => {
 		};
 
 		expect(structuredClone(event)).toEqual(event);
+	});
+});
+
+describe('CombatEvents', () => {
+	it('builds a known victory event', () => {
+		const event: KnownCombatEvent = CombatEvents.completed({ status: 'victory', winnerGroupId: 'group-1' }, 2);
+
+		expect(event).toEqual({
+			payload: { status: 'victory', winnerGroupId: 'group-1' },
+			sequence: 2,
+			type: COMBAT_EVENT_TYPES.combatCompleted,
+		});
 	});
 });
 
