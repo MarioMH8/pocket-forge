@@ -2,14 +2,14 @@ import Either from '@hexadrop/either';
 import type { CombatTransitionError } from '@pocket-forge/combat/domain';
 import { Combat } from '@pocket-forge/combat/domain';
 
-import type CombatEvent from '../combat-event';
-import type { CombatOutcome } from '../combat-outcome';
-import type CombatResolution from '../combat-resolution/combat-resolution';
-import type CombatResolutionError from '../combat-resolution/combat-resolution.error';
-import CombatRule from '../rule/combat-rule';
-import type CombatRuleError from '../rule/combat-rule.error';
 import CombatEngineError from './combat-engine.error';
+import type CombatEvent from './combat-event';
+import type { CombatOutcome } from './combat-outcome';
+import type CombatResolution from './combat-resolution/combat-resolution';
+import type CombatResolutionError from './combat-resolution/combat-resolution.error';
 import type CombatSetup from './combat-setup';
+import CombatRule from './rule/combat-rule';
+import type CombatRuleError from './rule/combat-rule.error';
 
 /**
  * Every rejection the Combat Engine can return.

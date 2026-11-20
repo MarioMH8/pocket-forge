@@ -1,6 +1,6 @@
-import type { CombatActionResolver } from '../action/combat-action.resolver';
-import type CombatMoveBindingSet from '../action/combat-move-binding-set';
-import type CombatRule from '../rule/combat-rule';
+import type { CombatActionResolver } from './action/combat-action.resolver';
+import type CombatMoveBindingSet from './action/combat-move-binding-set';
+import type CombatRule from './rule/combat-rule';
 
 /**
  * Collaborators that compose a {@link CombatSetup}.
