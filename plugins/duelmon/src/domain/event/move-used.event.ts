@@ -1,7 +1,7 @@
 import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import type { CombatEvent } from '@pocket-forge/combat-engine/domain';
 
-import { DUELMON_COMBAT_EVENT_TYPES } from './catalog';
+import { DUELMON_COMBAT_EVENT_TYPES } from './duelmon-combat-event-catalog';
 
 /**
  * Payload of the `move-used` event.

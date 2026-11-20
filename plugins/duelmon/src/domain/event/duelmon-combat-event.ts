@@ -3,7 +3,7 @@ import type {
 	AttributeModificationFailedPayload,
 } from './attribute-modification-failed.event';
 import type { AttributeModifiedEvent, AttributeModifiedPayload } from './attribute-modified.event';
-import { DUELMON_COMBAT_EVENT_TYPES } from './catalog';
+import { DUELMON_COMBAT_EVENT_TYPES } from './duelmon-combat-event-catalog';
 import type { MoveMissedEvent, MoveMissedPayload } from './move-missed.event';
 import type { MoveUsedEvent, MoveUsedPayload } from './move-used.event';
 

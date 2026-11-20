@@ -12,7 +12,7 @@ import type {
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type RandomPocket from '@pocket-forge/rng/domain';
 
-import { DuelmonCombatEvents } from '../../event/duelmon-combat-events';
+import { DuelmonCombatEvents } from '../../event/duelmon-combat-event';
 import { DuelmonCombatAttributes } from '../combat-attributes';
 import { DuelmonErrors } from '../duelmon.errors';
 import type DuelmonAction from '../duelmon-action';

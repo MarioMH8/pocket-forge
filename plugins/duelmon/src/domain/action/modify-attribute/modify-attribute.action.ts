@@ -9,7 +9,7 @@ import type {
 	CombatTransition,
 } from '@pocket-forge/combat-engine/domain';
 
-import { DuelmonCombatEvents } from '../../event/duelmon-combat-events';
+import { DuelmonCombatEvents } from '../../event/duelmon-combat-event';
 import { DuelmonCombatAttributes } from '../combat-attributes';
 import { DuelmonErrors } from '../duelmon.errors';
 import type DuelmonAction from '../duelmon-action';
