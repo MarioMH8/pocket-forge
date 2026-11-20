@@ -12,11 +12,11 @@ import type {
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type RandomPocket from '@pocket-forge/rng/domain';
 
+import { DuelmonCombatEvents } from '../../event/duelmon-combat-events';
 import { DuelmonCombatAttributes } from '../combat-attributes';
 import { DuelmonErrors } from '../duelmon.errors';
 import type DuelmonAction from '../duelmon-action';
 import type { DuelmonCombatInput } from '../duelmon-combat.input';
-import { DuelmonCombatEvents } from '../duelmon-combat-events';
 import type { UseMoveMechanics } from './use-move.mechanics';
 import { UseMoveResolution } from './use-move.resolution';
 

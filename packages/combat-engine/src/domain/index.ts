@@ -8,6 +8,13 @@ export type { CombatEngineFailure } from './combat-engine';
 export { default as CombatEngine } from './combat-engine';
 export type { CombatEngineErrorReason } from './combat-engine.error';
 export { default as CombatEngineError } from './combat-engine.error';
+export type { CombatOutcome } from './combat-outcome';
+export type { default as CombatResolution } from './combat-resolution/combat-resolution';
+export type { CombatResolutionErrorReason } from './combat-resolution/combat-resolution.error';
+export { default as CombatResolutionError } from './combat-resolution/combat-resolution.error';
+export type { CombatSetupInput } from './combat-setup';
+export { default as CombatSetup } from './combat-setup';
+export type { default as CombatTransition } from './combat-transition';
 export {
 	COMBAT_EVENT_TYPES,
 	type CombatCompletedEvent,
@@ -18,14 +25,7 @@ export {
 	type CombatEventType,
 	type CoreCombatEvent,
 	type KnownCombatEvent,
-} from './combat-event';
-export type { CombatOutcome } from './combat-outcome';
-export type { default as CombatResolution } from './combat-resolution/combat-resolution';
-export type { CombatResolutionErrorReason } from './combat-resolution/combat-resolution.error';
-export { default as CombatResolutionError } from './combat-resolution/combat-resolution.error';
-export type { CombatSetupInput } from './combat-setup';
-export { default as CombatSetup } from './combat-setup';
-export type { default as CombatTransition } from './combat-transition';
+} from './event';
 export type { default as CombatCompletionHook } from './rule/combat-completion.hook';
 export type { default as CombatCompositionHook } from './rule/combat-composition.hook';
 export type { CombatRuleData, CombatRulePrimitives } from './rule/combat-rule';

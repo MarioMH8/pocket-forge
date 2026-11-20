@@ -1,6 +1,6 @@
 import type { Combat } from '@pocket-forge/combat/domain';
 
-import type { CombatEvent } from './combat-event';
+import type { CombatEvent } from './event/combat-event';
 
 /**
  * Immutable result of a plugin-resolved combat action.
