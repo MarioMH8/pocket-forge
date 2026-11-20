@@ -1,4 +1,4 @@
-import type { CombatCompositionRulePrimitives } from '@pocket-forge/combat-engine/domain';
+import type { CombatCompositionRulePrimitives } from '@pocket-forge/combat-engine/rules';
 
 const TEST_GROUP_CONSTRAINTS = {
 	maxCombatantsPerGroup: 3,

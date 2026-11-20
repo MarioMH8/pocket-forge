@@ -1,11 +1,9 @@
 import Either from '@hexadrop/either';
 import type { CombatantGroup } from '@pocket-forge/combat/domain';
+import type { CombatCompositionHook, CombatRuleData, CombatRulePrimitives } from '@pocket-forge/combat-engine/domain';
+import { CombatRule, CombatRuleError } from '@pocket-forge/combat-engine/domain';
 
-import type CombatCompositionHook from './combat-composition.hook';
 import type CombatGroupConstraints from './combat-group-constraints';
-import CombatRule from './combat-rule';
-import CombatRuleError from './combat-rule.error';
-import type { CombatRuleData, CombatRulePrimitives } from './combat-rule.types';
 
 const CONSTRAINT_FIELDS = ['maxCombatantsPerGroup', 'maxGroups', 'minCombatantsPerGroup', 'minGroups'] as const;
 

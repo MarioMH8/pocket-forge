@@ -1,7 +1,7 @@
 import type { CombatantGroup } from '@pocket-forge/combat/domain';
 import { CombatantGroupMother, CombatantMother } from '@pocket-forge/combat/mother/domain';
-import type { CombatCompositionRulePrimitives } from '@pocket-forge/combat-engine/domain';
 import { CombatRuleMother } from '@pocket-forge/combat-engine/mother/domain';
+import type { CombatCompositionRulePrimitives } from '@pocket-forge/combat-engine/rules';
 import { OneVersusOneCombatRule, TwoVersusTwoCombatRule } from '@pocket-forge/combat-engine/rules';
 import { describe, expect, it } from 'bun:test';
 

@@ -13,12 +13,8 @@ import type {
 	CombatRuleError,
 	CombatTransition,
 } from '@pocket-forge/combat-engine/domain';
-import {
-	CombatCompositionRule,
-	CombatMoveBindingSet,
-	CombatResolutionError,
-	CombatRule,
-} from '@pocket-forge/combat-engine/domain';
+import { CombatMoveBindingSet, CombatResolutionError, CombatRule } from '@pocket-forge/combat-engine/domain';
+import { CombatCompositionRule } from '@pocket-forge/combat-engine/rules';
 
 const GROUP_CONSTRAINTS = {
 	maxCombatantsPerGroup: 6,

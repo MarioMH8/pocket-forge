@@ -3,9 +3,8 @@ import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain
 import type { Combat, CombatPrimitives } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import { CombatantGroupMother, CombatantMother } from '@pocket-forge/combat/mother/domain';
-import type { CombatCompositionRulePrimitives } from '@pocket-forge/combat-engine/domain';
 import { CombatRuleMother } from '@pocket-forge/combat-engine/mother/domain';
-import type { ThresholdCombatCompletionRule } from '@pocket-forge/combat-engine/rules';
+import type { CombatCompositionRulePrimitives, ThresholdCombatCompletionRule } from '@pocket-forge/combat-engine/rules';
 import {
 	COMPLETION_CONFIG_DEFINITIONS,
 	COMPLETION_CONFIG_KEYS,

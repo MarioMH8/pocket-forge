@@ -20,7 +20,7 @@ This changes the engine composition: `CombatSetup` now carries `rules`, `actions
 ## Consequences
 
 - `CombatRule` carries its own `attributes` and `definitions`; concrete rules extend it and implement `CombatCompositionHook` and/or `CombatCompletionHook`.
-- `CombatCompositionRule` is the base for composition rules; it owns `groupConstraints` and implements the composition hook.
+- `CombatCompositionRule` is the base for composition rules; it owns `groupConstraints` and implements the composition hook. It lives in `./rules`, not in `./domain`: the domain keeps the engine contracts (`CombatRule`, `CombatCompositionHook`, `CombatCompletionHook`, and the hook type guards) while concrete rules and their helpers live in `./rules`. Built-in rules are grouped into `rules/composition` and `rules/completion`.
 - `CombatSetup` is `{ rules, actions, moveBindings }`. `CombatEngine` validates composition by running every composition hook, evaluates every completion hook after the action resolves, and requires agreeing outcomes.
 - `CombatActionResolver` replaces `CombatActionPlugin`; `CombatMoveBindingSet` replaces `CombatActionSet`; the `CombatMoveBinding` row keeps its name.
 - The built-in `OneVersusOneCombatRule`, `TwoVersusTwoCombatRule`, and `ThresholdCombatCompletionRule` live under `@pocket-forge/combat-engine/rules`.

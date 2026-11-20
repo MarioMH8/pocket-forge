@@ -1,12 +1,8 @@
 import type { AttributeValue } from '@pocket-forge/attribute/domain';
 import type { Combat } from '@pocket-forge/combat/domain';
-import type {
-	CombatCompositionRulePrimitives,
-	CombatMoveBindingPrimitives,
-	CombatRule,
-	CombatRulePrimitives,
-} from '@pocket-forge/combat-engine/domain';
+import type { CombatMoveBindingPrimitives, CombatRule, CombatRulePrimitives } from '@pocket-forge/combat-engine/domain';
 import { CombatEngine, CombatMoveBindingSet, CombatSetup } from '@pocket-forge/combat-engine/domain';
+import type { CombatCompositionRulePrimitives } from '@pocket-forge/combat-engine/rules';
 import { OneVersusOneCombatRule, ThresholdCombatCompletionRule } from '@pocket-forge/combat-engine/rules';
 import { ModifyAttributeAction, ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
