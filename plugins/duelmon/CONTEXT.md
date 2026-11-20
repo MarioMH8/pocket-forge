@@ -1,8 +1,9 @@
 # Duelmon
 
-Duelmon combat plugin and its private Gen 1 dataset. Terms here are specific to
+Duelmon combat plugin and its catalog bridge. Terms here are specific to
 `@pocket-forge/duelmon`; core Combat vocabulary stays in
-`packages/combat/CONTEXT.md`.
+`packages/combat/CONTEXT.md`, and dataset vocabulary stays in
+`plugins/duelmon-dataset/CONTEXT.md`.
 
 ## Language
 
@@ -33,14 +34,6 @@ _Avoid_: Full battle engine, combat simulator
 **Use Move Mechanics**:
 The generation-specific seam behind the Use Move Action. It reads battle stats, checks accuracy, owns the damage random factor, and calculates damage, so a new generation only contributes a new mechanics implementation.
 _Avoid_: Damage utility, formula helper
-
-**Gen 1 Normalizer**:
-The builder policy that drops `Fairy`, falls back to `Normal`, maps `???` to `Normal`, and derives the Gen 1 damage category from the type.
-_Avoid_: Type sanitizer, dataset cleanup
-
-**Duelmon Dataset**:
-The curated Gen 1 species, moves, typechart, and abilities generated locally from a pinned Pokémon Showdown checkout. It is never committed or distributed.
-_Avoid_: Content pack, Showdown dump
 
 **Modify Attribute Action**:
 The Duelmon action that sets, adds, or subtracts one declared attribute on a Combat, Combatant Group, or Combatant, optionally gated by one deterministic probability draw.

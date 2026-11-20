@@ -1,5 +1,5 @@
 import { DuelmonTypes } from '@pocket-forge/duelmon/catalog';
-import type { DuelmonDataset, DuelmonMove, DuelmonSpecies, DuelmonType } from '@pocket-forge/duelmon/dataset';
+import type { DuelmonDataset, DuelmonMove, DuelmonSpecies, DuelmonType } from '@pocket-forge/duelmon-dataset';
 
 type TypeChartOverrides = Readonly<Partial<Record<DuelmonType, Readonly<Partial<Record<DuelmonType, number>>>>>>;
 

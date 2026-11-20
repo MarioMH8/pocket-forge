@@ -1,7 +1,7 @@
 {
 	"name": "@pocket-forge/duelmon",
 	"version": "0.0.0",
-	"description": "Duelmon Combat action resolver, authored Move binding set, and private Pokémon Showdown Gen 1 dataset extractor for Pocket Forge.",
+	"description": "Duelmon Combat action plugin and authored action binding set for Pocket Forge.",
 	"keywords": [
 		"pocket-forge",
 		"rpg",
@@ -9,8 +9,7 @@
 		"combat",
 		"plugin",
 		"duelmon",
-		"pokemon",
-		"dataset"
+		"pokemon"
 	],
 	"repository": {
 		"type": "git",
@@ -39,18 +38,12 @@
 			"types": "./dist/catalog/index.d.mts",
 			"default": "./dist/catalog/index.mjs"
 		},
-		"./dataset": {
-			"development": "./src/dataset/index.ts",
-			"types": "./dist/dataset/index.d.mts",
-			"default": "./dist/dataset/index.mjs"
-		},
 		"./mother/domain": {
 			"development": "./mother/domain/index.ts"
 		}
 	},
 	"scripts": {
-		"build": "tsdown",
-		"extract": "bun run scripts/extract-showdown.ts"
+		"build": "tsdown"
 	},
 	"peerDependencies": {
 		"@hexadrop/either": "^2.0.0",
@@ -58,6 +51,7 @@
 		"@pocket-forge/attribute": "workspace:*",
 		"@pocket-forge/combat": "workspace:*",
 		"@pocket-forge/combat-engine": "workspace:*",
+		"@pocket-forge/duelmon-dataset": "workspace:*",
 		"@pocket-forge/move": "workspace:*",
 		"@pocket-forge/species": "workspace:*"
 	},
@@ -68,6 +62,7 @@
 		"@pocket-forge/attribute": "0.0.0",
 		"@pocket-forge/combat": "0.0.0",
 		"@pocket-forge/combat-engine": "0.0.0",
+		"@pocket-forge/duelmon-dataset": "0.0.0",
 		"@pocket-forge/move": "0.0.0",
 		"@pocket-forge/species": "0.0.0",
 		"tsdown": "0.23.7"

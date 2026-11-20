@@ -1,16 +1,15 @@
 # @pocket-forge/duelmon agent guide
 
-Duelmon Combat action resolver, authored action binding set, and a private dataset
-extractor for the Pokémon Showdown Gen 1 tables.
+Duelmon Combat action resolver and authored action binding set. The Pokémon
+Showdown Gen 1 dataset lives in `@pocket-forge/duelmon-dataset`.
 
 - **Package manager:** Bun (`bun`)
 - **Build:** `bun run build` (at package folder)
 - **Test:** `bun test plugins/duelmon --conditions=development` (at root)
 - **Type-check:** `bun run typecheck` (at root)
 - **Lint:** `bun run lint:fix` (at root)
-- **Extract dataset:** `bun run extract --source <showdown-checkout>` (at package folder)
 
-The package only keeps package-exclusive scripts (`build`, `prepublishOnly`, `extract`); everything else runs from the repo root.
+The package only keeps package-exclusive scripts (`build`, `prepublishOnly`); everything else runs from the repo root.
 
 ## Boundary
 
@@ -18,7 +17,7 @@ This package is a private implementation outside the neutral Combat core. It may
 
 ## Dataset
 
-The generated Pokémon dataset is not committed. See the [README](./README.md) for the pinned Showdown commit and the local extraction workflow.
+The plugin consumes the dataset through `@pocket-forge/duelmon-dataset` and maps it to the neutral catalog. The generated dataset is not committed; see the dataset package README for the pinned commit and extraction workflow.
 
 ## Conventions
 

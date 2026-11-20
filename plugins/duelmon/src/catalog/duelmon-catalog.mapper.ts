@@ -1,10 +1,10 @@
 import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
-import type { DuelmonMove, DuelmonSpecies } from '@pocket-forge/duelmon/dataset';
+import type { DuelmonMove, DuelmonSpecies } from '@pocket-forge/duelmon-dataset';
+import { DuelmonTypes } from '@pocket-forge/duelmon-dataset';
 import { Move } from '@pocket-forge/move/domain';
 import { Species } from '@pocket-forge/species/domain';
 
-import { DuelmonTypes } from '../duelmon-types';
 import { DuelmonAttributeDefinitions } from './duelmon-attribute-definitions';
 import { DuelmonCatalogError } from './duelmon-catalog.error';
 

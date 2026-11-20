@@ -5,7 +5,7 @@
     "format": "auto",
     "changelog": "@changesets/cli/changelog",
     "commit": false,
-    "ignore": ["@pocket-forge/duelmon"],
+    "ignore": ["@pocket-forge/duelmon", "@pocket-forge/duelmon-dataset"],
     "fixed": [],
     "linked": [],
     "updateInternalDependencies": "patch",

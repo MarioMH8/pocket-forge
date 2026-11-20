@@ -2,5 +2,5 @@ import { defineConfig } from 'tsdown';
 
 export default defineConfig({
 	dts: true,
-	entry: ['src/domain/index.ts', 'src/dataset/index.ts', 'src/catalog/index.ts'],
+	entry: ['src/domain/index.ts', 'src/catalog/index.ts'],
 });

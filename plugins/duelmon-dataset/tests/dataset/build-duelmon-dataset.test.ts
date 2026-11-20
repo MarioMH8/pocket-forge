@@ -1,5 +1,5 @@
-import type { DuelmonSpecies, ShowdownTables } from '@pocket-forge/duelmon/dataset';
-import { DuelmonDatasetBuilder, DuelmonTypes } from '@pocket-forge/duelmon/dataset';
+import type { DuelmonSpecies, ShowdownTables } from '@pocket-forge/duelmon-dataset';
+import { DuelmonDatasetBuilder, DuelmonTypes } from '@pocket-forge/duelmon-dataset';
 import { describe, expect, it } from 'bun:test';
 
 const EXCLUDED_ATTACK_TYPES = ['Dark', 'Steel', 'Fairy', 'Stellar'] as const;

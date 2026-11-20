@@ -1,0 +1,21 @@
+{
+	"$schema": "https://typedoc.org/schema.json",
+	"entryPoints": ["src/dataset/index.ts"],
+	"plugin": ["typedoc-plugin-markdown"],
+	"readme": "none",
+	"githubPages": false,
+	"excludeExternals": true,
+	"hideBreadcrumbs": true,
+	"hidePageHeader": true,
+	"hideGroupHeadings": true,
+	"useCodeBlocks": true,
+	"typeDeclarationVisibility": "compact",
+	"entryFileName": "index",
+	"membersWithOwnFile": [],
+	"enumMembersFormat": "list",
+	"parametersFormat": "list",
+	"interfacePropertiesFormat": "list",
+	"classPropertiesFormat": "list",
+	"typeDeclarationFormat": "list",
+	"indexFormat": "list"
+}

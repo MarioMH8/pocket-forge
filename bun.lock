@@ -209,6 +209,7 @@
         "@pocket-forge/attribute": "0.0.0",
         "@pocket-forge/combat": "0.0.0",
         "@pocket-forge/combat-engine": "0.0.0",
+        "@pocket-forge/duelmon-dataset": "0.0.0",
         "@pocket-forge/move": "0.0.0",
         "@pocket-forge/species": "0.0.0",
         "tsdown": "0.23.7",
@@ -219,8 +220,20 @@
         "@pocket-forge/attribute": "workspace:*",
         "@pocket-forge/combat": "workspace:*",
         "@pocket-forge/combat-engine": "workspace:*",
+        "@pocket-forge/duelmon-dataset": "workspace:*",
         "@pocket-forge/move": "workspace:*",
         "@pocket-forge/species": "workspace:*",
+      },
+    },
+    "plugins/duelmon-dataset": {
+      "name": "@pocket-forge/duelmon-dataset",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@hexadrop/error": "2.0.0",
+        "tsdown": "0.23.7",
+      },
+      "peerDependencies": {
+        "@hexadrop/error": "^2.0.0",
       },
     },
   },
@@ -646,6 +659,8 @@
     "@pocket-forge/docs": ["@pocket-forge/docs@workspace:apps/docs"],
 
     "@pocket-forge/duelmon": ["@pocket-forge/duelmon@workspace:plugins/duelmon"],
+
+    "@pocket-forge/duelmon-dataset": ["@pocket-forge/duelmon-dataset@workspace:plugins/duelmon-dataset"],
 
     "@pocket-forge/game-session": ["@pocket-forge/game-session@workspace:packages/game-session"],
 

@@ -7,8 +7,8 @@ import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
-import type { ShowdownTables } from '@pocket-forge/duelmon/dataset';
-import { DuelmonDatasetBuilder } from '@pocket-forge/duelmon/dataset';
+import type { ShowdownTables } from '@pocket-forge/duelmon-dataset';
+import { DuelmonDatasetBuilder } from '@pocket-forge/duelmon-dataset';
 
 const SHOWDOWN_COMMIT = 'c23d2e942c9c0daadb13a7162a385bf78e3c9353';
 const DEFAULT_OUT = path.resolve(import.meta.dir, '../data/generated/dataset.json');

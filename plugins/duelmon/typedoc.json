@@ -35,8 +35,8 @@
 		},
 		"@pocket-forge/combat-engine": {
 			"CombatActionResolver": "/api/combat-engine/",
-			"CombatMoveBindingSet": "/api/combat-engine/",
-			"CombatMoveBindingSet.create": "/api/combat-engine/",
+			"CombatActionBindingSet": "/api/combat-engine/",
+			"CombatActionBindingSet.create": "/api/combat-engine/",
 			"CombatRule": "/api/combat-engine/",
 			"CombatRulePrimitives": "/api/combat-engine/",
 			"default": "/api/combat-engine/"
