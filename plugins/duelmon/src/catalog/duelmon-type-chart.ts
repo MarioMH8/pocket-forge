@@ -8,41 +8,6 @@ const EFFECTIVENESS = [1, 2, 0.5, 0] as const;
 
 type TypeChartPrimitives = Readonly<Record<string, Readonly<Record<string, number>>>>;
 type UnknownRecord = Record<string, unknown>;
-
-function isRecord(value: unknown): value is UnknownRecord {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function readRow(
-	defenderType: DuelmonType,
-	relations: UnknownRecord,
-	errors: DuelmonCatalogError[]
-): ReadonlyMap<DuelmonType, number> {
-	const row = new Map<DuelmonType, number>();
-
-	for (const attackType of DuelmonTypes.ALL) {
-		const value = relations[attackType];
-		const multiplier =
-			typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 && value <= 3
-				? EFFECTIVENESS[value]
-				: undefined;
-
-		if (multiplier === undefined) {
-			errors.push(
-				new DuelmonCatalogError(
-					'invalid-type-chart',
-					`Invalid Duelmon type chart: ${attackType} against ${defenderType} must be 0, 1, 2, or 3`,
-					`typechart.${defenderType}.${attackType}`
-				)
-			);
-			continue;
-		}
-
-		row.set(attackType, multiplier);
-	}
-
-	return row;
-}
 type MultiplierTable = ReadonlyMap<DuelmonType, ReadonlyMap<DuelmonType, number>>;
 
 /**
@@ -72,7 +37,7 @@ class DuelmonTypeChart {
 		for (const defenderType of DuelmonTypes.ALL) {
 			const relations: unknown = typechart[defenderType];
 
-			if (!isRecord(relations)) {
+			if (!this.isRecord(relations)) {
 				errors.push(
 					new DuelmonCatalogError(
 						'invalid-type-chart',
@@ -83,10 +48,45 @@ class DuelmonTypeChart {
 				continue;
 			}
 
-			table.set(defenderType, readRow(defenderType, relations, errors));
+			table.set(defenderType, this.readRow(defenderType, relations, errors));
 		}
 
 		return errors.length > 0 ? Either.left(errors) : Either.right(new DuelmonTypeChart(table));
+	}
+
+	private static isRecord(value: unknown): value is UnknownRecord {
+		return typeof value === 'object' && value !== null && !Array.isArray(value);
+	}
+
+	private static readRow(
+		defenderType: DuelmonType,
+		relations: UnknownRecord,
+		errors: DuelmonCatalogError[]
+	): ReadonlyMap<DuelmonType, number> {
+		const row = new Map<DuelmonType, number>();
+
+		for (const attackType of DuelmonTypes.ALL) {
+			const value = relations[attackType];
+			const multiplier =
+				typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 && value <= 3
+					? EFFECTIVENESS[value]
+					: undefined;
+
+			if (multiplier === undefined) {
+				errors.push(
+					new DuelmonCatalogError(
+						'invalid-type-chart',
+						`Invalid Duelmon type chart: ${attackType} against ${defenderType} must be 0, 1, 2, or 3`,
+						`typechart.${defenderType}.${attackType}`
+					)
+				);
+				continue;
+			}
+
+			row.set(attackType, multiplier);
+		}
+
+		return row;
 	}
 
 	/**
