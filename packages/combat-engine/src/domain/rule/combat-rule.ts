@@ -3,7 +3,7 @@ import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribu
 import { AttributeMap } from '@pocket-forge/attribute/domain';
 
 import type CombatCompletionHook from './combat-completion.hook';
-import type { CombatCompositionHook } from './combat-composition.hook';
+import type CombatCompositionHook from './combat-composition.hook';
 import CombatRuleError from './combat-rule.error';
 import type { CombatRuleData, CombatRulePrimitives } from './combat-rule.types';
 

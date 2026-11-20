@@ -6,7 +6,7 @@ import type {
 	CombatRuleData,
 	CombatRuleError,
 } from '@pocket-forge/combat-engine/domain';
-import { CombatCompositionRule, validateCompositionConstraints } from '@pocket-forge/combat-engine/domain';
+import { CombatCompositionRule } from '@pocket-forge/combat-engine/domain';
 
 /**
  * Built-in `1v1` combat rule: exactly two groups with one combatant each.
@@ -44,7 +44,7 @@ class OneVersusOneCombatRule extends CombatCompositionRule {
 		primitives: CombatCompositionRulePrimitives,
 		definitions: readonly AttributeDefinition[]
 	): Either<CombatRuleError[], OneVersusOneCombatRule> {
-		const constraintErrors = validateCompositionConstraints(primitives.groupConstraints, this.CONSTRAINTS);
+		const constraintErrors = this.validateConstraints(primitives.groupConstraints, this.CONSTRAINTS);
 
 		if (constraintErrors.length > 0) {
 			return Either.left(constraintErrors);
