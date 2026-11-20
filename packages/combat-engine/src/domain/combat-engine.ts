@@ -8,7 +8,7 @@ import type CombatResolution from './combat-resolution/combat-resolution';
 import type CombatResolutionError from './combat-resolution/combat-resolution.error';
 import type CombatSetup from './combat-setup';
 import type { CombatEvent } from './event/combat-event';
-import CombatEvents from './event/combat-events';
+import CombatEvents from './event/combat-event';
 import CombatRule from './rule/combat-rule';
 import type CombatRuleError from './rule/combat-rule.error';
 
