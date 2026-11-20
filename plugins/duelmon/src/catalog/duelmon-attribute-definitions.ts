@@ -1,8 +1,8 @@
 import type { AttributeDefinition } from '@pocket-forge/attribute/domain';
 import { AttributeDefinition as AttributeDefinitionEntity } from '@pocket-forge/attribute/domain';
 
-import type { DuelmonMoveCategory, DuelmonType } from '../duelmon.types';
-import { DuelmonTypes } from '../duelmon.types';
+import type { DuelmonMoveCategory, DuelmonType } from '../duelmon-types';
+import { DuelmonTypes } from '../duelmon-types';
 
 /**
  * Attribute definitions that describe entities built from the Duelmon dataset.
@@ -116,4 +116,4 @@ export { DuelmonAttributeDefinitions };
 
 export default DuelmonAttributeDefinitions;
 
-export { type DuelmonMoveCategory, type DuelmonType } from '../duelmon.types';
+export { type DuelmonMoveCategory, type DuelmonType } from '../duelmon-types';

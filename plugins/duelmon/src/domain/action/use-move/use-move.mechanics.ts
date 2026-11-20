@@ -3,7 +3,7 @@ import type { Combatant } from '@pocket-forge/combat/domain';
 import type { CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 import type RandomPocket from '@pocket-forge/rng/domain';
 
-import type { DuelmonMoveCategory, DuelmonType } from '../../../duelmon.types';
+import type { DuelmonMoveCategory, DuelmonType } from '../../../duelmon-types';
 
 /**
  * Move attributes required by the generation-specific mechanics.

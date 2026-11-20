@@ -1,5 +1,7 @@
-import type { DuelmonMoveCategory, DuelmonType } from '../duelmon.types';
-import { DuelmonTypes } from '../duelmon.types';
+import InvalidArgumentError from '@hexadrop/error/invalid-argument';
+
+import type { DuelmonMoveCategory, DuelmonType } from '../duelmon-types';
+import { DuelmonTypes } from '../duelmon-types';
 
 const FAIRY_TYPE = 'Fairy';
 const UNKNOWN_MOVE_TYPE = '???';
@@ -52,7 +54,7 @@ class DuelmonGen1Normalizer {
 		}
 
 		if (!DuelmonTypes.is(type)) {
-			throw new TypeError(`Unknown Duelmon move type "${type}"`);
+			throw new InvalidArgumentError(`Unknown Duelmon move type "${type}"`);
 		}
 
 		return type;
@@ -72,7 +74,7 @@ class DuelmonGen1Normalizer {
 
 		return normalized.map(type => {
 			if (!DuelmonTypes.is(type)) {
-				throw new TypeError(`Unknown Duelmon species type "${type}"`);
+				throw new InvalidArgumentError(`Unknown Duelmon species type "${type}"`);
 			}
 
 			return type;

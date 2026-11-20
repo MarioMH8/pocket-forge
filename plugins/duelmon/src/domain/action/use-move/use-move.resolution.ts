@@ -5,8 +5,8 @@ import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type { Move } from '@pocket-forge/move/domain';
 import type { Species } from '@pocket-forge/species/domain';
 
-import type { DuelmonType } from '../../../duelmon.types';
-import { DuelmonTypes } from '../../../duelmon.types';
+import type { DuelmonType } from '../../../duelmon-types';
+import { DuelmonTypes } from '../../../duelmon-types';
 import { DuelmonErrors } from '../duelmon.errors';
 import type { DuelmonCombatInput } from '../duelmon-combat.input';
 import type { ResolvedDuelmonTarget } from '../duelmon-target';

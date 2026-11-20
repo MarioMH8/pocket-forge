@@ -1,7 +1,7 @@
 import Either from '@hexadrop/either';
 
-import type { DuelmonType } from '../duelmon.types';
-import { DuelmonTypes } from '../duelmon.types';
+import type { DuelmonType } from '../duelmon-types';
+import { DuelmonTypes } from '../duelmon-types';
 import { DuelmonCatalogError } from './duelmon-catalog.error';
 
 const EFFECTIVENESS = [1, 2, 0.5, 0] as const;

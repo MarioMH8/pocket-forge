@@ -3,7 +3,7 @@ import type { DuelmonDataset } from '@pocket-forge/duelmon/dataset';
 import type { Move } from '@pocket-forge/move/domain';
 import type { Species } from '@pocket-forge/species/domain';
 
-import type { DuelmonType } from '../duelmon.types';
+import type { DuelmonType } from '../duelmon-types';
 import { DuelmonCatalogError } from './duelmon-catalog.error';
 import { DuelmonCatalogMapper } from './duelmon-catalog.mapper';
 import { DuelmonTypeChart } from './duelmon-type-chart';

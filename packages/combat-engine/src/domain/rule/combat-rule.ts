@@ -5,7 +5,33 @@ import { AttributeMap } from '@pocket-forge/attribute/domain';
 import type CombatCompletionHook from './combat-completion.hook';
 import type CombatCompositionHook from './combat-composition.hook';
 import CombatRuleError from './combat-rule.error';
-import type { CombatRuleData, CombatRulePrimitives } from './combat-rule.types';
+
+/**
+ * Plain, serializable representation of a Combat Rule.
+ *
+ * Rules carry their own configuration. Composition rules extend these
+ * primitives with their group constraints.
+ */
+interface CombatRulePrimitives {
+	/**
+	 * Authored rule configuration.
+	 */
+	readonly attributes: AttributeValues;
+}
+
+/**
+ * Validated data produced by a Combat Rule.
+ */
+interface CombatRuleData {
+	/**
+	 * Validated rule configuration.
+	 */
+	readonly attributes: AttributeMap;
+	/**
+	 * Definitions that govern {@link CombatRuleData.attributes}.
+	 */
+	readonly definitions: readonly AttributeDefinition[];
+}
 
 /**
  * Abstract, authored Combat Rule.
@@ -149,4 +175,5 @@ abstract class CombatRule {
 	}
 }
 
+export type { CombatRuleData, CombatRulePrimitives };
 export default CombatRule;

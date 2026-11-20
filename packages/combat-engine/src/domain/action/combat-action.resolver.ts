@@ -1,7 +1,7 @@
 import type Either from '@hexadrop/either';
 import type { Combat } from '@pocket-forge/combat/domain';
 
-import type CombatResolutionError from '../combat-resolution.error';
+import type CombatResolutionError from '../combat-resolution/combat-resolution.error';
 import type CombatTransition from '../combat-transition';
 import type { CombatActionCatalog } from './combat-action';
 import type CombatMoveBindingSet from './combat-move-binding-set';

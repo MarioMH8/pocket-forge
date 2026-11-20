@@ -4,7 +4,7 @@ import type { DuelmonMove, DuelmonSpecies } from '@pocket-forge/duelmon/dataset'
 import { Move } from '@pocket-forge/move/domain';
 import { Species } from '@pocket-forge/species/domain';
 
-import { DuelmonTypes } from '../duelmon.types';
+import { DuelmonTypes } from '../duelmon-types';
 import { DuelmonAttributeDefinitions } from './duelmon-attribute-definitions';
 import { DuelmonCatalogError } from './duelmon-catalog.error';
 

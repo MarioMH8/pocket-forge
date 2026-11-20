@@ -1,7 +1,7 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 
-import type { AttributeValue, AttributeValues } from './attribute.types';
 import type AttributeDefinition from './attribute-definition';
+import type { AttributeValue, AttributeValues } from './attribute-definition';
 
 /**
  * A typed, immutable container for validated attribute values.
