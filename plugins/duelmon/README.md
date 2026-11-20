@@ -104,3 +104,7 @@ or distributed. See that package's README for the pinned Showdown commit, the
 extraction workflow, the dataset shape, and the licensing notes.
 
 The plugin only consumes the generated dataset through `DuelmonCatalog.fromDataset`.
+
+## Roadmap
+
+The next slices — typed record attributes, Gen 1 status and stat-stage coverage, and the combat turn service — are recorded in [docs/grill/0003-combat-plugin-roadmap.md](../../docs/grill/0003-combat-plugin-roadmap.md).
