@@ -22,16 +22,19 @@ Do not open an issue to host that exploration. An issue implies an approved task
 
 ## Fields
 
-`Type` is a reserved field name in GitHub Projects, so the kind of work lives in `Kind`.
+`Type` is a reserved field name in GitHub Projects. The project therefore uses two fields that mirror the label prefixes: `Kind` for the hierarchy (`kind:*`) and `Nature` for the type of work (`type:*`).
 
 | Field | Type | Values | Required from |
 | ---------- | ------------- | ------------------------------------------ | ------------- |
 | `Stage` | single select | `Inbox`, `Refining`, `Ready`, `Promoted` | Inbox |
-| `Kind` | single select | `feature`, `bug`, `chore`, `docs`, `refactor`, `epic` | Refining |
+| `Kind` | single select | `epic`, `user-story`, `task`, `subtask` | Refining |
+| `Nature` | single select | `feature`, `bug`, `chore`, `docs`, `refactor`, `breaking-change` | Refining (tasks and subtasks only) |
 | `Priority` | single select | `critical`, `high`, `medium`, `low` | Refining |
-| `Executor` | single select | `agent`, `human` | Ready |
+| `Executor` | single select | `agent`, `human` | Ready (tasks and subtasks only) |
 
-`Status` (`Todo`, `In Progress`, `Done`) only applies after promotion and tracks delivery of the issue.
+`Status` (`Todo`, `In Progress`, `Done`) only applies after promotion and tracks delivery of the issue. It is a different axis from the `status:*` labels: the field tracks delivery, while the labels record triage and approval (`status:approved`, `status:blocked`, and so on).
+
+`Kind` records the hierarchy and maps to the `kind:*` labels at promotion: `kind:epic`, `kind:user-story`, `kind:task`, or `kind:subtask`. `Nature` records the type of work and maps to the `type:*` labels. Epics and user stories never carry `Nature` or `Executor`; tasks and subtasks carry both.
 
 ### Field reference
 
@@ -40,7 +43,8 @@ Drafts have no URL, so `gh project item-edit --field <name>` cannot target them.
 | Field | Field ID |
 | ---------- | ------------------------------------ |
 | `Stage` | `PVTSSF_lAHOBG-dps4Bsg5-zhqu0Gg` |
-| `Kind` | `PVTSSF_lAHOBG-dps4Bsg5-zhqu0Ig` |
+| `Kind` | `PVTSSF_lAHOBG-dps4Bsg5-zhqz6cA` |
+| `Nature` | `PVTSSF_lAHOBG-dps4Bsg5-zhqu0Ig` |
 | `Priority` | `PVTSSF_lAHOBG-dps4Bsg5-zhqu0JI` |
 | `Executor` | `PVTSSF_lAHOBG-dps4Bsg5-zhqu0JM` |
 | `Status` | `PVTSSF_lAHOBG-dps4Bsg5-zhquuyM` |
@@ -51,18 +55,22 @@ Drafts have no URL, so `gh project item-edit --field <name>` cannot target them.
 | `Stage` | `Refining` | `b88cd78f` |
 | `Stage` | `Ready` | `841b0bb6` |
 | `Stage` | `Promoted` | `d8b6971b` |
-| `Kind` | `feature` | `5b114c2d` |
-| `Kind` | `bug` | `0fe59a92` |
-| `Kind` | `chore` | `924af426` |
-| `Kind` | `docs` | `3f9b2266` |
-| `Kind` | `refactor` | `5bd4a908` |
-| `Kind` | `epic` | `8e365ad2` |
-| `Priority` | `critical` | `8317a9e2` |
-| `Priority` | `high` | `0a450141` |
-| `Priority` | `medium` | `eb37e188` |
-| `Priority` | `low` | `79a4ded0` |
-| `Executor` | `agent` | `ef80d90d` |
-| `Executor` | `human` | `dc532a78` |
+| `Kind` | `epic` | `836daa15` |
+| `Kind` | `user-story` | `2c0b6c7b` |
+| `Kind` | `task` | `1979adf4` |
+| `Kind` | `subtask` | `716e4d09` |
+| `Nature` | `feature` | `e0a5f3f4` |
+| `Nature` | `bug` | `0f3dba5b` |
+| `Nature` | `chore` | `6234b51c` |
+| `Nature` | `docs` | `3c22f854` |
+| `Nature` | `refactor` | `e952baaf` |
+| `Nature` | `breaking-change` | `5cc37829` |
+| `Priority` | `critical` | `38c94602` |
+| `Priority` | `high` | `27d78b51` |
+| `Priority` | `medium` | `2c3e9e80` |
+| `Priority` | `low` | `17be7e2c` |
+| `Executor` | `agent` | `81a3818f` |
+| `Executor` | `human` | `69cd7a7b` |
 | `Status` | `Todo` | `f75ad846` |
 | `Status` | `In Progress` | `47fc9ee4` |
 | `Status` | `Done` | `98236657` |
@@ -77,7 +85,7 @@ A draft is a project item, not an issue. It has:
 
 Compensate deliberately:
 
-- labels become `Kind`, `Priority`, and `Executor` fields;
+- labels become `Kind`, `Nature`, `Priority`, and `Executor` fields;
 - comments become a `Decision log` section in the body;
 - dependencies and epics are recorded in the body and materialized after promotion;
 - the issue number exists only after promotion.
@@ -101,7 +109,7 @@ gh project item-edit --project-id PVT_kwHOBG-dps4Bsg5- --id "$item" \
 
 ### Refining: shape
 
-Fill the brief. Set tentative `Kind` and `Priority`. Record every decision with a date in `Decision log`; the draft body is the only conversation surface.
+Fill the brief. Set `Kind` (the hierarchy) and `Priority`; for tasks and subtasks, also set `Nature`. Record every decision with a date in `Decision log`; the draft body is the only conversation surface.
 
 ### Ready: approve
 
@@ -109,9 +117,10 @@ A draft is ready when the checklist passes and the complete brief lives in the d
 
 Checklist:
 
-- [ ] Title starts with a capital letter, is descriptive, and has no type prefix; the type lives in `Kind`
+- [ ] Title starts with a capital letter, is descriptive, and has no type prefix; the hierarchy lives in `Kind` and the nature lives in `Nature`
 - [ ] `Kind` and `Priority` set
-- [ ] `Executor` set
+- [ ] `Nature` set (tasks and subtasks only)
+- [ ] `Executor` set (tasks and subtasks only)
 - [ ] Problem and expected outcome stated
 - [ ] Acceptance criteria are verifiable
 - [ ] Out of scope stated
@@ -181,16 +190,22 @@ Promotion is manual and maintainer-only.
 
    | Field | Label |
    | ------------- | -------------------------------------- |
-   | `Kind` | `type:feature`, `type:bug`, `type:chore`, `type:docs`, `type:refactor`, `type:epic` |
+   | `Kind` | `kind:epic`, `kind:user-story`, `kind:task`, or `kind:subtask` |
+   | `Nature` (tasks/subtasks only) | `type:feature`, `type:bug`, `type:chore`, `type:docs`, `type:refactor`, `type:breaking-change` |
    | `Priority` | `priority:critical`, `priority:high`, `priority:medium`, `priority:low` |
-   | `Executor` | `ready-for:agent` or `ready-for:human` |
+   | `Executor` (tasks/subtasks only) | `ready-for:agent` or `ready-for:human` |
 
    ```bash
+   # Epic or user story
    gh issue edit <NUMBER> \
-     --add-label "type:feature,priority:high,ready-for:agent,status:approved"
+     --add-label "kind:user-story,priority:high,status:approved"
+
+   # Task or subtask
+   gh issue edit <NUMBER> \
+     --add-label "kind:task,type:feature,priority:high,ready-for:agent,status:approved"
    ```
 
-   Promotion is the approval event: `status:approved` is applied here, so promoted issues do not go through triage again. Issue titles stay descriptive and never carry a type prefix; the type is only a label.
+   Epics and user stories never carry `type:*` or `ready-for:*`. Tasks and subtasks carry the hierarchy label, the nature label, the priority, and the executor. Promotion is the approval event: `status:approved` is applied here, so promoted issues do not go through triage again. Issue titles stay descriptive and never carry a type prefix; the hierarchy is a `kind:*` label, and the nature is a `type:*` label only on tasks and subtasks.
 
 4. Update the project fields. Drafts have no URL, so use node IDs:
 
@@ -214,7 +229,6 @@ Promotion is manual and maintainer-only.
 | ----------- | ------ | ------------------------------- | ------------------------- |
 | `Inbox` | Table | `stage:Inbox` | n/a |
 | `Planning` | Board | `stage:Inbox,Refining,Ready` | `Column by` = `Stage` |
-| `Ready` | Table | `stage:Ready` | n/a |
 | `Delivery` | Board | `label:status:approved` | `Column by` = `Status` |
 | `Roadmap` | Table | `stage:Ready,Promoted` | `Group by` = `Priority` |
 
