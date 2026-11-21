@@ -1,0 +1,3 @@
+# Use hexadrop as the hexagonal architecture foundation
+
+Pocket Forge domain packages use `@hexadrop/*` (command, query, aggregate-root, event, either, ioc, value-object) as the typed foundation for CQRS, domain events, and dependency injection rather than building these abstractions from scratch. Hexadrop's `AggregateRoot` base class provides the internal event-recording and `pullEvents()` mechanism every entity extends; its `Command`/`Query` base classes define the use-case contracts; its typed `EventBus` powers cross-package communication; and its IoC container is the DI backbone. Pocket Forge adds only game-domain concepts and the React integration layer on top.

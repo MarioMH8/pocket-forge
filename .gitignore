@@ -1,0 +1,29 @@
+# build
+dist
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# macOS-specific files
+.DS_Store
+
+**/src/typegen.d.ts
+
+.eslintcache
+
+.impeccable
+
+.astro
+
+apps/docs/src/content/docs/guides/glossary.md
+apps/docs/src/content/docs/api/**/*.md
+!apps/docs/src/content/docs/api/index.md
+.archify/
+plugins/duelmon/data/generated/
+plugins/duelmon-dataset/data/generated/
