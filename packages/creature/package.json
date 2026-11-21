@@ -1,6 +1,6 @@
 {
 	"name": "@pocket-forge/creature",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"description": "Immutable creature instances with embedded species, ability, and move snapshots for Pocket Forge.",
 	"keywords": [
 		"pocket-forge",
@@ -53,10 +53,10 @@
 		"@faker-js/faker": "10.6.0",
 		"@hexadrop/error": "2.0.0",
 		"@hexadrop/types": "2.0.0",
-		"@pocket-forge/ability": "0.0.0",
-		"@pocket-forge/attribute": "0.0.0",
-		"@pocket-forge/move": "0.0.0",
-		"@pocket-forge/species": "0.0.0",
+		"@pocket-forge/ability": "0.1.0",
+		"@pocket-forge/attribute": "0.0.1",
+		"@pocket-forge/move": "0.1.0",
+		"@pocket-forge/species": "0.1.0",
 		"tsdown": "0.23.7"
 	}
 }

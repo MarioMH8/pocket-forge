@@ -1,6 +1,6 @@
 {
 	"name": "@pocket-forge/attribute",
-	"version": "0.0.0",
+	"version": "0.0.1",
 	"description": "Reusable project-level attribute definitions and assignments for Pocket Forge.",
 	"keywords": [
 		"pocket-forge",

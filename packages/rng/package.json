@@ -1,6 +1,6 @@
 {
 	"name": "@pocket-forge/rng",
-	"version": "0.0.0",
+	"version": "0.0.1",
 	"description": "Seedable, deterministic random number generation for Pocket Forge.",
 	"keywords": [
 		"pocket-forge",
