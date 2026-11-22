@@ -4,6 +4,7 @@ export type { default as DuelmonActionResolver } from './action/duelmon-action.r
 export { ModifyAttributeAction } from './action/modify-attribute/modify-attribute.action';
 export type { DuelmonOperation } from './action/modify-attribute/modify-attribute.config';
 export { ModifyAttributeConfig } from './action/modify-attribute/modify-attribute.config';
+export type { Gen1BaseStats, Gen1DerivedStats } from './action/use-move/gen1/battle-stats';
 export { Gen1BattleStats } from './action/use-move/gen1/battle-stats';
 export type { Gen1DamageInput } from './action/use-move/gen1/damage';
 export { Gen1Damage } from './action/use-move/gen1/damage';
