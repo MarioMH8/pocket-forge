@@ -31,6 +31,7 @@ export type {
 	MoveUsedPayload,
 } from './event';
 export { DUELMON_COMBAT_EVENT_TYPES, DuelmonCombatEvents } from './event';
+export { Phase1MoveConstraints } from './start/phase-1-move.constraints';
 export { DuelmonCombatAttributes } from './support/combat-attributes';
 export { DuelmonCombatInput } from './support/duelmon-combat.input';
 export { DuelmonFailure } from './support/duelmon-failure';
