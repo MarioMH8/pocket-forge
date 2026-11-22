@@ -1,5 +1,5 @@
 import Either from '@hexadrop/either';
-import type { DuelmonDataset, DuelmonType } from '@pocket-forge/duelmon-dataset';
+import type { DuelmonDataset, DuelmonMove, DuelmonType } from '@pocket-forge/duelmon-dataset';
 import type { Move } from '@pocket-forge/move/domain';
 import type { Species } from '@pocket-forge/species/domain';
 
@@ -23,14 +23,21 @@ class DuelmonCatalog {
 	 * Species mapped to neutral catalog entities.
 	 */
 	readonly species: readonly Species[];
+	private readonly moveEntriesById: ReadonlyMap<string, DuelmonMove>;
 	private readonly movesById: ReadonlyMap<string, Move>;
 	private readonly speciesById: ReadonlyMap<string, Species>;
 	private readonly typeChart: DuelmonTypeChart;
 
-	private constructor(moves: readonly Move[], species: readonly Species[], typeChart: DuelmonTypeChart) {
+	private constructor(
+		moves: readonly Move[],
+		moveEntries: readonly DuelmonMove[],
+		species: readonly Species[],
+		typeChart: DuelmonTypeChart
+	) {
 		this.moves = moves;
 		this.species = species;
 		this.movesById = new Map(moves.map(move => [move.id, move]));
+		this.moveEntriesById = new Map(moveEntries.map(entry => [entry.id, entry]));
 		this.speciesById = new Map(species.map(speciesEntry => [speciesEntry.id, speciesEntry]));
 		this.typeChart = typeChart;
 	}
@@ -62,7 +69,9 @@ class DuelmonCatalog {
 			return Either.left(errors);
 		}
 
-		return Either.right(new DuelmonCatalog(moves.getRight(), species.getRight(), typeChart.getRight()));
+		return Either.right(
+			new DuelmonCatalog(moves.getRight(), dataset.moves, species.getRight(), typeChart.getRight())
+		);
 	}
 
 	/**
@@ -73,6 +82,20 @@ class DuelmonCatalog {
 	 */
 	findMove(id: string): Move | undefined {
 		return this.movesById.get(id);
+	}
+
+	/**
+	 * Finds the source dataset entry of a move.
+	 *
+	 * The neutral Move drops effects such as primary status, secondary effects,
+	 * and stat-stage changes. Consumers that validate content support read the
+	 * source entry instead of duplicating the dataset.
+	 *
+	 * @param id - Move identifier.
+	 * @returns The matching dataset entry, or `undefined` when it is unknown.
+	 */
+	findMoveEntry(id: string): DuelmonMove | undefined {
+		return this.moveEntriesById.get(id);
 	}
 
 	/**
