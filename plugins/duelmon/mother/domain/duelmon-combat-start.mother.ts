@@ -1,7 +1,7 @@
 import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import type { CombatantPrimitives, CombatPrimitives } from '@pocket-forge/combat/domain';
 import { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
-import type { DuelmonCombatStartDefinitions } from '@pocket-forge/duelmon/domain';
+import type { DuelmonCombatStartDefinitions, DuelmonCombatStartRequest } from '@pocket-forge/duelmon/domain';
 import { Gen1BattleStats } from '@pocket-forge/duelmon/domain';
 import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domain';
 
@@ -128,6 +128,46 @@ export default class DuelmonCombatStartMother {
 			id: 'combat-1',
 			randomPocket: { seed: 42, state: 42 },
 			status: 'active',
+			...overrides,
+		};
+	}
+
+	/**
+	 * Builds the Phase 1 demo start request.
+	 *
+	 * @param overrides - Start request fields to replace.
+	 * @returns The authored starting point.
+	 */
+	static request(overrides: Partial<DuelmonCombatStartRequest> = {}): DuelmonCombatStartRequest {
+		return {
+			groups: [
+				{
+					activeCombatantIds: ['player-emberling'],
+					combatants: [
+						{
+							creatureId: 'emberling-1',
+							id: 'player-emberling',
+							moveIds: ['ember-burst', 'tackle'],
+							speciesId: 'emberling',
+						},
+					],
+					id: 'player',
+				},
+				{
+					activeCombatantIds: ['opponent-aquafin'],
+					combatants: [
+						{
+							creatureId: 'aquafin-1',
+							id: 'opponent-aquafin',
+							moveIds: ['tackle'],
+							speciesId: 'aquafin',
+						},
+					],
+					id: 'opponent',
+				},
+			],
+			id: 'combat-1',
+			seed: 42,
 			...overrides,
 		};
 	}

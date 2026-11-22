@@ -35,6 +35,11 @@ export type { DuelmonCombatStartDefinitions } from './start/duelmon-combat-start
 export { DuelmonCombatStart } from './start/duelmon-combat-start';
 export type { DuelmonCombatStartErrorReason } from './start/duelmon-combat-start.error';
 export { DuelmonCombatStartError } from './start/duelmon-combat-start.error';
+export type {
+	DuelmonCombatStartCombatantRequest,
+	DuelmonCombatStartGroupRequest,
+	DuelmonCombatStartRequest,
+} from './start/duelmon-combat-start.request';
 export { Phase1MoveConstraints } from './start/phase-1-move.constraints';
 export { DuelmonCombatAttributes } from './support/combat-attributes';
 export { DuelmonCombatInput } from './support/duelmon-combat.input';

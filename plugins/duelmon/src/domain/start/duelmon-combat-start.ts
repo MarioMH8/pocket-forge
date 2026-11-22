@@ -1,11 +1,25 @@
 import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
-import type { Combat, CombatPrimitives } from '@pocket-forge/combat/domain';
+import type {
+	Combat,
+	CombatantGroupPrimitives,
+	CombatantPrimitives,
+	CombatPrimitives,
+} from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
+import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
+import type { MovePrimitives } from '@pocket-forge/move/domain';
+import RandomPocket from '@pocket-forge/rng/domain';
+import type { Species } from '@pocket-forge/species/domain';
 
+import type { Gen1BaseStats } from '../action/use-move/gen1/battle-stats';
+import { Gen1BattleStats } from '../action/use-move/gen1/battle-stats';
+import { DuelmonCombatAttributes } from '../support/combat-attributes';
 import type { UnknownRecord } from '../support/duelmon-record';
 import { DuelmonRecord } from '../support/duelmon-record';
 import { DuelmonCombatStartError } from './duelmon-combat-start.error';
+import type { DuelmonCombatStartCombatantRequest, DuelmonCombatStartRequest } from './duelmon-combat-start.request';
+import { Phase1MoveConstraints } from './phase-1-move.constraints';
 
 /**
  * Attribute definitions that govern the initial combat state.
@@ -26,6 +40,7 @@ interface DuelmonCombatStartDefinitions {
 }
 
 const ACTIVE_COMBATANT_IDS = 'activeCombatantIds';
+const BASE_STAT_KEYS = ['baseAtk', 'baseDef', 'baseHp', 'baseSpecial', 'baseSpeed'] as const;
 const HP = 'hp';
 const MAX_HP = 'maxHp';
 const MOVES = 'moves';
@@ -75,6 +90,186 @@ class DuelmonCombatStart {
 		const errors = this.validate(primitives, definitions);
 
 		return errors.length > 0 ? Either.left(errors) : Either.right(CombatEntity.fromPrimitives(primitives));
+	}
+
+	/**
+	 * Resolves authored content into a validated initial combat.
+	 *
+	 * Every referenced species and move is resolved through the catalog, move
+	 * support is checked against the Phase 1 slice, and the Gen 1 battle
+	 * attributes are derived before the state is validated. Content and state
+	 * failures use the same error type; a failed start never returns a partial
+	 * combat.
+	 *
+	 * @param request - Authored starting point: content references and seed.
+	 * @param catalog - Duelmon catalog built from the private dataset.
+	 * @param definitions - Definitions that govern combatant and group attributes.
+	 * @returns The initial combat, or every content and state failure.
+	 * @example
+	 * ```ts
+	 * const result = DuelmonCombatStart.fromContent(request, catalog, definitions);
+	 * ```
+	 */
+	static fromContent(
+		request: DuelmonCombatStartRequest,
+		catalog: DuelmonCatalog,
+		definitions: DuelmonCombatStartDefinitions
+	): Either<DuelmonCombatStartError[], Combat> {
+		const requestErrors = this.validateRequest(request);
+
+		if (requestErrors.length > 0) {
+			return Either.left(requestErrors);
+		}
+
+		const errors: DuelmonCombatStartError[] = [];
+		const groups: CombatantGroupPrimitives[] = [];
+
+		for (const [groupIndex, groupRequest] of request.groups.entries()) {
+			const groupPath = `groups.${String(groupIndex)}`;
+			const combatants: CombatantPrimitives[] = [];
+
+			for (const [combatantIndex, combatantRequest] of groupRequest.combatants.entries()) {
+				const combatant = this.resolveCombatant(
+					combatantRequest,
+					groupRequest.id,
+					`${groupPath}.combatants.${String(combatantIndex)}`,
+					catalog,
+					errors
+				);
+
+				if (combatant) {
+					combatants.push(combatant);
+				}
+			}
+
+			groups.push({
+				attributes: { [ACTIVE_COMBATANT_IDS]: [...groupRequest.activeCombatantIds] },
+				combatants,
+				id: groupRequest.id,
+			});
+		}
+
+		if (errors.length > 0) {
+			return Either.left(errors);
+		}
+
+		const primitives: CombatPrimitives = {
+			attributes: request.attributes === undefined ? {} : { ...request.attributes },
+			groups,
+			id: request.id,
+			randomPocket: RandomPocket.create(request.seed).toPrimitives(),
+			status: 'active',
+		};
+
+		return this.create(primitives, definitions);
+	}
+
+	private static readBaseStats(
+		species: Species,
+		path: string,
+		errors: DuelmonCombatStartError[]
+	): Gen1BaseStats | undefined {
+		const values = species.attributes.toPrimitives();
+		const base: Partial<Record<(typeof BASE_STAT_KEYS)[number], number>> = {};
+		let isMissing = false;
+
+		for (const key of BASE_STAT_KEYS) {
+			const value = DuelmonCombatAttributes.readNumber(values, key);
+
+			if (value === undefined) {
+				isMissing = true;
+				errors.push(
+					new DuelmonCombatStartError(
+						'missing-attribute',
+						`Species "${species.id}" is missing numeric "${key}" attribute`,
+						`${path}.creature.species.attributes.${key}`
+					)
+				);
+
+				continue;
+			}
+
+			base[key] = value;
+		}
+
+		if (isMissing) {
+			return undefined;
+		}
+
+		return {
+			baseAtk: base.baseAtk ?? 0,
+			baseDef: base.baseDef ?? 0,
+			baseHp: base.baseHp ?? 0,
+			baseSpecial: base.baseSpecial ?? 0,
+			baseSpeed: base.baseSpeed ?? 0,
+		};
+	}
+
+	private static resolveCombatant(
+		request: DuelmonCombatStartCombatantRequest,
+		groupId: string,
+		path: string,
+		catalog: DuelmonCatalog,
+		errors: DuelmonCombatStartError[]
+	): CombatantPrimitives | undefined {
+		const species = catalog.findSpecies(request.speciesId);
+
+		if (!species) {
+			errors.push(
+				new DuelmonCombatStartError(
+					'unknown-species',
+					`Unknown species "${request.speciesId}"`,
+					`${path}.creature.species.id`
+				)
+			);
+		}
+
+		const moves: MovePrimitives[] = [];
+
+		for (const [moveIndex, moveId] of request.moveIds.entries()) {
+			const movePath = `${path}.creature.moves.${String(moveIndex)}`;
+			const move = catalog.findMove(moveId);
+			const entry = catalog.findMoveEntry(moveId);
+
+			if (!move || !entry) {
+				errors.push(new DuelmonCombatStartError('unknown-move', `Unknown move "${moveId}"`, movePath));
+
+				continue;
+			}
+
+			const unsupported = Phase1MoveConstraints.unsupportedReason(entry);
+
+			if (unsupported) {
+				errors.push(new DuelmonCombatStartError('unsupported-move', unsupported, movePath));
+
+				continue;
+			}
+
+			moves.push(move.toPrimitives());
+		}
+
+		if (!species) {
+			return undefined;
+		}
+
+		const baseStats = this.readBaseStats(species, path, errors);
+
+		if (!baseStats) {
+			return undefined;
+		}
+
+		return {
+			attributes: { ...Gen1BattleStats.derive(baseStats, this.STARTING_LEVEL) },
+			creature: {
+				abilities: [],
+				attributes: {},
+				id: request.creatureId,
+				moves,
+				species: species.toPrimitives(),
+			},
+			groupId,
+			id: request.id,
+		};
 	}
 
 	private static validate(
@@ -462,6 +657,120 @@ class DuelmonCombatStart {
 					'invalid-random-pocket',
 					'Random state requires non-negative integer seed and state',
 					'randomPocket'
+				)
+			);
+		}
+	}
+
+	private static validateRequest(request: DuelmonCombatStartRequest): DuelmonCombatStartError[] {
+		const errors: DuelmonCombatStartError[] = [];
+
+		if (!DuelmonRecord.isRecord(request)) {
+			errors.push(new DuelmonCombatStartError('invalid-request', 'Start request must be an object'));
+
+			return errors;
+		}
+
+		if (!isNonEmptyString(request.id)) {
+			errors.push(new DuelmonCombatStartError('invalid-request', 'Start request id is required', 'id'));
+		}
+
+		if (!Number.isSafeInteger(request.seed) || request.seed < 0) {
+			errors.push(
+				new DuelmonCombatStartError(
+					'invalid-request',
+					'Start request seed must be a non-negative integer',
+					'seed'
+				)
+			);
+		}
+
+		if (request.attributes !== undefined && !DuelmonRecord.isRecord(request.attributes)) {
+			errors.push(
+				new DuelmonCombatStartError(
+					'invalid-request',
+					'Start request attributes must be an object',
+					'attributes'
+				)
+			);
+		}
+
+		const groups: unknown = request.groups;
+
+		if (!Array.isArray(groups)) {
+			errors.push(
+				new DuelmonCombatStartError('invalid-request', 'Start request groups must be an array', 'groups')
+			);
+
+			return errors;
+		}
+
+		for (const [groupIndex, group] of groups.entries()) {
+			const groupPath = `groups.${String(groupIndex)}`;
+
+			if (!DuelmonRecord.isRecord(group)) {
+				errors.push(new DuelmonCombatStartError('invalid-request', 'Group must be an object', groupPath));
+
+				continue;
+			}
+
+			if (!isNonEmptyString(group['id'])) {
+				errors.push(new DuelmonCombatStartError('invalid-request', 'Group id is required', `${groupPath}.id`));
+			}
+
+			if (!isStringArray(group[ACTIVE_COMBATANT_IDS])) {
+				errors.push(
+					new DuelmonCombatStartError(
+						'invalid-request',
+						'Group activeCombatantIds must be an array of strings',
+						`${groupPath}.${ACTIVE_COMBATANT_IDS}`
+					)
+				);
+			}
+
+			const combatants: unknown = group['combatants'];
+
+			if (!Array.isArray(combatants)) {
+				errors.push(
+					new DuelmonCombatStartError(
+						'invalid-request',
+						'Group combatants must be an array',
+						`${groupPath}.combatants`
+					)
+				);
+
+				continue;
+			}
+
+			for (const [combatantIndex, combatant] of combatants.entries()) {
+				this.validateRequestCombatant(combatant, `${groupPath}.combatants.${String(combatantIndex)}`, errors);
+			}
+		}
+
+		return errors;
+	}
+
+	private static validateRequestCombatant(combatant: unknown, path: string, errors: DuelmonCombatStartError[]): void {
+		if (!DuelmonRecord.isRecord(combatant)) {
+			errors.push(new DuelmonCombatStartError('invalid-request', 'Combatant must be an object', path));
+
+			return;
+		}
+
+		for (const key of ['id', 'creatureId', 'speciesId'] as const) {
+			if (!isNonEmptyString(combatant[key])) {
+				errors.push(
+					new DuelmonCombatStartError('invalid-request', `Combatant ${key} is required`, `${path}.${key}`)
+				);
+			}
+		}
+
+		if (!isStringArray(combatant['moveIds'])) {
+			errors.push(
+				new DuelmonCombatStartError(
+					'invalid-request',
+					'Combatant moveIds must be an array of strings',
+					`${path}.moveIds`
 				)
 			);
 		}
