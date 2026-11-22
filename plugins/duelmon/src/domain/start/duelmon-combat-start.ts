@@ -154,7 +154,7 @@ class DuelmonCombatStart {
 		}
 
 		const primitives: CombatPrimitives = {
-			attributes: request.attributes === undefined ? {} : { ...request.attributes },
+			attributes: {},
 			groups,
 			id: request.id,
 			randomPocket: RandomPocket.create(request.seed).toPrimitives(),
@@ -681,16 +681,6 @@ class DuelmonCombatStart {
 					'invalid-request',
 					'Start request seed must be a non-negative integer',
 					'seed'
-				)
-			);
-		}
-
-		if (request.attributes !== undefined && !DuelmonRecord.isRecord(request.attributes)) {
-			errors.push(
-				new DuelmonCombatStartError(
-					'invalid-request',
-					'Start request attributes must be an object',
-					'attributes'
 				)
 			);
 		}

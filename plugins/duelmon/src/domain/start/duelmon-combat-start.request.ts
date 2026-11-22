@@ -1,5 +1,3 @@
-import type { AttributeValues } from '@pocket-forge/attribute/domain';
-
 /**
  * Content reference for one combatant in a start request.
  *
@@ -51,10 +49,6 @@ interface DuelmonCombatStartGroupRequest {
  * initializes the only source of randomness.
  */
 interface DuelmonCombatStartRequest {
-	/**
-	 * Combat-level battle attributes. Phase 1 starts with `{}`.
-	 */
-	readonly attributes?: AttributeValues;
 	/**
 	 * Combatant groups in order. Index `0` is the player side.
 	 */
