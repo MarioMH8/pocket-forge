@@ -31,6 +31,10 @@ export type {
 	MoveUsedPayload,
 } from './event';
 export { DUELMON_COMBAT_EVENT_TYPES, DuelmonCombatEvents } from './event';
+export type { DuelmonCombatStartDefinitions } from './start/duelmon-combat-start';
+export { DuelmonCombatStart } from './start/duelmon-combat-start';
+export type { DuelmonCombatStartErrorReason } from './start/duelmon-combat-start.error';
+export { DuelmonCombatStartError } from './start/duelmon-combat-start.error';
 export { Phase1MoveConstraints } from './start/phase-1-move.constraints';
 export { DuelmonCombatAttributes } from './support/combat-attributes';
 export { DuelmonCombatInput } from './support/duelmon-combat.input';
