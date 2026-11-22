@@ -17,7 +17,8 @@ This package is a private implementation outside the neutral Combat core. It may
 
 ## Structure
 
-- `src/domain/` — actions, events, shared support helpers, and the plugin composition root.
+- `src/domain/` — actions, events, shared support helpers, the plugin composition root, and the initial combat start.
+- `src/domain/start/` — initial combat state contract, Phase 1 move-support policy, and content-to-state resolution.
 - `src/catalog/` — neutral dataset bridge. It is a separate public entrypoint (`@pocket-forge/duelmon/catalog`) because the catalog is assembled from the private dataset and reused by the plugin.
 - `mother/domain/` — plugin test fixtures. Dataset fixtures live in `@pocket-forge/duelmon-dataset/mother/domain`.
 

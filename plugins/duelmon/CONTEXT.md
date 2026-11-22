@@ -12,8 +12,16 @@ The private product name of the Duelmon action resolver. It implements the Comba
 _Avoid_: Core action resolver, engine plugin, Combat Action Plugin
 
 **Duelmon Catalog**:
-The neutral bridge built by `DuelmonCatalog.fromDataset` from the Duelmon Dataset. It exposes Species and Move entities plus `typeMultipliers`, validates the complete Gen 1 type chart and the Gen 1 move-effect vocabulary at the boundary, and is required by the Duelmon Combat Plugin.
+The neutral bridge built by `DuelmonCatalog.fromDataset` from the Duelmon Dataset. It exposes Species and Move entities plus `typeMultipliers`, validates the complete Gen 1 type chart and the Gen 1 move-effect vocabulary at the boundary, and is required by the Duelmon Combat Plugin. It also exposes the source dataset entry of a Move for content-support checks.
 _Avoid_: Dataset loader, content registry
+
+**Duelmon Combat Start**:
+The start contract that resolves Phase 1 content references into a validated initial Combat. It derives Gen 1 battle attributes, rejects unknown or unsupported content, aggregates every failure, and never returns a partial combat.
+_Avoid_: Battle bootstrap, battle factory, initial-state builder
+
+**Phase 1 Move Support**:
+The subset of Moves a Phase 1 combat may start with: damaging, full accuracy, zero priority, and without captured primary status, stat-stage, or secondary effects. It is validated from the source dataset entry because the neutral Move drops those fields.
+_Avoid_: Supported moves, content allowlist
 
 **Duelmon Type Chart**:
 The validated value object behind the catalog's `typeMultipliers`. It owns the complete fifteen-defender, fifteen-attack relation table so actions never handle a lazy chart error.
