@@ -1,96 +1,82 @@
-import type { DuelmonMove } from '@pocket-forge/duelmon-dataset';
+import type { Move } from '@pocket-forge/move/domain';
 
 /**
  * Phase 1 move-support policy.
  *
  * Phase 1 only starts combats with damaging moves that always hit, have zero
  * priority, and carry no primary status, stat-stage change, or secondary
- * effect. The neutral catalog Move drops those effect fields, so the policy is
- * built from the source dataset entries at composition.
+ * effect. The catalog maps those declarations into the neutral Move, so the
+ * policy never reads the private dataset.
  */
 class Phase1MoveConstraints {
-	private readonly entries: ReadonlyMap<string, DuelmonMove>;
-
-	private constructor(entries: ReadonlyMap<string, DuelmonMove>) {
-		this.entries = entries;
-	}
-
-	/**
-	 * Builds the policy from the dataset entries used by the catalog.
-	 *
-	 * @param entries - Moves declared by the dataset.
-	 * @returns The Phase 1 move-support policy.
-	 * @example
-	 * ```ts
-	 * const constraints = Phase1MoveConstraints.fromMoves(dataset.moves);
-	 *
-	 * constraints.unsupportedReason('tackle'); // undefined
-	 * constraints.unsupportedReason('oath'); // 'Move "oath" is a Status move...'
-	 * ```
-	 */
-	static fromMoves(entries: readonly DuelmonMove[]): Phase1MoveConstraints {
-		return new Phase1MoveConstraints(new Map(entries.map(entry => [entry.id, entry])));
-	}
-
 	/**
 	 * Explains why a move cannot start a Phase 1 combat.
 	 *
-	 * @param moveId - Move identifier.
+	 * @param move - Neutral catalog move.
 	 * @returns The unsupported reason, or `undefined` when the move is supported.
+	 * @example
+	 * ```ts
+	 * Phase1MoveConstraints.unsupportedReason(tackle); // undefined
+	 * Phase1MoveConstraints.unsupportedReason(oath); // 'Move "oath" is a Status move...'
+	 * ```
 	 */
-	unsupportedReason(moveId: string): string | undefined {
-		const entry = this.entries.get(moveId);
+	static unsupportedReason(move: Move): string | undefined {
+		const values = move.attributes.toPrimitives();
 
-		if (!entry) {
-			return `Move "${moveId}" is not part of the Phase 1 content`;
+		if (values['category'] === 'Status') {
+			return `Move "${move.id}" is a Status move, which is outside Phase 1`;
 		}
 
-		if (entry.category === 'Status') {
-			return `Move "${entry.id}" is a Status move, which is outside Phase 1`;
+		const power = values['power'];
+
+		if (typeof power !== 'number' || power < 1) {
+			return `Move "${move.id}" has no base power, which is outside Phase 1`;
 		}
 
-		if (entry.power < 1) {
-			return `Move "${entry.id}" has no base power, which is outside Phase 1`;
+		const accuracy = values['accuracy'];
+
+		if (typeof accuracy !== 'number' || accuracy < 100) {
+			return `Move "${move.id}" can miss, which is outside Phase 1`;
 		}
 
-		if (entry.accuracy !== true && entry.accuracy < 100) {
-			return `Move "${entry.id}" can miss, which is outside Phase 1`;
+		const priority = values['priority'];
+
+		if (priority !== 0) {
+			return `Move "${move.id}" has non-zero priority, which is outside Phase 1`;
 		}
 
-		if (entry.priority !== 0) {
-			return `Move "${entry.id}" has non-zero priority, which is outside Phase 1`;
+		if (values['status'] !== undefined) {
+			return `Move "${move.id}" applies a primary status, which is outside Phase 1`;
 		}
 
-		if (entry.status !== undefined) {
-			return `Move "${entry.id}" applies a primary status, which is outside Phase 1`;
+		if (values['volatileStatus'] !== undefined) {
+			return `Move "${move.id}" applies a volatile status, which is outside Phase 1`;
 		}
 
-		if (entry.volatileStatus !== undefined) {
-			return `Move "${entry.id}" applies a volatile status, which is outside Phase 1`;
+		if (values['secondary'] !== undefined) {
+			return `Move "${move.id}" has a secondary effect, which is outside Phase 1`;
 		}
 
-		if (entry.secondary !== undefined) {
-			return `Move "${entry.id}" has a secondary effect, which is outside Phase 1`;
+		if (values['boosts'] !== undefined) {
+			return `Move "${move.id}" changes stat stages, which is outside Phase 1`;
 		}
 
-		if (entry.boosts !== undefined) {
-			return `Move "${entry.id}" changes stat stages, which is outside Phase 1`;
+		if (values['drain'] !== undefined) {
+			return `Move "${move.id}" drains damage, which is outside Phase 1`;
 		}
 
-		if (entry.drain !== undefined) {
-			return `Move "${entry.id}" drains damage, which is outside Phase 1`;
+		if (values['recoil'] !== undefined) {
+			return `Move "${move.id}" recoils damage, which is outside Phase 1`;
 		}
 
-		if (entry.recoil !== undefined) {
-			return `Move "${entry.id}" recoils damage, which is outside Phase 1`;
+		if (values['multihit'] !== undefined) {
+			return `Move "${move.id}" hits multiple times, which is outside Phase 1`;
 		}
 
-		if (entry.multihit !== undefined) {
-			return `Move "${entry.id}" hits multiple times, which is outside Phase 1`;
-		}
+		const critRatio = values['critRatio'];
 
-		if (entry.critRatio !== undefined && entry.critRatio > 1) {
-			return `Move "${entry.id}" has a high critical-hit ratio, which is outside Phase 1`;
+		if (typeof critRatio === 'number' && critRatio > 1) {
+			return `Move "${move.id}" has a high critical-hit ratio, which is outside Phase 1`;
 		}
 
 		return undefined;

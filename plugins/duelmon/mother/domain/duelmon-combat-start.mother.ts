@@ -2,7 +2,7 @@ import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import type { CombatantPrimitives, CombatPrimitives } from '@pocket-forge/combat/domain';
 import { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type { DuelmonCombatStartDefinitions, DuelmonCombatStartRequest } from '@pocket-forge/duelmon/domain';
-import { Gen1BattleStats, Phase1MoveConstraints } from '@pocket-forge/duelmon/domain';
+import { Gen1BattleStats } from '@pocket-forge/duelmon/domain';
 import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domain';
 
 const EMBERLING_ATTRIBUTES: AttributeValues = {
@@ -43,7 +43,6 @@ export default class DuelmonCombatStartMother {
 	};
 
 	private static catalogCache: DuelmonCatalog | undefined;
-	private static constraintsCache: Phase1MoveConstraints | undefined;
 
 	/**
 	 * Returns the catalog built from the dataset fixture.
@@ -54,17 +53,6 @@ export default class DuelmonCombatStartMother {
 		this.catalogCache ??= DuelmonCatalog.fromDataset(DuelmonDatasetMother.create()).getRight();
 
 		return this.catalogCache;
-	}
-
-	/**
-	 * Returns the Phase 1 move-support policy built from the dataset fixture.
-	 *
-	 * @returns The policy used by the start contract.
-	 */
-	static constraints(): Phase1MoveConstraints {
-		this.constraintsCache ??= Phase1MoveConstraints.fromMoves(DuelmonDatasetMother.moves());
-
-		return this.constraintsCache;
 	}
 
 	/**
