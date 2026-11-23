@@ -1,7 +1,5 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 
-import isAttributeRecord from './attribute-value';
-
 /**
  * Supported attribute types for the neutral attribute system.
  */
@@ -77,46 +75,6 @@ interface AttributeDefinitionPrimitives {
 	readonly key: string;
 	readonly required?: boolean | undefined;
 	readonly type: AttributeType;
-}
-
-/**
- * Describes a raw value's shape for error messages.
- *
- * @param value - The value being described.
- * @returns A short type name (`array`, `null`, or `typeof`).
- */
-function describeValue(value: unknown): string {
-	if (Array.isArray(value)) {
-		return 'array';
-	}
-
-	if (value === null) {
-		return 'null';
-	}
-
-	return typeof value;
-}
-
-/**
- * Joins a dotted path with a nested segment.
- *
- * @param path - Parent path, empty at the attribute root.
- * @param segment - Field key or array index.
- * @returns The dotted path.
- */
-function joinPath(path: string, segment: number | string): string {
-	return path === '' ? String(segment) : `${path}.${String(segment)}`;
-}
-
-/**
- * Prefixes an error message with its nested path, keeping root messages unchanged.
- *
- * @param path - Path relative to the attribute root.
- * @param message - The base message.
- * @returns The message, with a field prefix when nested.
- */
-function messageAt(path: string, message: string): string {
-	return path === '' ? message : `Field "${path}": ${message}`;
 }
 
 /**
@@ -233,6 +191,37 @@ export default class AttributeDefinition {
 		return new AttributeDefinition(primitives);
 	}
 
+	/**
+	 * Checks whether a raw value is a plain record suitable for a record attribute.
+	 *
+	 * Rejects `null`, arrays, and class instances so record attributes only hold
+	 * schema-driven, serializable objects.
+	 *
+	 * @param value - The raw value to inspect.
+	 * @returns `true` when the value is a plain record.
+	 */
+	static isRecordValue(value: unknown): value is AttributeRecord {
+		if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+			return false;
+		}
+
+		const prototype: null | object = Reflect.getPrototypeOf(value);
+
+		return prototype === Object.prototype || prototype === null;
+	}
+
+	private static describeValue(value: unknown): string {
+		if (Array.isArray(value)) {
+			return 'array';
+		}
+
+		if (value === null) {
+			return 'null';
+		}
+
+		return typeof value;
+	}
+
 	private static hydrateConstraints(constraints: AttributeConstraintsPrimitives): AttributeConstraints {
 		const { fields, itemDefinition, ...flat } = constraints;
 
@@ -243,6 +232,14 @@ export default class AttributeDefinition {
 				itemDefinition: this.fromPrimitives(itemDefinition),
 			}),
 		};
+	}
+
+	private static joinPath(path: string, segment: number | string): string {
+		return path === '' ? String(segment) : `${path}.${String(segment)}`;
+	}
+
+	private static messageAt(path: string, message: string): string {
+		return path === '' ? message : `Field "${path}": ${message}`;
 	}
 
 	toPrimitives(): AttributeDefinitionPrimitives {
@@ -303,13 +300,13 @@ export default class AttributeDefinition {
 	private validateArray(value: unknown, path: string): InvalidArgumentError | undefined {
 		if (!Array.isArray(value)) {
 			return new InvalidArgumentError(
-				messageAt(path, `Expected array, got ${typeof value}`),
+				AttributeDefinition.messageAt(path, `Expected array, got ${typeof value}`),
 				'AttributeDefinition'
 			);
 		}
 		if (this.constraints.minLength !== undefined && value.length < this.constraints.minLength) {
 			return new InvalidArgumentError(
-				messageAt(
+				AttributeDefinition.messageAt(
 					path,
 					`Array length ${String(value.length)} is below minimum ${String(this.constraints.minLength)}`
 				),
@@ -318,7 +315,7 @@ export default class AttributeDefinition {
 		}
 		if (this.constraints.maxLength !== undefined && value.length > this.constraints.maxLength) {
 			return new InvalidArgumentError(
-				messageAt(
+				AttributeDefinition.messageAt(
 					path,
 					`Array length ${String(value.length)} exceeds maximum ${String(this.constraints.maxLength)}`
 				),
@@ -328,7 +325,7 @@ export default class AttributeDefinition {
 
 		const { itemDefinition, itemType } = this.constraints;
 		for (const [index, element] of value.entries()) {
-			const itemPath = joinPath(path, index);
+			const itemPath = AttributeDefinition.joinPath(path, index);
 
 			if (itemDefinition) {
 				const itemError = itemDefinition.validate(element, itemPath);
@@ -341,7 +338,7 @@ export default class AttributeDefinition {
 			// eslint-disable-next-line valid-typeof
 			if (typeof element !== itemType) {
 				return new InvalidArgumentError(
-					messageAt(
+					AttributeDefinition.messageAt(
 						itemPath,
 						`Array item at index ${String(index)} expected ${String(itemType)}, got ${typeof element}`
 					),
@@ -356,7 +353,7 @@ export default class AttributeDefinition {
 	private validateBoolean(value: unknown, path: string): InvalidArgumentError | undefined {
 		if (typeof value !== 'boolean') {
 			return new InvalidArgumentError(
-				messageAt(path, `Expected boolean, got ${typeof value}`),
+				AttributeDefinition.messageAt(path, `Expected boolean, got ${typeof value}`),
 				'AttributeDefinition'
 			);
 		}
@@ -397,7 +394,7 @@ export default class AttributeDefinition {
 	private validateEnum(value: unknown, path: string): InvalidArgumentError | undefined {
 		if (typeof value !== 'string') {
 			return new InvalidArgumentError(
-				messageAt(path, `Expected string for enum, got ${typeof value}`),
+				AttributeDefinition.messageAt(path, `Expected string for enum, got ${typeof value}`),
 				'AttributeDefinition'
 			);
 		}
@@ -405,7 +402,10 @@ export default class AttributeDefinition {
 			const allowed = String(this.constraints.validValues?.join(', '));
 
 			return new InvalidArgumentError(
-				messageAt(path, `"${value}" is not a valid value for attribute "${this.key}". Allowed: ${allowed}`),
+				AttributeDefinition.messageAt(
+					path,
+					`"${value}" is not a valid value for attribute "${this.key}". Allowed: ${allowed}`
+				),
 				'AttributeDefinition'
 			);
 		}
@@ -416,19 +416,25 @@ export default class AttributeDefinition {
 	private validateNumber(value: unknown, path: string): InvalidArgumentError | undefined {
 		if (typeof value !== 'number' || Number.isNaN(value)) {
 			return new InvalidArgumentError(
-				messageAt(path, `Expected number, got ${typeof value}`),
+				AttributeDefinition.messageAt(path, `Expected number, got ${typeof value}`),
 				'AttributeDefinition'
 			);
 		}
 		if (this.constraints.min !== undefined && value < this.constraints.min) {
 			return new InvalidArgumentError(
-				messageAt(path, `Value ${String(value)} is below minimum ${String(this.constraints.min)}`),
+				AttributeDefinition.messageAt(
+					path,
+					`Value ${String(value)} is below minimum ${String(this.constraints.min)}`
+				),
 				'AttributeDefinition'
 			);
 		}
 		if (this.constraints.max !== undefined && value > this.constraints.max) {
 			return new InvalidArgumentError(
-				messageAt(path, `Value ${String(value)} exceeds maximum ${String(this.constraints.max)}`),
+				AttributeDefinition.messageAt(
+					path,
+					`Value ${String(value)} exceeds maximum ${String(this.constraints.max)}`
+				),
 				'AttributeDefinition'
 			);
 		}
@@ -437,9 +443,9 @@ export default class AttributeDefinition {
 	}
 
 	private validateRecord(value: unknown, path: string): InvalidArgumentError | undefined {
-		if (!isAttributeRecord(value)) {
+		if (!AttributeDefinition.isRecordValue(value)) {
 			return new InvalidArgumentError(
-				messageAt(path, `Expected record, got ${describeValue(value)}`),
+				AttributeDefinition.messageAt(path, `Expected record, got ${AttributeDefinition.describeValue(value)}`),
 				'AttributeDefinition'
 			);
 		}
@@ -449,14 +455,14 @@ export default class AttributeDefinition {
 
 		for (const key of Object.keys(value)) {
 			if (!declared.has(key)) {
-				const keyPath = joinPath(path, key);
+				const keyPath = AttributeDefinition.joinPath(path, key);
 
 				return new InvalidArgumentError(`Field "${keyPath}" is not a declared field`, 'AttributeDefinition');
 			}
 		}
 
 		for (const field of fields) {
-			const fieldPath = joinPath(path, field.key);
+			const fieldPath = AttributeDefinition.joinPath(path, field.key);
 			const fieldValue = value[field.key];
 
 			if (fieldValue === undefined) {
@@ -481,13 +487,13 @@ export default class AttributeDefinition {
 	private validateString(value: unknown, path: string): InvalidArgumentError | undefined {
 		if (typeof value !== 'string') {
 			return new InvalidArgumentError(
-				messageAt(path, `Expected string, got ${typeof value}`),
+				AttributeDefinition.messageAt(path, `Expected string, got ${typeof value}`),
 				'AttributeDefinition'
 			);
 		}
 		if (this.constraints.minLength !== undefined && value.length < this.constraints.minLength) {
 			return new InvalidArgumentError(
-				messageAt(
+				AttributeDefinition.messageAt(
 					path,
 					`String length ${String(value.length)} is below minimum ${String(this.constraints.minLength)}`
 				),
@@ -496,7 +502,7 @@ export default class AttributeDefinition {
 		}
 		if (this.constraints.maxLength !== undefined && value.length > this.constraints.maxLength) {
 			return new InvalidArgumentError(
-				messageAt(
+				AttributeDefinition.messageAt(
 					path,
 					`String length ${String(value.length)} exceeds maximum ${String(this.constraints.maxLength)}`
 				),
