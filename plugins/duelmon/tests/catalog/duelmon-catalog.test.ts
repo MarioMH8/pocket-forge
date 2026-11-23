@@ -1,4 +1,5 @@
 import { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
+import type { DuelmonMove } from '@pocket-forge/duelmon-dataset';
 import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
@@ -49,6 +50,93 @@ describe('DuelmonCatalog.fromDataset', () => {
 
 		expect(current.findMove('missing')).toBeUndefined();
 		expect(current.findSpecies('missing')).toBeUndefined();
+	});
+
+	describe('move effects', () => {
+		function move(overrides: Partial<DuelmonMove> & Pick<DuelmonMove, 'id'>): DuelmonMove {
+			return {
+				accuracy: true,
+				category: 'Physical',
+				flags: {},
+				name: overrides.id,
+				power: 40,
+				pp: 35,
+				priority: 0,
+				target: 'normal',
+				type: 'Normal',
+				...overrides,
+			};
+		}
+
+		function catalogWith(moves: readonly DuelmonMove[]): DuelmonCatalog {
+			return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create({ moves })).getRight();
+		}
+
+		it('maps primary status, volatile status, and stat stages', () => {
+			const current = catalogWith([
+				move({ id: 'status-move', status: 'brn' }),
+				move({ id: 'volatile-move', volatileStatus: 'confusion' }),
+				move({ boosts: { atk: 2 }, id: 'boost-move', target: 'self' }),
+			]);
+
+			expect(current.findMove('status-move')?.attributes.toPrimitives()).toMatchObject({ status: 'brn' });
+			expect(current.findMove('volatile-move')?.attributes.toPrimitives()).toMatchObject({
+				volatileStatus: 'confusion',
+			});
+			expect(current.findMove('boost-move')?.attributes.toPrimitives()).toMatchObject({
+				boosts: [{ stages: 2, stat: 'atk' }],
+			});
+		});
+
+		it('maps secondary effects with nested boosts', () => {
+			const current = catalogWith([
+				move({
+					id: 'secondary-move',
+					secondary: {
+						boosts: { def: -1 },
+						chance: 10,
+						self: { boosts: { spa: 1 } },
+						status: 'brn',
+						volatileStatus: 'flinch',
+					},
+				}),
+			]);
+
+			expect(current.findMove('secondary-move')?.attributes.toPrimitives()).toMatchObject({
+				secondary: {
+					boosts: [{ stages: -1, stat: 'def' }],
+					chance: 10,
+					self: { boosts: [{ stages: 1, stat: 'spa' }] },
+					status: 'brn',
+					volatileStatus: 'flinch',
+				},
+			});
+		});
+
+		it('maps drain, recoil, multihit, and critical-hit ratio', () => {
+			const current = catalogWith([
+				move({ drain: [1, 2], id: 'drain-move' }),
+				move({ id: 'recoil-move', recoil: [33, 100] }),
+				move({ id: 'range-move', multihit: [2, 5] }),
+				move({ id: 'fixed-move', multihit: 3 }),
+				move({ critRatio: 2, id: 'crit-move' }),
+			]);
+
+			expect(current.findMove('drain-move')?.attributes.toPrimitives()).toMatchObject({ drain: [1, 2] });
+			expect(current.findMove('recoil-move')?.attributes.toPrimitives()).toMatchObject({ recoil: [33, 100] });
+			expect(current.findMove('range-move')?.attributes.toPrimitives()).toMatchObject({ multihit: [2, 5] });
+			expect(current.findMove('fixed-move')?.attributes.toPrimitives()).toMatchObject({ multihit: [3, 3] });
+			expect(current.findMove('crit-move')?.attributes.toPrimitives()).toMatchObject({ critRatio: 2 });
+		});
+
+		it('rejects moves with invalid effect data', () => {
+			const result = DuelmonCatalog.fromDataset(
+				DuelmonDatasetMother.create({ moves: [move({ drain: [1] as never, id: 'broken-move' })] })
+			);
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]?.message).toContain('Invalid Duelmon move "broken-move"');
+		});
 	});
 
 	describe('typeMultipliers', () => {

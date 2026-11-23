@@ -1,6 +1,6 @@
 import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
-import type { DuelmonMove, DuelmonSpecies } from '@pocket-forge/duelmon-dataset';
+import type { DuelmonMove, DuelmonMoveSecondary, DuelmonSpecies } from '@pocket-forge/duelmon-dataset';
 import { DuelmonTypes } from '@pocket-forge/duelmon-dataset';
 import { Move } from '@pocket-forge/move/domain';
 import { Species } from '@pocket-forge/species/domain';
@@ -10,6 +10,24 @@ import { DuelmonCatalogError } from './duelmon-catalog.error';
 
 function messageOf(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
+}
+
+function boostValues(boosts: Readonly<Record<string, number>>): AttributeValues[] {
+	return Object.entries(boosts).map(([stat, stages]) => ({ stages, stat }));
+}
+
+function multihitValues(multihit: number | readonly number[]): number[] {
+	return typeof multihit === 'number' ? [multihit, multihit] : [...multihit];
+}
+
+function secondaryValues(secondary: DuelmonMoveSecondary): AttributeValues {
+	return {
+		...(secondary.boosts !== undefined && { boosts: boostValues(secondary.boosts) }),
+		...(secondary.chance !== undefined && { chance: secondary.chance }),
+		...(secondary.self?.boosts !== undefined && { self: { boosts: boostValues(secondary.self.boosts) } }),
+		...(secondary.status !== undefined && { status: secondary.status }),
+		...(secondary.volatileStatus !== undefined && { volatileStatus: secondary.volatileStatus }),
+	};
 }
 
 /**
@@ -68,6 +86,14 @@ class DuelmonCatalogMapper {
 				pp: entry.pp,
 				priority: entry.priority,
 				type: entry.type,
+				...(entry.status !== undefined && { status: entry.status }),
+				...(entry.volatileStatus !== undefined && { volatileStatus: entry.volatileStatus }),
+				...(entry.boosts !== undefined && { boosts: boostValues(entry.boosts) }),
+				...(entry.secondary !== undefined && { secondary: secondaryValues(entry.secondary) }),
+				...(entry.drain !== undefined && { drain: [...entry.drain] }),
+				...(entry.recoil !== undefined && { recoil: [...entry.recoil] }),
+				...(entry.multihit !== undefined && { multihit: multihitValues(entry.multihit) }),
+				...(entry.critRatio !== undefined && { critRatio: entry.critRatio }),
 			};
 
 			try {
