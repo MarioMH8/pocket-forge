@@ -1,10 +1,9 @@
 import { faker } from '@faker-js/faker';
-import type { Primitives } from '@hexadrop/types/primitives';
-import type { AttributeType } from '@pocket-forge/attribute/domain';
+import type { AttributeDefinitionPrimitives, AttributeType } from '@pocket-forge/attribute/domain';
 import { AttributeDefinition } from '@pocket-forge/attribute/domain';
 
 export default class AttributeDefinitionMother {
-	static array(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
+	static array(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
 		return AttributeDefinition.create({
 			constraints: overrides?.constraints ?? { itemType: 'string', maxLength: 10, minLength: 0 },
 			defaultValue: overrides?.defaultValue ?? [],
@@ -14,7 +13,7 @@ export default class AttributeDefinitionMother {
 		});
 	}
 
-	static boolean(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
+	static boolean(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
 		return AttributeDefinition.create({
 			constraints: overrides?.constraints ?? {},
 			defaultValue: overrides?.defaultValue ?? false,
@@ -24,9 +23,9 @@ export default class AttributeDefinitionMother {
 		});
 	}
 
-	static create(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
+	static create(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
 		const constraints = overrides?.constraints;
-		const primitives: Primitives<AttributeDefinition> = {
+		const primitives: AttributeDefinitionPrimitives = {
 			constraints: constraints ?? {},
 			defaultValue: overrides?.defaultValue ?? faker.string.alpha(10),
 			key: overrides?.key ?? faker.string.alpha({ length: { max: 20, min: 3 } }),
@@ -37,7 +36,7 @@ export default class AttributeDefinitionMother {
 		return AttributeDefinition.create(primitives);
 	}
 
-	static enum(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
+	static enum(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
 		return AttributeDefinition.create({
 			constraints: overrides?.constraints ?? { validValues: ['fire', 'water', 'earth', 'air'] },
 			defaultValue: overrides?.defaultValue ?? 'fire',
@@ -47,9 +46,9 @@ export default class AttributeDefinitionMother {
 		});
 	}
 
-	static fromPrimitives(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
+	static fromPrimitives(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
 		const constraints = overrides?.constraints;
-		const primitives: Primitives<AttributeDefinition> = {
+		const primitives: AttributeDefinitionPrimitives = {
 			constraints: constraints ?? {},
 			defaultValue: overrides?.defaultValue ?? faker.string.alpha(10),
 			key: overrides?.key ?? faker.string.alpha({ length: { max: 20, min: 3 } }),
@@ -60,7 +59,7 @@ export default class AttributeDefinitionMother {
 		return AttributeDefinition.fromPrimitives(primitives);
 	}
 
-	static number(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
+	static number(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
 		return AttributeDefinition.create({
 			constraints: overrides?.constraints ?? { max: 999, min: 0 },
 			defaultValue: overrides?.defaultValue ?? 0,
@@ -70,7 +69,19 @@ export default class AttributeDefinitionMother {
 		});
 	}
 
-	static string(overrides?: Partial<Primitives<AttributeDefinition>>): AttributeDefinition {
+	static record(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
+		return AttributeDefinition.create({
+			constraints: overrides?.constraints ?? {
+				fields: [this.number({ defaultValue: 0, key: 'stages', required: true })],
+			},
+			defaultValue: overrides?.defaultValue ?? {},
+			key: overrides?.key ?? 'boosts',
+			required: overrides?.required,
+			type: 'record',
+		});
+	}
+
+	static string(overrides?: Partial<AttributeDefinitionPrimitives>): AttributeDefinition {
 		return AttributeDefinition.create({
 			constraints: overrides?.constraints ?? { maxLength: 100, minLength: 1 },
 			defaultValue: overrides?.defaultValue ?? 'default',
@@ -93,6 +104,9 @@ export default class AttributeDefinitionMother {
 			}
 			case 'number': {
 				return this.number();
+			}
+			case 'record': {
+				return this.record();
 			}
 			case 'string': {
 				return this.string();
