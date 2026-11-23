@@ -1,6 +1,5 @@
 import type { AttributeDefinition } from '@pocket-forge/attribute/domain';
 import { AttributeDefinition as AttributeDefinitionEntity } from '@pocket-forge/attribute/domain';
-import type { DuelmonMoveCategory, DuelmonType } from '@pocket-forge/duelmon-dataset';
 import { DuelmonTypes } from '@pocket-forge/duelmon-dataset';
 
 const BOOST_FIELDS: readonly AttributeDefinition[] = Object.freeze([
@@ -172,11 +171,6 @@ class DuelmonAttributeDefinitions {
 	]);
 
 	/**
-	 * Move categories accepted by the dataset catalog.
-	 */
-	static readonly MOVE_CATEGORIES: readonly DuelmonMoveCategory[] = DuelmonTypes.MOVE_CATEGORIES;
-
-	/**
 	 * Attributes that describe a neutral Species built from the dataset.
 	 */
 	static readonly SPECIES: readonly AttributeDefinition[] = Object.freeze([
@@ -217,13 +211,7 @@ class DuelmonAttributeDefinitions {
 			type: 'number',
 		}),
 	]);
-
-	/**
-	 * Gen 1 types accepted by the dataset catalog.
-	 */
-	static readonly TYPES: readonly DuelmonType[] = DuelmonTypes.ALL;
 }
-
 export { DuelmonAttributeDefinitions };
 
 export default DuelmonAttributeDefinitions;
