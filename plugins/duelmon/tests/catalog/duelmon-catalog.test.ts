@@ -51,21 +51,6 @@ describe('DuelmonCatalog.fromDataset', () => {
 		expect(current.findSpecies('missing')).toBeUndefined();
 	});
 
-	it('exposes the source entry of a move', () => {
-		const current = catalog();
-
-		expect(current.findMoveEntry('tackle')).toMatchObject({
-			accuracy: true,
-			category: 'Physical',
-			id: 'tackle',
-			power: 35,
-			priority: 0,
-			type: 'Normal',
-		});
-		expect(current.findMoveEntry('flare')?.secondary).toEqual({ chance: 10, status: 'burn' });
-		expect(current.findMoveEntry('missing')).toBeUndefined();
-	});
-
 	describe('typeMultipliers', () => {
 		const current = catalog();
 

@@ -42,6 +42,7 @@ function start(request: DuelmonCombatStartRequest) {
 	return DuelmonCombatStart.fromContent(
 		request,
 		DuelmonCombatStartMother.catalog(),
+		DuelmonCombatStartMother.constraints(),
 		DuelmonCombatStartMother.DEFINITIONS
 	);
 }

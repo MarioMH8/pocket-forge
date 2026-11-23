@@ -5,22 +5,46 @@ import type { DuelmonMove } from '@pocket-forge/duelmon-dataset';
  *
  * Phase 1 only starts combats with damaging moves that always hit, have zero
  * priority, and carry no primary status, stat-stage change, or secondary
- * effect. The neutral catalog Move drops those effect fields, so the policy
- * reads the source dataset entry.
+ * effect. The neutral catalog Move drops those effect fields, so the policy is
+ * built from the source dataset entries at composition.
  */
 class Phase1MoveConstraints {
+	private readonly entries: ReadonlyMap<string, DuelmonMove>;
+
+	private constructor(entries: ReadonlyMap<string, DuelmonMove>) {
+		this.entries = entries;
+	}
+
+	/**
+	 * Builds the policy from the dataset entries used by the catalog.
+	 *
+	 * @param entries - Moves declared by the dataset.
+	 * @returns The Phase 1 move-support policy.
+	 * @example
+	 * ```ts
+	 * const constraints = Phase1MoveConstraints.fromMoves(dataset.moves);
+	 *
+	 * constraints.unsupportedReason('tackle'); // undefined
+	 * constraints.unsupportedReason('oath'); // 'Move "oath" is a Status move...'
+	 * ```
+	 */
+	static fromMoves(entries: readonly DuelmonMove[]): Phase1MoveConstraints {
+		return new Phase1MoveConstraints(new Map(entries.map(entry => [entry.id, entry])));
+	}
+
 	/**
 	 * Explains why a move cannot start a Phase 1 combat.
 	 *
-	 * @param entry - Source dataset entry of the move.
+	 * @param moveId - Move identifier.
 	 * @returns The unsupported reason, or `undefined` when the move is supported.
-	 * @example
-	 * ```ts
-	 * Phase1MoveConstraints.unsupportedReason(tackleEntry); // undefined
-	 * Phase1MoveConstraints.unsupportedReason(oathEntry); // 'Move "oath" is a Status move...'
-	 * ```
 	 */
-	static unsupportedReason(entry: DuelmonMove): string | undefined {
+	unsupportedReason(moveId: string): string | undefined {
+		const entry = this.entries.get(moveId);
+
+		if (!entry) {
+			return `Move "${moveId}" is not part of the Phase 1 content`;
+		}
+
 		if (entry.category === 'Status') {
 			return `Move "${entry.id}" is a Status move, which is outside Phase 1`;
 		}

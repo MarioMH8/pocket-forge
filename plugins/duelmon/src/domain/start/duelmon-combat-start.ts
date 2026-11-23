@@ -19,7 +19,7 @@ import type { UnknownRecord } from '../support/duelmon-record';
 import { DuelmonRecord } from '../support/duelmon-record';
 import { DuelmonCombatStartError } from './duelmon-combat-start.error';
 import type { DuelmonCombatStartCombatantRequest, DuelmonCombatStartRequest } from './duelmon-combat-start.request';
-import { Phase1MoveConstraints } from './phase-1-move.constraints';
+import type { Phase1MoveConstraints } from './phase-1-move.constraints';
 
 /**
  * Attribute definitions that govern the initial combat state.
@@ -103,16 +103,18 @@ class DuelmonCombatStart {
 	 *
 	 * @param request - Authored starting point: content references and seed.
 	 * @param catalog - Duelmon catalog built from the private dataset.
+	 * @param constraints - Phase 1 move-support policy built from the same dataset.
 	 * @param definitions - Definitions that govern combatant and group attributes.
 	 * @returns The initial combat, or every content and state failure.
 	 * @example
 	 * ```ts
-	 * const result = DuelmonCombatStart.fromContent(request, catalog, definitions);
+	 * const result = DuelmonCombatStart.fromContent(request, catalog, constraints, definitions);
 	 * ```
 	 */
 	static fromContent(
 		request: DuelmonCombatStartRequest,
 		catalog: DuelmonCatalog,
+		constraints: Phase1MoveConstraints,
 		definitions: DuelmonCombatStartDefinitions
 	): Either<DuelmonCombatStartError[], Combat> {
 		const requestErrors = this.validateRequest(request);
@@ -134,6 +136,7 @@ class DuelmonCombatStart {
 					groupRequest.id,
 					`${groupPath}.combatants.${String(combatantIndex)}`,
 					catalog,
+					constraints,
 					errors
 				);
 
@@ -210,6 +213,7 @@ class DuelmonCombatStart {
 		groupId: string,
 		path: string,
 		catalog: DuelmonCatalog,
+		constraints: Phase1MoveConstraints,
 		errors: DuelmonCombatStartError[]
 	): CombatantPrimitives | undefined {
 		const species = catalog.findSpecies(request.speciesId);
@@ -229,15 +233,14 @@ class DuelmonCombatStart {
 		for (const [moveIndex, moveId] of request.moveIds.entries()) {
 			const movePath = `${path}.creature.moves.${String(moveIndex)}`;
 			const move = catalog.findMove(moveId);
-			const entry = catalog.findMoveEntry(moveId);
 
-			if (!move || !entry) {
+			if (!move) {
 				errors.push(new DuelmonCombatStartError('unknown-move', `Unknown move "${moveId}"`, movePath));
 
 				continue;
 			}
 
-			const unsupported = Phase1MoveConstraints.unsupportedReason(entry);
+			const unsupported = constraints.unsupportedReason(moveId);
 
 			if (unsupported) {
 				errors.push(new DuelmonCombatStartError('unsupported-move', unsupported, movePath));
