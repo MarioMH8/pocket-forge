@@ -76,6 +76,95 @@ describe('AttributeMap', () => {
 		});
 	});
 
+	describe('record values', () => {
+		const boostsDefinition = AttributeDefinition.create({
+			constraints: {
+				fields: [
+					AttributeDefinition.create({
+						constraints: { max: 6, min: -6 },
+						defaultValue: 0,
+						key: 'stages',
+						type: 'number',
+					}),
+				],
+			},
+			key: 'boosts',
+			type: 'record',
+		});
+
+		it('applies nested field defaults and keeps present values', () => {
+			const map = AttributeMap.create({ boosts: { stages: 2 } }, [boostsDefinition], 'Test');
+
+			expect(map.value.boosts).toEqual({ stages: 2 });
+
+			const defaulted = AttributeMap.create({ boosts: {} }, [boostsDefinition], 'Test');
+
+			expect(defaulted.value.boosts).toEqual({ stages: 0 });
+		});
+
+		it('does not mutate the input object', () => {
+			const input = Object.freeze({ stages: 1 });
+
+			const map = AttributeMap.create({ boosts: input }, [boostsDefinition], 'Test');
+
+			expect(input).toEqual({ stages: 1 });
+			expect(map.value.boosts).not.toBe(input);
+		});
+
+		it('rejects unknown nested fields', () => {
+			expect(() => AttributeMap.create({ boosts: { defense: 1 } }, [boostsDefinition], 'Test')).toThrow(
+				'Invalid value for attribute "boosts": Field "defense" is not a declared field'
+			);
+		});
+
+		it('rejects nested values that fail their field definition', () => {
+			expect(() => AttributeMap.create({ boosts: { stages: 12 } }, [boostsDefinition], 'Test')).toThrow(
+				'Invalid value for attribute "boosts": Field "stages": Value 12 exceeds maximum 6'
+			);
+		});
+
+		it('skips optional record attributes when no value is provided', () => {
+			const map = AttributeMap.create({}, [boostsDefinition], 'Test');
+
+			expect((map.value as Record<string, AttributeValue>)['boosts']).toBeUndefined();
+		});
+
+		it('applies defaults inside arrays of records', () => {
+			const entry = AttributeDefinition.create({
+				constraints: {
+					fields: [
+						AttributeDefinition.create({ constraints: {}, key: 'moveId', required: true, type: 'string' }),
+						AttributeDefinition.create({
+							constraints: { max: 64, min: 0 },
+							defaultValue: 35,
+							key: 'current',
+							type: 'number',
+						}),
+						AttributeDefinition.create({
+							constraints: { max: 64, min: 1 },
+							defaultValue: 35,
+							key: 'max',
+							type: 'number',
+						}),
+					],
+				},
+				key: 'movePpEntry',
+				type: 'record',
+			});
+			const definition = AttributeDefinition.create({
+				constraints: { itemDefinition: entry },
+				key: 'movePp',
+				type: 'array',
+			});
+
+			const map = AttributeMap.create({ movePp: [{ moveId: 'ember' }] }, [definition], 'Test');
+
+			expect((map.value as Record<string, AttributeValue>)['movePp']).toEqual([
+				{ current: 35, max: 35, moveId: 'ember' },
+			]);
+		});
+	});
+
 	describe('fromPrimitives', () => {
 		it('hydrates from a plain record', () => {
 			const map = AttributeMap.fromPrimitives({ level: 5, name: 'hello' });

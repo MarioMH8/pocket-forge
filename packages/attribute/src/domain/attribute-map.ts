@@ -1,7 +1,7 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 
-import type AttributeDefinition from './attribute-definition';
-import type { AttributeValue, AttributeValues } from './attribute-definition';
+import type { AttributeRecord, AttributeValue, AttributeValues } from './attribute-definition';
+import AttributeDefinition from './attribute-definition';
 
 /**
  * A typed, immutable container for validated attribute values.
@@ -47,7 +47,8 @@ export default class AttributeMap<T extends Record<keyof T, AttributeValue> = At
 	 * Every definition contributes an entry to the map: if a key is present
 	 * in `values` its value is used; otherwise the definition's
 	 * `defaultValue` is applied. All entries are validated against their
-	 * corresponding definition.
+	 * corresponding definition. Record values also receive their nested field
+	 * defaults, and the input object is never mutated.
 	 *
 	 * @param values - A typed record of attribute values. Keys not listed
 	 *                 here receive their definition's default.
@@ -95,7 +96,7 @@ export default class AttributeMap<T extends Record<keyof T, AttributeValue> = At
 					entityName
 				);
 			}
-			merged[definition.key] = value;
+			merged[definition.key] = this.resolveDefaults(value, definition);
 		}
 
 		return new AttributeMap(merged as unknown as T);
@@ -113,6 +114,47 @@ export default class AttributeMap<T extends Record<keyof T, AttributeValue> = At
 	 */
 	static fromPrimitives(attributes: AttributeValues): AttributeMap {
 		return new AttributeMap(attributes);
+	}
+
+	private static resolveDefaults(value: AttributeValue, definition: AttributeDefinition): AttributeValue {
+		if (definition.type === 'record' && AttributeDefinition.isRecordValue(value)) {
+			return this.resolveRecordDefaults(value, definition);
+		}
+
+		const itemDefinition = definition.constraints.itemDefinition;
+		if (!itemDefinition || definition.type !== 'array' || !Array.isArray(value)) {
+			return value;
+		}
+
+		const records: AttributeRecord[] = [];
+		for (const item of value) {
+			if (!AttributeDefinition.isRecordValue(item)) {
+				return value;
+			}
+			records.push(item);
+		}
+
+		return records.map(item => this.resolveRecordDefaults(item, itemDefinition));
+	}
+
+	private static resolveRecordDefaults(value: AttributeRecord, definition: AttributeDefinition): AttributeRecord {
+		const resolved: Record<string, AttributeValue> = {};
+		const fields = definition.constraints.fields ?? [];
+
+		for (const field of fields) {
+			const fieldValue = value[field.key];
+
+			if (fieldValue === undefined) {
+				if (field.defaultValue !== undefined) {
+					resolved[field.key] = this.resolveDefaults(field.defaultValue, field);
+				}
+				continue;
+			}
+
+			resolved[field.key] = this.resolveDefaults(fieldValue, field);
+		}
+
+		return resolved;
 	}
 
 	/**
