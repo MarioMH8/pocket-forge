@@ -1,7 +1,67 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 
 import type AttributeDefinition from './attribute-definition';
-import type { AttributeValue, AttributeValues } from './attribute-definition';
+import type { AttributeRecord, AttributeValue, AttributeValues } from './attribute-definition';
+import isAttributeRecord from './attribute-value';
+
+/**
+ * Resolves nested defaults for a record, building a new object.
+ *
+ * @param value - The record to resolve.
+ * @param definition - A record definition with declared `fields`.
+ * @returns A new record with nested defaults applied.
+ */
+function resolveRecordDefaults(value: AttributeRecord, definition: AttributeDefinition): AttributeRecord {
+	const resolved: Record<string, AttributeValue> = {};
+	const fields = definition.constraints.fields ?? [];
+
+	for (const field of fields) {
+		const fieldValue = value[field.key];
+
+		if (fieldValue === undefined) {
+			if (field.defaultValue !== undefined) {
+				resolved[field.key] = resolveDefaults(field.defaultValue, field);
+			}
+			continue;
+		}
+
+		resolved[field.key] = resolveDefaults(fieldValue, field);
+	}
+
+	return resolved;
+}
+
+/**
+ * Resolves nested record defaults into a new value without mutating the input.
+ *
+ * Present values win; absent fields take their definition's `defaultValue` when
+ * available, and absent optional fields without a default are omitted. Required
+ * fields are enforced by `AttributeDefinition.validateValue` before this runs.
+ *
+ * @param value - The validated value to resolve.
+ * @param definition - The definition that governs the value.
+ * @returns A new value with nested defaults applied.
+ */
+function resolveDefaults(value: AttributeValue, definition: AttributeDefinition): AttributeValue {
+	if (definition.type === 'record' && isAttributeRecord(value)) {
+		return resolveRecordDefaults(value, definition);
+	}
+
+	const itemDefinition = definition.constraints.itemDefinition;
+	if (!itemDefinition || definition.type !== 'array' || !Array.isArray(value)) {
+		return value;
+	}
+
+	const records: AttributeRecord[] = [];
+	for (const item of value) {
+		if (!isAttributeRecord(item)) {
+			return value;
+		}
+		records.push(item);
+	}
+
+	return records.map(item => resolveRecordDefaults(item, itemDefinition));
+}
 
 /**
  * A typed, immutable container for validated attribute values.
@@ -47,7 +107,8 @@ export default class AttributeMap<T extends Record<keyof T, AttributeValue> = At
 	 * Every definition contributes an entry to the map: if a key is present
 	 * in `values` its value is used; otherwise the definition's
 	 * `defaultValue` is applied. All entries are validated against their
-	 * corresponding definition.
+	 * corresponding definition. Record values also receive their nested field
+	 * defaults, and the input object is never mutated.
 	 *
 	 * @param values - A typed record of attribute values. Keys not listed
 	 *                 here receive their definition's default.
@@ -95,7 +156,7 @@ export default class AttributeMap<T extends Record<keyof T, AttributeValue> = At
 					entityName
 				);
 			}
-			merged[definition.key] = value;
+			merged[definition.key] = resolveDefaults(value, definition);
 		}
 
 		return new AttributeMap(merged as unknown as T);
