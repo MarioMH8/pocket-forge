@@ -1,5 +1,6 @@
 import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import type { CombatantPrimitives, CombatPrimitives } from '@pocket-forge/combat/domain';
+import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type { DuelmonCombatStartDefinitions, DuelmonCombatStartRequest } from '@pocket-forge/duelmon/domain';
 import { Gen1BattleStats } from '@pocket-forge/duelmon/domain';
@@ -53,6 +54,16 @@ export default class DuelmonCombatStartMother {
 		this.catalogCache ??= DuelmonCatalog.fromDataset(DuelmonDatasetMother.create()).getRight();
 
 		return this.catalogCache;
+	}
+
+	/**
+	 * Builds the expected initial combat from the fixture primitives.
+	 *
+	 * @param overrides - Combat primitive fields to replace.
+	 * @returns The initial combat.
+	 */
+	static combat(overrides: Partial<CombatPrimitives> = {}): CombatEntity {
+		return CombatEntity.fromPrimitives(this.primitives(overrides));
 	}
 
 	/**
