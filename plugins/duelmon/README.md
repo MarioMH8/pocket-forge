@@ -40,6 +40,25 @@ the attribute definitions; `useMove` reads moves and species from the Duelmon
 catalog. Actions and their descriptors live in the same classes, so the plugin
 catalog and resolver map are built from one action list.
 
+## Reading the initial state
+
+`DuelmonCombat`, `DuelmonCombatantGroup`, and `DuelmonCombatant` are read-only
+semantic views over the `Combat` snapshot returned by `DuelmonCombatStart`.
+`DuelmonCombatReport` renders that same snapshot as readable text for the
+minimal Phase 1 screen:
+
+```ts
+const combat = DuelmonCombatStart.fromContent(request, catalog, definitions).getRight();
+const report = DuelmonCombatReport.fromCombat(combat);
+
+console.log(report.toString());
+```
+
+The report shows each group's active combatant, current and maximum HP, species
+types, and loadout moves. It does not render PP, accuracy, priority, status
+conditions, stat stages, or other information outside Phase 1. Views keep no
+manual copy of the state: the `Combat` snapshot remains the source of truth.
+
 ## Use Move action
 
 `useMove` resolves a single-target damaging move for one combatant against

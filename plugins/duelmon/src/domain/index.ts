@@ -42,6 +42,7 @@ export type {
 	DuelmonSecondaryEffectSelf,
 } from './move/duelmon-move';
 export { DuelmonMove } from './move/duelmon-move';
+export { DuelmonCombatReport } from './report/duelmon-combat-report';
 export type { DuelmonSpeciesAttributes } from './species/duelmon-species';
 export { DuelmonSpecies } from './species/duelmon-species';
 export type { DuelmonCombatStartDefinitions } from './start/duelmon-combat-start';
