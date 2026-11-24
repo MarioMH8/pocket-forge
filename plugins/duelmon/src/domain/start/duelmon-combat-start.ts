@@ -10,11 +10,10 @@ import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type { MovePrimitives } from '@pocket-forge/move/domain';
 import RandomPocket from '@pocket-forge/rng/domain';
-import type { Species } from '@pocket-forge/species/domain';
 
-import type { Gen1BaseStats } from '../action/use-move/gen1/battle-stats';
 import { Gen1BattleStats } from '../action/use-move/gen1/battle-stats';
-import { DuelmonCombatAttributes } from '../support/combat-attributes';
+import { DuelmonMove } from '../move/duelmon-move';
+import { DuelmonSpecies } from '../species/duelmon-species';
 import type { UnknownRecord } from '../support/duelmon-record';
 import { DuelmonRecord } from '../support/duelmon-record';
 import { DuelmonCombatStartError } from './duelmon-combat-start.error';
@@ -40,7 +39,6 @@ interface DuelmonCombatStartDefinitions {
 }
 
 const ACTIVE_COMBATANT_IDS = 'activeCombatantIds';
-const BASE_STAT_KEYS = ['baseAtk', 'baseDef', 'baseHp', 'baseSpecial', 'baseSpeed'] as const;
 const HP = 'hp';
 const MAX_HP = 'maxHp';
 const MOVES = 'moves';
@@ -164,47 +162,6 @@ class DuelmonCombatStart {
 		return this.create(primitives, definitions);
 	}
 
-	private static readBaseStats(
-		species: Species,
-		path: string,
-		errors: DuelmonCombatStartError[]
-	): Gen1BaseStats | undefined {
-		const values = species.attributes.toPrimitives();
-		const base: Partial<Record<(typeof BASE_STAT_KEYS)[number], number>> = {};
-		let isMissing = false;
-
-		for (const key of BASE_STAT_KEYS) {
-			const value = DuelmonCombatAttributes.readNumber(values, key);
-
-			if (value === undefined) {
-				isMissing = true;
-				errors.push(
-					new DuelmonCombatStartError(
-						'missing-attribute',
-						`Species "${species.id}" is missing numeric "${key}" attribute`,
-						`${path}.creature.species.attributes.${key}`
-					)
-				);
-
-				continue;
-			}
-
-			base[key] = value;
-		}
-
-		if (isMissing) {
-			return undefined;
-		}
-
-		return {
-			baseAtk: base.baseAtk ?? 0,
-			baseDef: base.baseDef ?? 0,
-			baseHp: base.baseHp ?? 0,
-			baseSpecial: base.baseSpecial ?? 0,
-			baseSpeed: base.baseSpeed ?? 0,
-		};
-	}
-
 	private static resolveCombatant(
 		request: DuelmonCombatStartCombatantRequest,
 		groupId: string,
@@ -236,7 +193,7 @@ class DuelmonCombatStart {
 				continue;
 			}
 
-			const unsupported = Phase1MoveConstraints.unsupportedReason(move);
+			const unsupported = Phase1MoveConstraints.unsupportedReason(DuelmonMove.fromMove(move));
 
 			if (unsupported) {
 				errors.push(new DuelmonCombatStartError('unsupported-move', unsupported, movePath));
@@ -251,11 +208,7 @@ class DuelmonCombatStart {
 			return undefined;
 		}
 
-		const baseStats = this.readBaseStats(species, path, errors);
-
-		if (!baseStats) {
-			return undefined;
-		}
+		const baseStats = DuelmonSpecies.fromSpecies(species).baseStats();
 
 		return {
 			attributes: { ...Gen1BattleStats.derive(baseStats, this.STARTING_LEVEL) },

@@ -1,8 +1,7 @@
 import type { AttributeValues } from '@pocket-forge/attribute/domain';
 import { DuelmonAttributeDefinitions, DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
-import { Phase1MoveConstraints } from '@pocket-forge/duelmon/domain';
+import { DuelmonMove, Phase1MoveConstraints } from '@pocket-forge/duelmon/domain';
 import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domain';
-import type { Move } from '@pocket-forge/move/domain';
 import { Move as MoveEntity } from '@pocket-forge/move/domain';
 import { describe, expect, it } from 'bun:test';
 
@@ -10,30 +9,32 @@ function catalog(): DuelmonCatalog {
 	return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create()).getRight();
 }
 
-function catalogMove(id: string): Move {
+function catalogMove(id: string): DuelmonMove {
 	const found = catalog().findMove(id);
 
 	if (!found) {
 		throw new Error(`Missing fixture move "${id}"`);
 	}
 
-	return found;
+	return DuelmonMove.fromMove(found);
 }
 
-function move(overrides: AttributeValues = {}): Move {
-	return MoveEntity.create(
-		'test-move',
-		{
-			accuracy: 100,
-			alwaysHits: true,
-			category: 'Physical',
-			power: 40,
-			pp: 35,
-			priority: 0,
-			type: 'Normal',
-			...overrides,
-		},
-		[...DuelmonAttributeDefinitions.MOVE]
+function move(overrides: AttributeValues = {}): DuelmonMove {
+	return DuelmonMove.fromMove(
+		MoveEntity.create(
+			'test-move',
+			{
+				accuracy: 100,
+				alwaysHits: true,
+				category: 'Physical',
+				power: 40,
+				pp: 35,
+				priority: 0,
+				type: 'Normal',
+				...overrides,
+			},
+			[...DuelmonAttributeDefinitions.MOVE]
+		)
 	);
 }
 
