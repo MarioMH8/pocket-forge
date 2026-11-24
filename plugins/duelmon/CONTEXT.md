@@ -27,6 +27,18 @@ _Avoid_: Species wrapper, species DTO
 A read-only semantic projection of a neutral Combatant. It exposes level, HP, battle stats, the embedded Species, and the loadout Moves; battle-state writes still go through primitives.
 _Avoid_: Combatant wrapper, battle DTO
 
+**Duelmon Combat View**:
+A read-only semantic projection of a neutral Combat. It exposes the combat groups in order and their active subset, and never replaces the Combat as the source of truth.
+_Avoid_: Battle DTO, combat wrapper
+
+**Duelmon Combatant Group View**:
+A read-only semantic projection of a neutral Combatant Group. It exposes its combatants and active subset without leaking the attribute map.
+_Avoid_: Team view, side DTO
+
+**Duelmon Combat Report**:
+A human-readable text projection of a Duelmon Combat View for the minimal Phase 1 screen and the basic history. It renders only the initial state Phase 1 exposes and keeps no manual copy of the combat.
+_Avoid_: Log formatter, screen model
+
 **Duelmon Combat Start**:
 The start contract that resolves Phase 1 content references into a validated initial Combat. It derives Gen 1 battle attributes, rejects unknown or unsupported content, aggregates every failure, and never returns a partial combat.
 _Avoid_: Battle bootstrap, battle factory, initial-state builder

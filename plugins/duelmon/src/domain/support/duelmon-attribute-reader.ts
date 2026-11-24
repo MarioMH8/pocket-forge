@@ -110,6 +110,41 @@ class DuelmonAttributeReader {
 
 		return value;
 	}
+
+	/**
+	 * Reads a required array of strings.
+	 *
+	 * @param values - Primitive attribute values.
+	 * @param key - Attribute key.
+	 * @param context - Entity description used in the error message.
+	 * @returns The string values.
+	 * @throws {InvalidArgumentError} When the value is not an array of strings.
+	 */
+	static stringArray(values: AttributeValues, key: string, context: string): readonly string[] {
+		const value = values[key];
+
+		if (!Array.isArray(value)) {
+			throw new InvalidArgumentError(
+				`${context} requires an array of strings "${key}"`,
+				'DuelmonAttributeReader'
+			);
+		}
+
+		const strings: string[] = [];
+
+		for (const item of value) {
+			if (typeof item !== 'string') {
+				throw new InvalidArgumentError(
+					`${context} requires an array of strings "${key}"`,
+					'DuelmonAttributeReader'
+				);
+			}
+
+			strings.push(item);
+		}
+
+		return strings;
+	}
 }
 
 export { DuelmonAttributeReader };

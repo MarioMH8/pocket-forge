@@ -18,8 +18,9 @@ This package is a private implementation outside the neutral Combat core. It may
 ## Structure
 
 - `src/domain/` — actions, events, shared support helpers, the plugin composition root, and the initial combat start.
-- `src/domain/combat/` — semantic views over the neutral Combatant state.
+- `src/domain/combat/` — semantic views over neutral Combat, Combatant Group, and Combatant state.
 - `src/domain/move/` — semantic view over neutral catalog Moves.
+- `src/domain/report/` — human-readable Phase 1 report over the combat views.
 - `src/domain/species/` — semantic view over neutral catalog Species.
 - `src/domain/start/` — initial combat state contract, Phase 1 move-support policy, and content-to-state resolution.
 - `src/catalog/` — neutral dataset bridge. It is a separate public entrypoint (`@pocket-forge/duelmon/catalog`) because the catalog is assembled from the private dataset and reused by the plugin.
