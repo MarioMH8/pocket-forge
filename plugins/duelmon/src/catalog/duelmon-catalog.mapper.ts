@@ -1,16 +1,12 @@
 import Either from '@hexadrop/either';
 import type { AttributeDefinition, AttributeValues } from '@pocket-forge/attribute/domain';
-import type { DuelmonMove, DuelmonSpecies } from '@pocket-forge/duelmon-dataset';
+import type { DuelmonMove, DuelmonMoveSecondary, DuelmonSpecies } from '@pocket-forge/duelmon-dataset';
 import { DuelmonTypes } from '@pocket-forge/duelmon-dataset';
 import { Move } from '@pocket-forge/move/domain';
 import { Species } from '@pocket-forge/species/domain';
 
 import { DuelmonAttributeDefinitions } from './duelmon-attribute-definitions';
 import { DuelmonCatalogError } from './duelmon-catalog.error';
-
-function messageOf(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
-}
 
 /**
  * Validates dataset entries and maps them to neutral catalog entities.
@@ -68,6 +64,14 @@ class DuelmonCatalogMapper {
 				pp: entry.pp,
 				priority: entry.priority,
 				type: entry.type,
+				...(entry.status !== undefined && { status: entry.status }),
+				...(entry.volatileStatus !== undefined && { volatileStatus: entry.volatileStatus }),
+				...(entry.boosts !== undefined && { boosts: this.boostValues(entry.boosts) }),
+				...(entry.secondary !== undefined && { secondary: this.secondaryValues(entry.secondary) }),
+				...(entry.drain !== undefined && { drain: [...entry.drain] }),
+				...(entry.recoil !== undefined && { recoil: [...entry.recoil] }),
+				...(entry.multihit !== undefined && { multihit: this.multihitValues(entry.multihit) }),
+				...(entry.critRatio !== undefined && { critRatio: entry.critRatio }),
 			};
 
 			try {
@@ -76,7 +80,7 @@ class DuelmonCatalogMapper {
 				errors.push(
 					new DuelmonCatalogError(
 						'invalid-move',
-						`Invalid Duelmon move "${entry.id}": ${messageOf(error)}`,
+						`Invalid Duelmon move "${entry.id}": ${this.messageOf(error)}`,
 						`moves.${entry.id}`
 					)
 				);
@@ -143,7 +147,7 @@ class DuelmonCatalogMapper {
 				errors.push(
 					new DuelmonCatalogError(
 						'invalid-species',
-						`Invalid Duelmon species "${entry.id}": ${messageOf(error)}`,
+						`Invalid Duelmon species "${entry.id}": ${this.messageOf(error)}`,
 						`species.${entry.id}`
 					)
 				);
@@ -151,6 +155,28 @@ class DuelmonCatalogMapper {
 		}
 
 		return errors.length > 0 ? Either.left(errors) : Either.right(Object.freeze(species));
+	}
+
+	private static boostValues(boosts: Readonly<Record<string, number>>): AttributeValues[] {
+		return Object.entries(boosts).map(([stat, stages]) => ({ stages, stat }));
+	}
+
+	private static messageOf(error: unknown): string {
+		return error instanceof Error ? error.message : String(error);
+	}
+
+	private static multihitValues(multihit: number | readonly number[]): number[] {
+		return typeof multihit === 'number' ? [multihit, multihit] : [...multihit];
+	}
+
+	private static secondaryValues(secondary: DuelmonMoveSecondary): AttributeValues {
+		return {
+			...(secondary.boosts !== undefined && { boosts: this.boostValues(secondary.boosts) }),
+			...(secondary.chance !== undefined && { chance: secondary.chance }),
+			...(secondary.self?.boosts !== undefined && { self: { boosts: this.boostValues(secondary.self.boosts) } }),
+			...(secondary.status !== undefined && { status: secondary.status }),
+			...(secondary.volatileStatus !== undefined && { volatileStatus: secondary.volatileStatus }),
+		};
 	}
 }
 

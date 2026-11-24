@@ -4,6 +4,7 @@ export type { default as DuelmonActionResolver } from './action/duelmon-action.r
 export { ModifyAttributeAction } from './action/modify-attribute/modify-attribute.action';
 export type { DuelmonOperation } from './action/modify-attribute/modify-attribute.config';
 export { ModifyAttributeConfig } from './action/modify-attribute/modify-attribute.config';
+export type { Gen1BaseStats, Gen1DerivedStats } from './action/use-move/gen1/battle-stats';
 export { Gen1BattleStats } from './action/use-move/gen1/battle-stats';
 export type { Gen1DamageInput } from './action/use-move/gen1/damage';
 export { Gen1Damage } from './action/use-move/gen1/damage';
@@ -30,6 +31,16 @@ export type {
 	MoveUsedPayload,
 } from './event';
 export { DUELMON_COMBAT_EVENT_TYPES, DuelmonCombatEvents } from './event';
+export type { DuelmonCombatStartDefinitions } from './start/duelmon-combat-start';
+export { DuelmonCombatStart } from './start/duelmon-combat-start';
+export type { DuelmonCombatStartErrorReason } from './start/duelmon-combat-start.error';
+export { DuelmonCombatStartError } from './start/duelmon-combat-start.error';
+export type {
+	DuelmonCombatStartCombatantRequest,
+	DuelmonCombatStartGroupRequest,
+	DuelmonCombatStartRequest,
+} from './start/duelmon-combat-start.request';
+export { Phase1MoveConstraints } from './start/phase-1-move.constraints';
 export { DuelmonCombatAttributes } from './support/combat-attributes';
 export { DuelmonCombatInput } from './support/duelmon-combat.input';
 export { DuelmonFailure } from './support/duelmon-failure';

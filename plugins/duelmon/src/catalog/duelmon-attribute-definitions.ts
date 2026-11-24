@@ -1,7 +1,79 @@
 import type { AttributeDefinition } from '@pocket-forge/attribute/domain';
 import { AttributeDefinition as AttributeDefinitionEntity } from '@pocket-forge/attribute/domain';
-import type { DuelmonMoveCategory, DuelmonType } from '@pocket-forge/duelmon-dataset';
 import { DuelmonTypes } from '@pocket-forge/duelmon-dataset';
+
+const BOOST_FIELDS: readonly AttributeDefinition[] = Object.freeze([
+	AttributeDefinitionEntity.create({
+		constraints: { minLength: 1 },
+		key: 'stat',
+		required: true,
+		type: 'string',
+	}),
+	AttributeDefinitionEntity.create({
+		constraints: { max: 6, min: -6 },
+		key: 'stages',
+		required: true,
+		type: 'number',
+	}),
+]);
+
+/**
+ * One stat-stage change, carried as a closed record.
+ */
+const BOOST: AttributeDefinition = AttributeDefinitionEntity.create({
+	constraints: { fields: BOOST_FIELDS },
+	key: 'boost',
+	required: true,
+	type: 'record',
+});
+
+/**
+ * Stat-stage changes applied by a Move or a secondary effect.
+ */
+const BOOSTS: AttributeDefinition = AttributeDefinitionEntity.create({
+	constraints: { itemDefinition: BOOST, maxLength: 6, minLength: 1 },
+	key: 'boosts',
+	required: false,
+	type: 'array',
+});
+
+/**
+ * Probabilistic extra effect of a damaging Move.
+ */
+const SECONDARY: AttributeDefinition = AttributeDefinitionEntity.create({
+	constraints: {
+		fields: [
+			AttributeDefinitionEntity.create({
+				constraints: { max: 100, min: 0 },
+				key: 'chance',
+				required: false,
+				type: 'number',
+			}),
+			AttributeDefinitionEntity.create({
+				constraints: { minLength: 1 },
+				key: 'status',
+				required: false,
+				type: 'string',
+			}),
+			AttributeDefinitionEntity.create({
+				constraints: { minLength: 1 },
+				key: 'volatileStatus',
+				required: false,
+				type: 'string',
+			}),
+			BOOSTS,
+			AttributeDefinitionEntity.create({
+				constraints: { fields: [BOOSTS] },
+				key: 'self',
+				required: false,
+				type: 'record',
+			}),
+		],
+	},
+	key: 'secondary',
+	required: false,
+	type: 'record',
+});
 
 /**
  * Attribute definitions that describe entities built from the Duelmon dataset.
@@ -58,12 +130,45 @@ class DuelmonAttributeDefinitions {
 			required: true,
 			type: 'number',
 		}),
+		AttributeDefinitionEntity.create({
+			constraints: { minLength: 1 },
+			key: 'status',
+			required: false,
+			type: 'string',
+		}),
+		AttributeDefinitionEntity.create({
+			constraints: { minLength: 1 },
+			key: 'volatileStatus',
+			required: false,
+			type: 'string',
+		}),
+		BOOSTS,
+		SECONDARY,
+		AttributeDefinitionEntity.create({
+			constraints: { itemType: 'number', maxLength: 2, minLength: 2 },
+			key: 'drain',
+			required: false,
+			type: 'array',
+		}),
+		AttributeDefinitionEntity.create({
+			constraints: { itemType: 'number', maxLength: 2, minLength: 2 },
+			key: 'recoil',
+			required: false,
+			type: 'array',
+		}),
+		AttributeDefinitionEntity.create({
+			constraints: { itemType: 'number', maxLength: 2, minLength: 2 },
+			key: 'multihit',
+			required: false,
+			type: 'array',
+		}),
+		AttributeDefinitionEntity.create({
+			constraints: { min: 1 },
+			key: 'critRatio',
+			required: false,
+			type: 'number',
+		}),
 	]);
-
-	/**
-	 * Move categories accepted by the dataset catalog.
-	 */
-	static readonly MOVE_CATEGORIES: readonly DuelmonMoveCategory[] = DuelmonTypes.MOVE_CATEGORIES;
 
 	/**
 	 * Attributes that describe a neutral Species built from the dataset.
@@ -106,13 +211,7 @@ class DuelmonAttributeDefinitions {
 			type: 'number',
 		}),
 	]);
-
-	/**
-	 * Gen 1 types accepted by the dataset catalog.
-	 */
-	static readonly TYPES: readonly DuelmonType[] = DuelmonTypes.ALL;
 }
-
 export { DuelmonAttributeDefinitions };
 
 export default DuelmonAttributeDefinitions;
