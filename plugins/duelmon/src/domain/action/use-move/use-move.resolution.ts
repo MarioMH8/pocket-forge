@@ -101,9 +101,9 @@ class UseMoveResolution {
 			return DuelmonFailure.fail('invalid-input', `Unknown combatant actor "${input.actorId}"`, 'input.actorId');
 		}
 
-		const move = catalog.findMove(input.moveId);
+		const catalogMove = catalog.findMove(input.moveId);
 
-		if (!move) {
+		if (!catalogMove) {
 			return DuelmonFailure.fail(
 				'invalid-input',
 				`Unknown Move "${input.moveId}" in the Duelmon catalog`,
@@ -111,9 +111,9 @@ class UseMoveResolution {
 			);
 		}
 
-		const moveView = DuelmonMove.fromMove(move);
+		const move = DuelmonMove.fromMove(catalogMove);
 
-		if (!moveView.isDamaging) {
+		if (!move.isDamaging) {
 			return DuelmonFailure.fail(
 				'rejected',
 				`Move "${input.moveId}" does not have a damaging category`,
@@ -149,16 +149,16 @@ class UseMoveResolution {
 				attacker,
 				attackerTypes,
 				{
-					accuracy: moveView.accuracy,
-					alwaysHits: moveView.alwaysHits,
-					category: moveView.category,
-					power: moveView.power,
-					type: moveView.type,
+					accuracy: move.accuracy,
+					alwaysHits: move.alwaysHits,
+					category: move.category,
+					power: move.power,
+					type: move.type,
 				},
 				input.moveId,
 				resolvedTarget,
 				target,
-				catalog.typeMultipliers(moveView.type, targetTypes)
+				catalog.typeMultipliers(move.type, targetTypes)
 			)
 		);
 	}
