@@ -17,6 +17,8 @@ export type {
 	UseMoveOutcome,
 } from './action/use-move/use-move.mechanics';
 export { UseMoveResolution } from './action/use-move/use-move.resolution';
+export type { DuelmonCombatantAttributes } from './combat/duelmon-combatant';
+export { DuelmonCombatant } from './combat/duelmon-combatant';
 export { DuelmonCombatPlugin } from './duelmon-combat.plugin';
 export type {
 	AttributeModificationFailedEvent,
