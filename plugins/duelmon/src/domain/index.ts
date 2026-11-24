@@ -31,6 +31,15 @@ export type {
 	MoveUsedPayload,
 } from './event';
 export { DUELMON_COMBAT_EVENT_TYPES, DuelmonCombatEvents } from './event';
+export type {
+	DuelmonBoost,
+	DuelmonMoveAttributes,
+	DuelmonSecondaryEffect,
+	DuelmonSecondaryEffectSelf,
+} from './move/duelmon-move';
+export { DuelmonMove } from './move/duelmon-move';
+export type { DuelmonSpeciesAttributes } from './species/duelmon-species';
+export { DuelmonSpecies } from './species/duelmon-species';
 export type { DuelmonCombatStartDefinitions } from './start/duelmon-combat-start';
 export { DuelmonCombatStart } from './start/duelmon-combat-start';
 export type { DuelmonCombatStartErrorReason } from './start/duelmon-combat-start.error';
