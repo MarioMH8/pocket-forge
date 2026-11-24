@@ -15,6 +15,18 @@ _Avoid_: Core action resolver, engine plugin, Combat Action Plugin
 The neutral bridge built by `DuelmonCatalog.fromDataset` from the Duelmon Dataset. It exposes Species and Move entities plus `typeMultipliers`, validates the complete Gen 1 type chart and the Gen 1 move-effect vocabulary at the boundary, and is required by the Duelmon Combat Plugin.
 _Avoid_: Dataset loader, content registry
 
+**Duelmon Move View**:
+A read-only semantic projection of a neutral Move. It exposes typed getters and predicates such as `isStatus`, `hasSecondaryEffect`, and `drains`, and hides the attribute map; the neutral Move remains the source of truth.
+_Avoid_: Move wrapper, move DTO
+
+**Duelmon Species View**:
+A read-only semantic projection of a neutral Species. It exposes its types and base stats in the shape the Gen 1 stat formula consumes.
+_Avoid_: Species wrapper, species DTO
+
+**Duelmon Combatant View**:
+A read-only semantic projection of a neutral Combatant. It exposes level, HP, battle stats, the embedded Species, and the loadout Moves; battle-state writes still go through primitives.
+_Avoid_: Combatant wrapper, battle DTO
+
 **Duelmon Combat Start**:
 The start contract that resolves Phase 1 content references into a validated initial Combat. It derives Gen 1 battle attributes, rejects unknown or unsupported content, aggregates every failure, and never returns a partial combat.
 _Avoid_: Battle bootstrap, battle factory, initial-state builder
