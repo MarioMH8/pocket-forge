@@ -16,7 +16,9 @@ function stats(overrides: AttributeValues = {}): AttributeValues {
 		defense: 80,
 		hp: 100,
 		level: 50,
+		maxHp: 100,
 		special: 120,
+		speed: 50,
 		...overrides,
 	};
 }

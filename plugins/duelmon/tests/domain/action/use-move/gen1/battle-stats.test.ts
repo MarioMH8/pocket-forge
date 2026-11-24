@@ -1,4 +1,6 @@
+import { Combat } from '@pocket-forge/combat/domain';
 import { Gen1BattleStats } from '@pocket-forge/duelmon/domain';
+import { DuelmonCombatStartMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
 const EMBERLING = {
@@ -77,5 +79,24 @@ describe('Gen1BattleStats definitions', () => {
 		expect(definition?.validateValue([])).toBeDefined();
 		expect(definition?.validateValue(['a', 'b', 'c'])).toBeDefined();
 		expect(definition?.validateValue('combatant-a')).toBeDefined();
+	});
+});
+
+describe('Gen1BattleStats.fromCombatant', () => {
+	it('reads the battle stats through the combatant view', () => {
+		const combat = Combat.fromPrimitives(DuelmonCombatStartMother.primitives());
+		const combatant = combat.groups[0]?.combatants[0];
+
+		if (!combatant) {
+			throw new Error('Missing fixture combatant');
+		}
+
+		expect(Gen1BattleStats.fromCombatant(combatant)).toMatchObject({
+			attack: 57,
+			defense: 48,
+			hp: 99,
+			level: 50,
+			special: 65,
+		});
 	});
 });
