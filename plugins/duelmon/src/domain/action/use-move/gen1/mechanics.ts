@@ -23,20 +23,11 @@ class Gen1UseMoveMechanics implements UseMoveMechanics {
 	 *
 	 * @param input - Combatants, move attributes, and type data already resolved.
 	 * @param randomPocket - Randomness state at the start of the hit.
-	 * @returns The hit result and the advanced randomness, or missing stat failures.
+	 * @returns The hit result and the advanced randomness.
 	 */
 	resolve(input: UseMoveInput, randomPocket: RandomPocket): Either<CombatResolutionError[], UseMoveOutcome> {
-		const attackerStats = Gen1BattleStats.fromCombatant(input.attacker, 'invalid-input');
-
-		if (attackerStats.isLeft()) {
-			return Either.left(attackerStats.getLeft());
-		}
-
-		const targetStats = Gen1BattleStats.fromCombatant(input.target, 'invalid-target');
-
-		if (targetStats.isLeft()) {
-			return Either.left(targetStats.getLeft());
-		}
+		const stats = Gen1BattleStats.fromCombatant(input.attacker);
+		const defender = Gen1BattleStats.fromCombatant(input.target);
 
 		let nextRandomPocket = randomPocket;
 
@@ -50,8 +41,6 @@ class Gen1UseMoveMechanics implements UseMoveMechanics {
 		}
 
 		const [randomFactor, afterDamage] = nextRandomPocket.nextInt(MIN_RANDOM_FACTOR, MAX_RANDOM_FACTOR);
-		const stats = attackerStats.getRight();
-		const defender = targetStats.getRight();
 		const isPhysical = input.move.category === 'Physical';
 		const damage = Gen1Damage.calculate({
 			attack: isPhysical ? stats.attack : stats.special,

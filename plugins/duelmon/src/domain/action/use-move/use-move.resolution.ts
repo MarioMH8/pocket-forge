@@ -3,60 +3,12 @@ import type { Combat, Combatant } from '@pocket-forge/combat/domain';
 import type { CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type { DuelmonType } from '@pocket-forge/duelmon-dataset';
-import { DuelmonTypes } from '@pocket-forge/duelmon-dataset';
-import type { Move } from '@pocket-forge/move/domain';
-import type { Species } from '@pocket-forge/species/domain';
 
+import { DuelmonMove } from '../../move/duelmon-move';
+import { DuelmonSpecies } from '../../species/duelmon-species';
 import type { DuelmonCombatInput, ResolvedDuelmonTarget } from '../../support';
 import { DuelmonFailure, DuelmonTarget } from '../../support';
 import type { UseMoveAttributes } from './use-move.mechanics';
-
-const STATUS_CATEGORY = 'Status';
-
-function readMoveAttributes(move: Move, moveId: string): Either<CombatResolutionError[], UseMoveAttributes> {
-	const values = move.attributes.toPrimitives();
-	const type = values['type'];
-	const category = values['category'];
-	const power = values['power'];
-	const accuracy = values['accuracy'];
-	const alwaysHits = values['alwaysHits'];
-
-	if (
-		typeof power !== 'number' ||
-		typeof accuracy !== 'number' ||
-		typeof alwaysHits !== 'boolean' ||
-		!DuelmonTypes.is(type) ||
-		!DuelmonTypes.isCategory(category)
-	) {
-		return DuelmonFailure.fail('invalid-action', `Move "${moveId}" has invalid catalog attributes`, 'input.moveId');
-	}
-
-	return Either.right({ accuracy, alwaysHits, category, power, type });
-}
-
-function readSpeciesTypes(
-	species: Species,
-	reason: 'invalid-input' | 'invalid-target',
-	path: string
-): Either<CombatResolutionError[], readonly DuelmonType[]> {
-	const types = species.attributes.toPrimitives()['types'];
-
-	if (!Array.isArray(types)) {
-		return DuelmonFailure.fail(reason, `Species "${species.id}" has invalid types`, path);
-	}
-
-	const parsed: DuelmonType[] = [];
-
-	for (const type of types) {
-		if (!DuelmonTypes.is(type)) {
-			return DuelmonFailure.fail(reason, `Species "${species.id}" has invalid types`, path);
-		}
-
-		parsed.push(type);
-	}
-
-	return Either.right(parsed);
-}
 
 /**
  * Resolved inputs of one damaging `useMove` resolution.
@@ -159,15 +111,9 @@ class UseMoveResolution {
 			);
 		}
 
-		const moveAttributes = readMoveAttributes(move, input.moveId);
+		const moveView = DuelmonMove.fromMove(move);
 
-		if (moveAttributes.isLeft()) {
-			return Either.left(moveAttributes.getLeft());
-		}
-
-		const attributes = moveAttributes.getRight();
-
-		if (attributes.category === STATUS_CATEGORY) {
+		if (!moveView.isDamaging) {
 			return DuelmonFailure.fail(
 				'rejected',
 				`Move "${input.moveId}" does not have a damaging category`,
@@ -195,37 +141,24 @@ class UseMoveResolution {
 			);
 		}
 
-		const attackerTypes = readSpeciesTypes(
-			attackerSpecies,
-			'invalid-input',
-			`combatants.${attacker.id}.creature.species.attributes.types`
-		);
-
-		if (attackerTypes.isLeft()) {
-			return Either.left(attackerTypes.getLeft());
-		}
-
-		const targetTypes = readSpeciesTypes(
-			targetSpecies,
-			'invalid-target',
-			`combatants.${target.id}.creature.species.attributes.types`
-		);
-
-		if (targetTypes.isLeft()) {
-			return Either.left(targetTypes.getLeft());
-		}
-
-		const defenderTypes = targetTypes.getRight();
+		const attackerTypes = DuelmonSpecies.fromSpecies(attackerSpecies).types;
+		const targetTypes = DuelmonSpecies.fromSpecies(targetSpecies).types;
 
 		return Either.right(
 			new UseMoveResolution(
 				attacker,
-				attackerTypes.getRight(),
-				attributes,
+				attackerTypes,
+				{
+					accuracy: moveView.accuracy,
+					alwaysHits: moveView.alwaysHits,
+					category: moveView.category,
+					power: moveView.power,
+					type: moveView.type,
+				},
 				input.moveId,
 				resolvedTarget,
 				target,
-				catalog.typeMultipliers(attributes.type, defenderTypes)
+				catalog.typeMultipliers(moveView.type, targetTypes)
 			)
 		);
 	}

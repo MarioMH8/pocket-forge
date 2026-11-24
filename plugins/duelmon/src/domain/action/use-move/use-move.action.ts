@@ -12,6 +12,7 @@ import { CombatTransition } from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type RandomPocket from '@pocket-forge/rng/domain';
 
+import { DuelmonCombatant } from '../../combat/duelmon-combatant';
 import { DuelmonCombatEvents } from '../../event';
 import type { DuelmonCombatInput } from '../../support';
 import { DuelmonCombatAttributes, DuelmonFailure } from '../../support';
@@ -122,15 +123,7 @@ class UseMoveAction implements DuelmonAction {
 			);
 		}
 
-		const currentHp = DuelmonCombatAttributes.readNumber(move.resolvedTarget.values, HP_KEY);
-
-		if (currentHp === undefined) {
-			return DuelmonFailure.fail(
-				'invalid-target',
-				`Combatant "${move.target.id}" is missing numeric "${HP_KEY}" attribute`,
-				`combatants.${move.target.id}.${HP_KEY}`
-			);
-		}
+		const currentHp = DuelmonCombatant.fromCombatant(move.target).hp;
 
 		const outcome = this.mechanics.resolve(
 			{

@@ -1,25 +1,12 @@
-import type { AttributeDefinition, AttributeValue, AttributeValues } from '@pocket-forge/attribute/domain';
+import type { AttributeDefinition, AttributeValue } from '@pocket-forge/attribute/domain';
 import type { CombatPrimitives } from '@pocket-forge/combat/domain';
 
 import type { ResolvedDuelmonTarget } from './duelmon-target';
 
 /**
- * Numeric attribute reads and writes shared by Duelmon actions.
+ * Numeric attribute writes shared by Duelmon actions.
  */
 class DuelmonCombatAttributes {
-	/**
-	 * Reads a finite numeric attribute from a primitive attribute record.
-	 *
-	 * @param values - Primitive attribute values.
-	 * @param key - Attribute key.
-	 * @returns The numeric value, or `undefined` when it is absent or invalid.
-	 */
-	static readNumber(values: AttributeValues, key: string): number | undefined {
-		const value = values[key];
-
-		return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
-	}
-
 	/**
 	 * Resolves the numeric value currently stored for an attribute.
 	 *

@@ -17,6 +17,8 @@ export type {
 	UseMoveOutcome,
 } from './action/use-move/use-move.mechanics';
 export { UseMoveResolution } from './action/use-move/use-move.resolution';
+export type { DuelmonCombatantAttributes } from './combat/duelmon-combatant';
+export { DuelmonCombatant } from './combat/duelmon-combatant';
 export { DuelmonCombatPlugin } from './duelmon-combat.plugin';
 export type {
 	AttributeModificationFailedEvent,
@@ -31,6 +33,15 @@ export type {
 	MoveUsedPayload,
 } from './event';
 export { DUELMON_COMBAT_EVENT_TYPES, DuelmonCombatEvents } from './event';
+export type {
+	DuelmonBoost,
+	DuelmonMoveAttributes,
+	DuelmonSecondaryEffect,
+	DuelmonSecondaryEffectSelf,
+} from './move/duelmon-move';
+export { DuelmonMove } from './move/duelmon-move';
+export type { DuelmonSpeciesAttributes } from './species/duelmon-species';
+export { DuelmonSpecies } from './species/duelmon-species';
 export type { DuelmonCombatStartDefinitions } from './start/duelmon-combat-start';
 export { DuelmonCombatStart } from './start/duelmon-combat-start';
 export type { DuelmonCombatStartErrorReason } from './start/duelmon-combat-start.error';

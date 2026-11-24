@@ -1,15 +1,8 @@
-import Either from '@hexadrop/either';
 import type { AttributeDefinition } from '@pocket-forge/attribute/domain';
 import { AttributeDefinition as AttributeDefinitionEntity } from '@pocket-forge/attribute/domain';
 import type { Combatant } from '@pocket-forge/combat/domain';
-import type { CombatResolutionError, CombatResolutionErrorReason } from '@pocket-forge/combat-engine/domain';
-import { CombatResolutionError as CombatResolutionErrorValue } from '@pocket-forge/combat-engine/domain';
 
-import { DuelmonCombatAttributes } from '../../../support';
-
-const BATTLE_STAT_KEYS = ['level', 'hp', 'attack', 'defense', 'special'] as const;
-
-type Gen1BattleStatKey = (typeof BATTLE_STAT_KEYS)[number];
+import { DuelmonCombatant } from '../../../combat/duelmon-combatant';
 
 /**
  * Base stats read from a species to derive the initial battle values.
@@ -168,57 +161,22 @@ class Gen1BattleStats {
 	}
 
 	/**
-	 * Reads the Gen 1 battle stats from a combatant's attributes.
+	 * Reads the Gen 1 battle stats from a combatant.
 	 *
-	 * @param combatant - Combatant whose attributes are read.
-	 * @param reason - Failure reason to report when a stat is missing.
-	 * @returns The battle stats, or one failure per missing numeric attribute.
+	 * @param combatant - Combatant whose battle attributes are read.
+	 * @returns The battle stats.
 	 * @example
 	 * ```ts
-	 * const stats = Gen1BattleStats.fromCombatant(combatant).getRight();
+	 * const stats = Gen1BattleStats.fromCombatant(combatant);
 	 *
 	 * stats.level; // 50
 	 * stats.special; // 120
 	 * ```
 	 */
-	static fromCombatant(
-		combatant: Combatant,
-		reason: CombatResolutionErrorReason = 'invalid-input'
-	): Either<CombatResolutionError[], Gen1BattleStats> {
-		const values = combatant.attributes.toPrimitives();
-		const errors: CombatResolutionError[] = [];
-		const stats: Partial<Record<Gen1BattleStatKey, number>> = {};
+	static fromCombatant(combatant: Combatant): Gen1BattleStats {
+		const view = DuelmonCombatant.fromCombatant(combatant);
 
-		for (const key of BATTLE_STAT_KEYS) {
-			const value = DuelmonCombatAttributes.readNumber(values, key);
-
-			if (value === undefined) {
-				errors.push(
-					new CombatResolutionErrorValue(
-						reason,
-						`Combatant "${combatant.id}" is missing numeric "${key}" attribute`,
-						`combatants.${combatant.id}.${key}`
-					)
-				);
-				continue;
-			}
-
-			stats[key] = value;
-		}
-
-		if (errors.length > 0) {
-			return Either.left(errors);
-		}
-
-		return Either.right(
-			new Gen1BattleStats(
-				stats.level ?? 0,
-				stats.hp ?? 0,
-				stats.attack ?? 0,
-				stats.defense ?? 0,
-				stats.special ?? 0
-			)
-		);
+		return new Gen1BattleStats(view.level, view.hp, view.attack, view.defense, view.special);
 	}
 
 	private static deriveHp(baseHp: number, level: number): number {
