@@ -39,6 +39,14 @@ _Avoid_: Team view, side DTO
 A human-readable text projection of a Duelmon Combat View for the minimal Phase 1 screen and the basic history. It renders only the initial state Phase 1 exposes and keeps no manual copy of the combat.
 _Avoid_: Log formatter, screen model
 
+**Duelmon Combat History**:
+Ordered, serializable record of what happened in a Duelmon combat. Each entry keeps the canonical `Combat` snapshot it records; the history never replaces the Combat as the source of truth.
+_Avoid_: Combat log file, event store
+
+**Duelmon Combat History Entry**:
+One immutable item of the Duelmon Combat History. The Phase 1 start entry carries the recorded event kind, the serialized `Combat` primitives, and the readable report text.
+_Avoid_: Log line, message
+
 **Duelmon Combat Start**:
 The start contract that resolves Phase 1 content references into a validated initial Combat. It derives Gen 1 battle attributes, rejects unknown or unsupported content, aggregates every failure, and never returns a partial combat.
 _Avoid_: Battle bootstrap, battle factory, initial-state builder
