@@ -116,35 +116,29 @@ class DuelmonCombatStart {
 	): Either<DuelmonCombatStartError[], Combat> {
 		const requestErrors = this.validateRequest(request);
 
-		if (requestErrors.length > 0) {
+		if (!DuelmonRecord.isRecord(request) || !Array.isArray(request.groups)) {
 			return Either.left(requestErrors);
 		}
 
-		const errors: DuelmonCombatStartError[] = [];
+		const errors: DuelmonCombatStartError[] = [...requestErrors];
 		const groups: CombatantGroupPrimitives[] = [];
 
-		for (const [groupIndex, groupRequest] of request.groups.entries()) {
-			const groupPath = `groups.${String(groupIndex)}`;
-			const combatants: CombatantPrimitives[] = [];
-
-			for (const [combatantIndex, combatantRequest] of groupRequest.combatants.entries()) {
-				const combatant = this.resolveCombatant(
-					combatantRequest,
-					groupRequest.id,
-					`${groupPath}.combatants.${String(combatantIndex)}`,
-					catalog,
-					errors
-				);
-
-				if (combatant) {
-					combatants.push(combatant);
-				}
+		for (const [groupIndex, rawGroup] of request.groups.entries()) {
+			if (!DuelmonRecord.isRecord(rawGroup)) {
+				continue;
 			}
 
+			const groupPath = `groups.${String(groupIndex)}`;
+			const groupId = isNonEmptyString(rawGroup['id']) ? rawGroup['id'] : '';
+			const activeCombatantIds = isStringArray(rawGroup[ACTIVE_COMBATANT_IDS])
+				? [...rawGroup[ACTIVE_COMBATANT_IDS]]
+				: [];
+			const combatants = this.resolveGroupCombatants(rawGroup['combatants'], groupId, groupPath, catalog, errors);
+
 			groups.push({
-				attributes: { [ACTIVE_COMBATANT_IDS]: [...groupRequest.activeCombatantIds] },
+				attributes: { [ACTIVE_COMBATANT_IDS]: activeCombatantIds },
 				combatants,
-				id: groupRequest.id,
+				id: groupId,
 			});
 		}
 
@@ -170,21 +164,31 @@ class DuelmonCombatStart {
 		catalog: DuelmonCatalog,
 		errors: DuelmonCombatStartError[]
 	): CombatantPrimitives | undefined {
-		const species = catalog.findSpecies(request.speciesId);
+		if (!isNonEmptyString(request.speciesId)) {
+			return undefined;
+		}
+
+		const speciesId = request.speciesId;
+		const species = catalog.findSpecies(speciesId);
 
 		if (!species) {
 			errors.push(
 				new DuelmonCombatStartError(
 					'unknown-species',
-					`Unknown species "${request.speciesId}"`,
+					`Unknown species "${speciesId}"`,
 					`${path}.creature.species.id`
 				)
 			);
 		}
 
 		const moves: MovePrimitives[] = [];
+		const moveIds: readonly unknown[] = Array.isArray(request.moveIds) ? request.moveIds : [];
 
-		for (const [moveIndex, moveId] of request.moveIds.entries()) {
+		for (const [moveIndex, moveId] of moveIds.entries()) {
+			if (!isNonEmptyString(moveId)) {
+				continue;
+			}
+
 			const movePath = `${path}.creature.moves.${String(moveIndex)}`;
 			const move = catalog.findMove(moveId);
 
@@ -216,13 +220,47 @@ class DuelmonCombatStart {
 			creature: {
 				abilities: [],
 				attributes: {},
-				id: request.creatureId,
+				id: isNonEmptyString(request.creatureId) ? request.creatureId : '',
 				moves,
 				species: species.toPrimitives(),
 			},
 			groupId,
-			id: request.id,
+			id: isNonEmptyString(request.id) ? request.id : '',
 		};
+	}
+
+	private static resolveGroupCombatants(
+		combatantRequests: unknown,
+		groupId: string,
+		groupPath: string,
+		catalog: DuelmonCatalog,
+		errors: DuelmonCombatStartError[]
+	): CombatantPrimitives[] {
+		const combatants: CombatantPrimitives[] = [];
+
+		if (!Array.isArray(combatantRequests)) {
+			return combatants;
+		}
+
+		for (const [combatantIndex, rawCombatant] of combatantRequests.entries()) {
+			if (!DuelmonRecord.isRecord(rawCombatant)) {
+				continue;
+			}
+
+			const combatant = this.resolveCombatant(
+				rawCombatant as unknown as DuelmonCombatStartCombatantRequest,
+				groupId,
+				`${groupPath}.combatants.${String(combatantIndex)}`,
+				catalog,
+				errors
+			);
+
+			if (combatant) {
+				combatants.push(combatant);
+			}
+		}
+
+		return combatants;
 	}
 
 	private static validate(
@@ -734,6 +772,19 @@ class DuelmonCombatStart {
 			return errors;
 		}
 
+		if (groups.length !== 2) {
+			errors.push(
+				new DuelmonCombatStartError(
+					'invalid-group-count',
+					`Combat requires exactly two groups, received ${String(groups.length)}`,
+					'groups'
+				)
+			);
+		}
+
+		const groupIds = new Set<string>();
+		const combatantIds = new Set<string>();
+
 		for (const [groupIndex, group] of groups.entries()) {
 			const groupPath = `groups.${String(groupIndex)}`;
 
@@ -743,16 +794,34 @@ class DuelmonCombatStart {
 				continue;
 			}
 
-			if (!isNonEmptyString(group['id'])) {
+			const groupId = group['id'];
+
+			if (!isNonEmptyString(groupId)) {
 				errors.push(new DuelmonCombatStartError('invalid-request', 'Group id is required', `${groupPath}.id`));
+			} else if (groupIds.has(groupId)) {
+				errors.push(
+					new DuelmonCombatStartError('duplicate-id', `Duplicated group id: ${groupId}`, `${groupPath}.id`)
+				);
+			} else {
+				groupIds.add(groupId);
 			}
 
-			if (!isStringArray(group[ACTIVE_COMBATANT_IDS])) {
+			const activeCombatantIds = group[ACTIVE_COMBATANT_IDS];
+
+			if (!isStringArray(activeCombatantIds)) {
 				errors.push(
 					new DuelmonCombatStartError(
 						'invalid-request',
 						'Group activeCombatantIds must be an array of strings',
-						`${groupPath}.${ACTIVE_COMBATANT_IDS}`
+						`${groupPath}.attributes.${ACTIVE_COMBATANT_IDS}`
+					)
+				);
+			} else if (activeCombatantIds.length !== 1) {
+				errors.push(
+					new DuelmonCombatStartError(
+						'invalid-active-combatant',
+						'Group requires exactly one active combatant id',
+						`${groupPath}.attributes.${ACTIVE_COMBATANT_IDS}`
 					)
 				);
 			}
@@ -771,15 +840,53 @@ class DuelmonCombatStart {
 				continue;
 			}
 
+			if (combatants.length !== 1) {
+				errors.push(
+					new DuelmonCombatStartError(
+						'invalid-combatant-count',
+						`Group "${String(groupId)}" requires exactly one combatant, received ${String(combatants.length)}`,
+						`${groupPath}.combatants`
+					)
+				);
+			}
+
+			const groupCombatantIds = new Set<string>();
+
 			for (const [combatantIndex, combatant] of combatants.entries()) {
-				this.validateRequestCombatant(combatant, `${groupPath}.combatants.${String(combatantIndex)}`, errors);
+				this.validateRequestCombatant(
+					combatant,
+					`${groupPath}.combatants.${String(combatantIndex)}`,
+					groupCombatantIds,
+					combatantIds,
+					errors
+				);
+			}
+
+			if (isStringArray(activeCombatantIds) && activeCombatantIds.length === 1) {
+				const [activeId] = activeCombatantIds;
+
+				if (activeId !== undefined && !groupCombatantIds.has(activeId)) {
+					errors.push(
+						new DuelmonCombatStartError(
+							'invalid-active-combatant',
+							`Active combatant "${activeId}" does not belong to group "${String(groupId)}"`,
+							`${groupPath}.attributes.${ACTIVE_COMBATANT_IDS}`
+						)
+					);
+				}
 			}
 		}
 
 		return errors;
 	}
 
-	private static validateRequestCombatant(combatant: unknown, path: string, errors: DuelmonCombatStartError[]): void {
+	private static validateRequestCombatant(
+		combatant: unknown,
+		path: string,
+		groupCombatantIds: Set<string>,
+		combatantIds: Set<string>,
+		errors: DuelmonCombatStartError[]
+	): void {
 		if (!DuelmonRecord.isRecord(combatant)) {
 			errors.push(new DuelmonCombatStartError('invalid-request', 'Combatant must be an object', path));
 
@@ -794,7 +901,23 @@ class DuelmonCombatStart {
 			}
 		}
 
-		if (!isStringArray(combatant['moveIds'])) {
+		const combatantId = combatant['id'];
+
+		if (isNonEmptyString(combatantId)) {
+			groupCombatantIds.add(combatantId);
+
+			if (combatantIds.has(combatantId)) {
+				errors.push(
+					new DuelmonCombatStartError('duplicate-id', `Duplicated combatant id: ${combatantId}`, `${path}.id`)
+				);
+			} else {
+				combatantIds.add(combatantId);
+			}
+		}
+
+		const moveIds = combatant['moveIds'];
+
+		if (!isStringArray(moveIds)) {
 			errors.push(
 				new DuelmonCombatStartError(
 					'invalid-request',
@@ -802,6 +925,48 @@ class DuelmonCombatStart {
 					`${path}.moveIds`
 				)
 			);
+
+			return;
+		}
+
+		const movesPath = `${path}.creature.moves`;
+
+		if (moveIds.length === 0) {
+			errors.push(
+				new DuelmonCombatStartError('missing-moves', 'Combatant requires at least one move', movesPath)
+			);
+
+			return;
+		}
+
+		if (moveIds.length > 4) {
+			errors.push(
+				new DuelmonCombatStartError(
+					'invalid-moves',
+					`Combatant allows at most four moves, received ${String(moveIds.length)}`,
+					movesPath
+				)
+			);
+		}
+
+		const seenMoveIds = new Set<string>();
+
+		for (const [moveIndex, moveId] of moveIds.entries()) {
+			const movePath = `${movesPath}.${String(moveIndex)}`;
+
+			if (!isNonEmptyString(moveId)) {
+				errors.push(new DuelmonCombatStartError('invalid-moves', 'Move id is required', movePath));
+
+				continue;
+			}
+
+			if (seenMoveIds.has(moveId)) {
+				errors.push(new DuelmonCombatStartError('invalid-moves', `Duplicated move id: ${moveId}`, movePath));
+
+				continue;
+			}
+
+			seenMoveIds.add(moveId);
 		}
 	}
 

@@ -231,4 +231,30 @@ describe('DuelmonCombatStart.fromContent', () => {
 			reason: 'invalid-active-combatant',
 		});
 	});
+
+	it('aggregates structural request errors with content errors', () => {
+		const request = valid();
+		const extraGroup = structuredClone(group(request, 1));
+
+		extraGroup.id = 'extra';
+		extraGroup.activeCombatantIds = ['extra-combatant'];
+
+		const [extraCombatant] = extraGroup.combatants;
+
+		if (!extraCombatant) {
+			throw new Error('Missing extra combatant');
+		}
+
+		extraCombatant.id = 'extra-combatant';
+		request.groups.push(extraGroup);
+		combatant(request, 0).moveIds = ['ember-burst', 'missing'];
+
+		const errors = errorsOf(request);
+
+		expectError(errors, { path: 'groups', reason: 'invalid-group-count' });
+		expectError(errors, {
+			path: 'groups.0.combatants.0.creature.moves.1',
+			reason: 'unknown-move',
+		});
+	});
 });
