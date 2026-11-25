@@ -151,7 +151,7 @@ describe('DuelmonCombatStart.fromContent', () => {
 
 	it('rejects moves with flags outside the Phase 1 slice', () => {
 		const charge = {
-			accuracy: true,
+			accuracy: true as const,
 			category: 'Special' as const,
 			flags: { charge: 1 },
 			id: 'solar-beam',

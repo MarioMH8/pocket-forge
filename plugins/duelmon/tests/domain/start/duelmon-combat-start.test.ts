@@ -255,6 +255,123 @@ describe('DuelmonCombatStart.create', () => {
 		});
 	});
 
+	it('rejects species snapshots without their base stats', () => {
+		const primitives = valid();
+
+		delete combatant(primitives, 0).creature.species.attributes['baseHp'];
+
+		expectError(errorsOf(primitives), {
+			path: 'groups.0.combatants.0.creature.species.attributes.baseHp',
+			reason: 'missing-attribute',
+		});
+	});
+
+	it('rejects species snapshots with invalid base stats', () => {
+		const primitives = valid();
+
+		combatant(primitives, 0).creature.species.attributes['baseHp'] = 0;
+
+		expectError(errorsOf(primitives), {
+			path: 'groups.0.combatants.0.creature.species.attributes.baseHp',
+			reason: 'invalid-attribute',
+		});
+	});
+
+	it('rejects move snapshots without their attributes', () => {
+		const primitives = valid();
+
+		combatant(primitives, 0).creature.moves = [
+			{
+				attributes: {
+					alwaysHits: true,
+					category: 'Status',
+					power: 0,
+					pp: 30,
+					priority: 0,
+					type: 'Normal',
+				},
+				id: 'oath',
+			},
+		] as never;
+
+		expectError(errorsOf(primitives), {
+			path: 'groups.0.combatants.0.creature.moves.0.attributes.accuracy',
+			reason: 'missing-attribute',
+		});
+	});
+
+	it('rejects move snapshots outside the Phase 1 slice', () => {
+		const primitives = valid();
+
+		combatant(primitives, 0).creature.moves = [
+			{
+				attributes: {
+					accuracy: 100,
+					alwaysHits: true,
+					category: 'Status',
+					power: 0,
+					pp: 30,
+					priority: 0,
+					type: 'Normal',
+				},
+				id: 'oath',
+			},
+		] as never;
+
+		expectError(errorsOf(primitives), {
+			path: 'groups.0.combatants.0.creature.moves.0',
+			reason: 'unsupported-move',
+		});
+	});
+
+	it('rejects move snapshots with unsupported flags', () => {
+		const primitives = valid();
+		const move = combatant(primitives, 0).creature.moves[0];
+
+		if (!move) {
+			throw new Error('Missing fixture move');
+		}
+
+		combatant(primitives, 0).creature.moves = [
+			{ ...move, attributes: { ...move.attributes, flags: [{ name: 'charge', value: 1 }] } },
+		];
+
+		expectError(errorsOf(primitives), {
+			path: 'groups.0.combatants.0.creature.moves.0',
+			reason: 'unsupported-move',
+		});
+	});
+
+	it('rejects combat and creature attributes outside Phase 1', () => {
+		const primitives = valid();
+		const first = combatant(primitives, 0);
+
+		primitives.attributes = { power: 5 };
+		first.creature.attributes = { power: 5 };
+		first.creature.abilities = [{}] as never;
+
+		expectError(errorsOf(primitives), { path: 'attributes.power', reason: 'invalid-attribute' });
+		expectError(errorsOf(primitives), {
+			path: 'groups.0.combatants.0.creature.attributes.power',
+			reason: 'invalid-attribute',
+		});
+		expectError(errorsOf(primitives), {
+			path: 'groups.0.combatants.0.creature.abilities',
+			reason: 'invalid-combat',
+		});
+	});
+
+	it('rejects a creature without an id', () => {
+		const primitives = valid();
+
+		combatant(primitives, 0).creature.id = '';
+
+		expectError(errorsOf(primitives), {
+			path: 'groups.0.combatants.0.creature.id',
+			reason: 'missing-id',
+		});
+	});
+
 	it('aggregates every violation instead of stopping at the first', () => {
 		const primitives = valid();
 		const first = combatant(primitives, 0);

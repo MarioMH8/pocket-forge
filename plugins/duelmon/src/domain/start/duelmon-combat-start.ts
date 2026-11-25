@@ -8,6 +8,7 @@ import type {
 } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
+import { DuelmonAttributeDefinitions } from '@pocket-forge/duelmon/catalog';
 import type { MovePrimitives } from '@pocket-forge/move/domain';
 import RandomPocket from '@pocket-forge/rng/domain';
 
@@ -250,6 +251,7 @@ class DuelmonCombatStart {
 			);
 		}
 
+		this.validateCombatAttributes(primitives.attributes, errors);
 		this.validateRandomPocket(primitives.randomPocket, errors);
 
 		const groups = primitives.groups;
@@ -382,6 +384,10 @@ class DuelmonCombatStart {
 		}
 	}
 
+	private static validateCombatAttributes(attributes: unknown, errors: DuelmonCombatStartError[]): void {
+		this.validateEmptyAttributes(attributes, 'attributes', 'Combat', errors);
+	}
+
 	private static validateCombatant(
 		combatant: unknown,
 		group: UnknownRecord,
@@ -442,6 +448,32 @@ class DuelmonCombatStart {
 			return;
 		}
 
+		if (!isNonEmptyString(creature['id'])) {
+			errors.push(new DuelmonCombatStartError('missing-id', 'Creature id is required', `${path}.id`));
+		}
+
+		this.validateEmptyAttributes(creature['attributes'], `${path}.attributes`, 'Creature', errors);
+
+		const abilities = creature['abilities'];
+
+		if (!Array.isArray(abilities)) {
+			errors.push(
+				new DuelmonCombatStartError(
+					'invalid-combat',
+					'Creature abilities must be an array',
+					`${path}.abilities`
+				)
+			);
+		} else if (abilities.length > 0) {
+			errors.push(
+				new DuelmonCombatStartError(
+					'invalid-combat',
+					'Phase 1 creatures cannot have abilities',
+					`${path}.abilities`
+				)
+			);
+		}
+
 		const species = creature[SPECIES];
 		const speciesPath = `${path}.${SPECIES}`;
 
@@ -452,7 +484,16 @@ class DuelmonCombatStart {
 				);
 			}
 
-			this.validateTypes(species['attributes'], `${speciesPath}.attributes`, errors);
+			const speciesAttributes = species['attributes'];
+
+			this.validateAttributes(
+				speciesAttributes as AttributeValues,
+				DuelmonAttributeDefinitions.SPECIES,
+				`${speciesPath}.attributes`,
+				errors,
+				[TYPES]
+			);
+			this.validateTypes(speciesAttributes, `${speciesPath}.attributes`, errors);
 		} else {
 			errors.push(
 				new DuelmonCombatStartError('missing-species', 'Combatant species is required', `${speciesPath}.id`)
@@ -460,6 +501,31 @@ class DuelmonCombatStart {
 		}
 
 		this.validateMoves(creature[MOVES], `${path}.${MOVES}`, errors);
+	}
+
+	private static validateEmptyAttributes(
+		attributes: unknown,
+		path: string,
+		context: string,
+		errors: DuelmonCombatStartError[]
+	): void {
+		if (!DuelmonRecord.isRecord(attributes)) {
+			errors.push(
+				new DuelmonCombatStartError('invalid-attribute', `${context} attributes must be an object`, path)
+			);
+
+			return;
+		}
+
+		for (const key of Object.keys(attributes)) {
+			errors.push(
+				new DuelmonCombatStartError(
+					'invalid-attribute',
+					`${context} attribute "${key}" is not part of Phase 1`,
+					`${path}.${key}`
+				)
+			);
+		}
 	}
 
 	private static validateGroup(
@@ -592,6 +658,27 @@ class DuelmonCombatStart {
 			}
 
 			moveIds.add(move['id']);
+
+			const errorsBefore = errors.length;
+
+			this.validateAttributes(
+				move['attributes'] as AttributeValues,
+				DuelmonAttributeDefinitions.MOVE,
+				`${movePath}.attributes`,
+				errors
+			);
+
+			if (errors.length > errorsBefore) {
+				continue;
+			}
+
+			const unsupported = Phase1MoveConstraints.unsupportedReason(
+				DuelmonMove.fromPrimitives(move as unknown as MovePrimitives)
+			);
+
+			if (unsupported) {
+				errors.push(new DuelmonCombatStartError('unsupported-move', unsupported, movePath));
+			}
 		}
 	}
 
