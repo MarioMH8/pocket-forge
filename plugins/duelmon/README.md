@@ -59,6 +59,26 @@ types, and loadout moves. It does not render PP, accuracy, priority, status
 conditions, stat stages, or other information outside Phase 1. Views keep no
 manual copy of the state: the `Combat` snapshot remains the source of truth.
 
+## Recording the start
+
+`DuelmonCombatHistory` records the combat in the basic history as ordered,
+serializable entries. The start entry keeps the canonical `Combat` snapshot and
+the readable report text, both built from the same `Combat` the resolution
+uses:
+
+```ts
+const combat = DuelmonCombatStart.fromContent(request, catalog, definitions).getRight();
+const history = DuelmonCombatHistory.start(combat);
+const entry = history.entries()[0];
+
+console.log(entry?.text);
+```
+
+Each entry exposes `kind` (`start` in Phase 1), the serialized `combat`
+primitives, and the readable `text`. The history hydrates back through
+`DuelmonCombatHistory.fromPrimitives`, keeps its entries in record order, and
+never keeps a manual copy of the battle state.
+
 ## Use Move action
 
 `useMove` resolves a single-target damaging move for one combatant against

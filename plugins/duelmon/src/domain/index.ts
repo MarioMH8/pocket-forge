@@ -35,6 +35,13 @@ export type {
 	MoveUsedPayload,
 } from './event';
 export { DUELMON_COMBAT_EVENT_TYPES, DuelmonCombatEvents } from './event';
+export type { DuelmonCombatHistoryPrimitives } from './history/duelmon-combat-history';
+export { DuelmonCombatHistory } from './history/duelmon-combat-history';
+export type {
+	DuelmonCombatHistoryEntryKind,
+	DuelmonCombatHistoryEntryPrimitives,
+} from './history/duelmon-combat-history-entry';
+export { DuelmonCombatHistoryEntry } from './history/duelmon-combat-history-entry';
 export type {
 	DuelmonBoost,
 	DuelmonMoveAttributes,
