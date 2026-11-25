@@ -72,6 +72,21 @@ describe('DuelmonCatalog.fromDataset', () => {
 			return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create({ moves })).getRight();
 		}
 
+		it('maps Showdown flags to typed records', () => {
+			const current = catalogWith([
+				move({ flags: { charge: 1, contact: 1 }, id: 'flagged-move' }),
+				move({ flags: {}, id: 'unflagged-move' }),
+			]);
+
+			expect(current.findMove('flagged-move')?.attributes.toPrimitives()).toMatchObject({
+				flags: [
+					{ name: 'charge', value: 1 },
+					{ name: 'contact', value: 1 },
+				],
+			});
+			expect(current.findMove('unflagged-move')?.attributes.toPrimitives()).not.toHaveProperty('flags');
+		});
+
 		it('maps primary status, volatile status, and stat stages', () => {
 			const current = catalogWith([
 				move({ id: 'status-move', status: 'brn' }),

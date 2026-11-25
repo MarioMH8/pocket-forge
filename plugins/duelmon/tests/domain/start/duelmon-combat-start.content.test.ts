@@ -1,7 +1,9 @@
 import { Combat } from '@pocket-forge/combat/domain';
+import { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type { DuelmonCombatStartError, DuelmonCombatStartRequest } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatStart } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatStartMother } from '@pocket-forge/duelmon/mother/domain';
+import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
 type StartError = DuelmonCombatStartError;
@@ -145,6 +147,37 @@ describe('DuelmonCombatStart.fromContent', () => {
 				reason: 'unsupported-move',
 			});
 		}
+	});
+
+	it('rejects moves with flags outside the Phase 1 slice', () => {
+		const charge = {
+			accuracy: true,
+			category: 'Special' as const,
+			flags: { charge: 1 },
+			id: 'solar-beam',
+			name: 'Solar Beam',
+			power: 120,
+			pp: 10,
+			priority: 0,
+			target: 'normal',
+			type: 'Grass' as const,
+		};
+		const catalog = DuelmonCatalog.fromDataset(
+			DuelmonDatasetMother.create({ moves: [...DuelmonDatasetMother.moves(), charge] })
+		).getRight();
+		const request = valid();
+
+		combatant(request, 0).moveIds = ['solar-beam'];
+
+		const result = DuelmonCombatStart.fromContent(request, catalog, DuelmonCombatStartMother.DEFINITIONS);
+
+		expect(result.isLeft()).toBe(true);
+
+		const [error] = result.getLeft();
+
+		expect(error?.reason).toBe('unsupported-move');
+		expect(error?.path).toBe('groups.0.combatants.0.creature.moves.0');
+		expect(error?.message).toContain('charge');
 	});
 
 	it('rejects a missing loadout', () => {

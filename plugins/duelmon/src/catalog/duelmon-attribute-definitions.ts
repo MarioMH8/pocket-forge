@@ -38,6 +38,41 @@ const BOOSTS: AttributeDefinition = AttributeDefinitionEntity.create({
 });
 
 /**
+ * One Showdown move flag.
+ */
+const FLAG: AttributeDefinition = AttributeDefinitionEntity.create({
+	constraints: {
+		fields: [
+			AttributeDefinitionEntity.create({
+				constraints: { minLength: 1 },
+				key: 'name',
+				required: true,
+				type: 'string',
+			}),
+			AttributeDefinitionEntity.create({
+				constraints: {},
+				key: 'value',
+				required: true,
+				type: 'number',
+			}),
+		],
+	},
+	key: 'flag',
+	required: true,
+	type: 'record',
+});
+
+/**
+ * Showdown flags declared by a Move.
+ */
+const FLAGS: AttributeDefinition = AttributeDefinitionEntity.create({
+	constraints: { itemDefinition: FLAG },
+	key: 'flags',
+	required: false,
+	type: 'array',
+});
+
+/**
  * Probabilistic extra effect of a damaging Move.
  */
 const SECONDARY: AttributeDefinition = AttributeDefinitionEntity.create({
@@ -118,6 +153,7 @@ class DuelmonAttributeDefinitions {
 			required: true,
 			type: 'boolean',
 		}),
+		FLAGS,
 		AttributeDefinitionEntity.create({
 			constraints: { max: 64, min: 1 },
 			key: 'pp',

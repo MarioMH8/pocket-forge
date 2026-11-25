@@ -1,6 +1,11 @@
 import type { DuelmonMove } from '../move/duelmon-move';
 
 /**
+ * Showdown flags that change turn or self-KO behavior and stay outside Phase 1.
+ */
+const UNSUPPORTED_FLAGS = ['charge', 'mustrecharge', 'noreturn', 'recharge'] as const;
+
+/**
  * Phase 1 move-support policy.
  *
  * Phase 1 only starts combats with damaging moves that always hit, have zero
@@ -67,6 +72,12 @@ class Phase1MoveConstraints {
 
 		if (move.hasHighCritRatio) {
 			return `Move "${move.id}" has a high critical-hit ratio, which is outside Phase 1`;
+		}
+
+		for (const flag of UNSUPPORTED_FLAGS) {
+			if (move.hasFlag(flag)) {
+				return `Move "${move.id}" has the "${flag}" flag, which is outside Phase 1`;
+			}
 		}
 
 		return undefined;
