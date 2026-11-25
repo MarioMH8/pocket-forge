@@ -44,6 +44,7 @@ export type {
 export { DuelmonCombatHistoryEntry } from './history/duelmon-combat-history-entry';
 export type {
 	DuelmonBoost,
+	DuelmonFlag,
 	DuelmonMoveAttributes,
 	DuelmonSecondaryEffect,
 	DuelmonSecondaryEffectSelf,

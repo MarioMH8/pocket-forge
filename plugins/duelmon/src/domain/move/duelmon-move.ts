@@ -22,6 +22,20 @@ interface DuelmonBoost {
 }
 
 /**
+ * One Showdown flag declared by a Move.
+ */
+interface DuelmonFlag {
+	/**
+	 * Flag name.
+	 */
+	readonly name: string;
+	/**
+	 * Flag value.
+	 */
+	readonly value: number;
+}
+
+/**
  * Stat-stage changes applied to the user by a secondary effect.
  */
 interface DuelmonSecondaryEffectSelf {
@@ -140,6 +154,13 @@ class DuelmonMove {
 	 */
 	get drains(): boolean {
 		return this.attributes.drain !== undefined;
+	}
+
+	/**
+	 * Showdown flags declared by the Move.
+	 */
+	get flags(): readonly DuelmonFlag[] {
+		return this.attributes.flags ?? [];
 	}
 
 	/**
@@ -282,6 +303,16 @@ class DuelmonMove {
 	}
 
 	/**
+	 * Whether the Move declares a Showdown flag.
+	 *
+	 * @param name - Flag name.
+	 * @returns `true` when the flag is present.
+	 */
+	hasFlag(name: string): boolean {
+		return this.flags.some(flag => flag.name === name);
+	}
+
+	/**
 	 * Serializes the wrapped Move snapshot.
 	 *
 	 * @returns The Move primitives.
@@ -298,6 +329,7 @@ class DuelmonMove {
 		const boosts = this.readBoosts(this.values['boosts']);
 		const critRatio = DuelmonAttributeReader.optionalNumber(this.values, 'critRatio');
 		const drain = this.readPair(this.values['drain'], 'drain');
+		const flags = this.readFlags(this.values['flags']);
 		const multihit = this.readPair(this.values['multihit'], 'multihit');
 		const recoil = this.readPair(this.values['recoil'], 'recoil');
 		const secondary = this.readSecondary(this.values['secondary']);
@@ -315,6 +347,7 @@ class DuelmonMove {
 			...(boosts !== undefined && { boosts }),
 			...(critRatio !== undefined && { critRatio }),
 			...(drain !== undefined && { drain }),
+			...(flags !== undefined && { flags }),
 			...(multihit !== undefined && { multihit }),
 			...(recoil !== undefined && { recoil }),
 			...(secondary !== undefined && { secondary }),
@@ -353,6 +386,28 @@ class DuelmonMove {
 		}
 
 		return value;
+	}
+
+	private readFlags(value: AttributeValue | undefined): readonly DuelmonFlag[] | undefined {
+		if (value === undefined) {
+			return undefined;
+		}
+
+		if (!Array.isArray(value)) {
+			throw this.invalid('flags');
+		}
+
+		return value.map(item => {
+			if (
+				!DuelmonRecord.isRecord(item) ||
+				typeof item['name'] !== 'string' ||
+				typeof item['value'] !== 'number'
+			) {
+				throw this.invalid('flags');
+			}
+
+			return { name: item['name'], value: item['value'] };
+		});
 	}
 
 	private readPair(value: AttributeValue | undefined, key: string): readonly [number, number] | undefined {
@@ -431,6 +486,7 @@ interface DuelmonMoveAttributes {
 	readonly category: DuelmonMoveCategory;
 	readonly critRatio?: number;
 	readonly drain?: readonly [number, number];
+	readonly flags?: readonly DuelmonFlag[];
 	readonly multihit?: readonly [number, number];
 	readonly power: number;
 	readonly pp: number;
@@ -442,7 +498,7 @@ interface DuelmonMoveAttributes {
 	readonly volatileStatus?: string;
 }
 
-export type { DuelmonBoost, DuelmonMoveAttributes, DuelmonSecondaryEffect, DuelmonSecondaryEffectSelf };
+export type { DuelmonBoost, DuelmonFlag, DuelmonMoveAttributes, DuelmonSecondaryEffect, DuelmonSecondaryEffectSelf };
 export { DuelmonMove };
 
 export default DuelmonMove;

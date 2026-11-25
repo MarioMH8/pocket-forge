@@ -13,6 +13,7 @@ const EXPECTED_TEXT = [
 	'',
 	'Group "opponent" (active: opponent-aquafin)',
 	'  * opponent-aquafin (aquafin) [Water] HP 104/104',
+	'      - aqua-burst (Water / Special / 40 power)',
 	'      - tackle (Normal / Physical / 35 power)',
 ].join('\n');
 

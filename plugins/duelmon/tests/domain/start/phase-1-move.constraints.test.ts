@@ -99,4 +99,25 @@ describe('Phase1MoveConstraints', () => {
 		expect(Phase1MoveConstraints.unsupportedReason(move({ critRatio: 2 }))).toContain('critical-hit');
 		expect(Phase1MoveConstraints.unsupportedReason(move({ critRatio: 1 }))).toBeUndefined();
 	});
+
+	it('rejects moves with turn or self-KO flags', () => {
+		for (const flag of ['charge', 'mustrecharge', 'noreturn', 'recharge'] as const) {
+			expect(Phase1MoveConstraints.unsupportedReason(move({ flags: [{ name: flag, value: 1 }] }))).toContain(
+				flag
+			);
+		}
+	});
+
+	it('allows moves with benign flags', () => {
+		expect(
+			Phase1MoveConstraints.unsupportedReason(
+				move({
+					flags: [
+						{ name: 'contact', value: 1 },
+						{ name: 'protect', value: 1 },
+					],
+				})
+			)
+		).toBeUndefined();
+	});
 });

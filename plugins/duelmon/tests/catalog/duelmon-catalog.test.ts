@@ -16,7 +16,7 @@ describe('DuelmonCatalog.fromDataset', () => {
 
 		expect(result.isRight()).toBe(true);
 		expect(current.species).toHaveLength(7);
-		expect(current.moves).toHaveLength(9);
+		expect(current.moves).toHaveLength(11);
 		expect(species?.id).toBe('stonelet');
 		expect(species?.attributes.value).toMatchObject({
 			baseAtk: 80,
@@ -71,6 +71,21 @@ describe('DuelmonCatalog.fromDataset', () => {
 		function catalogWith(moves: readonly DuelmonMove[]): DuelmonCatalog {
 			return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create({ moves })).getRight();
 		}
+
+		it('maps Showdown flags to typed records', () => {
+			const current = catalogWith([
+				move({ flags: { charge: 1, contact: 1 }, id: 'flagged-move' }),
+				move({ flags: {}, id: 'unflagged-move' }),
+			]);
+
+			expect(current.findMove('flagged-move')?.attributes.toPrimitives()).toMatchObject({
+				flags: [
+					{ name: 'charge', value: 1 },
+					{ name: 'contact', value: 1 },
+				],
+			});
+			expect(current.findMove('unflagged-move')?.attributes.toPrimitives()).not.toHaveProperty('flags');
+		});
 
 		it('maps primary status, volatile status, and stat stages', () => {
 			const current = catalogWith([

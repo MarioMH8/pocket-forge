@@ -60,6 +60,7 @@ class DuelmonCatalogMapper {
 				accuracy: entry.accuracy === true ? 100 : entry.accuracy,
 				alwaysHits: entry.accuracy === true,
 				category: entry.category,
+				...(Object.keys(entry.flags).length > 0 && { flags: this.flagValues(entry.flags) }),
 				power: entry.power,
 				pp: entry.pp,
 				priority: entry.priority,
@@ -159,6 +160,12 @@ class DuelmonCatalogMapper {
 
 	private static boostValues(boosts: Readonly<Record<string, number>>): AttributeValues[] {
 		return Object.entries(boosts).map(([stat, stages]) => ({ stages, stat }));
+	}
+
+	private static flagValues(flags: Readonly<Record<string, number>>): AttributeValues[] {
+		return Object.entries(flags)
+			.toSorted(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+			.map(([name, value]) => ({ name, value }));
 	}
 
 	private static messageOf(error: unknown): string {

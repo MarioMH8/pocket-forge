@@ -1,7 +1,9 @@
 import { Combat } from '@pocket-forge/combat/domain';
+import { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type { DuelmonCombatStartError, DuelmonCombatStartRequest } from '@pocket-forge/duelmon/domain';
-import { DuelmonCombatStart } from '@pocket-forge/duelmon/domain';
+import { DuelmonCombatStart, DuelmonMove, DuelmonSpecies, Phase1MoveConstraints } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatStartMother } from '@pocket-forge/duelmon/mother/domain';
+import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
 type StartError = DuelmonCombatStartError;
@@ -147,6 +149,37 @@ describe('DuelmonCombatStart.fromContent', () => {
 		}
 	});
 
+	it('rejects moves with flags outside the Phase 1 slice', () => {
+		const charge = {
+			accuracy: true as const,
+			category: 'Special' as const,
+			flags: { charge: 1 },
+			id: 'solar-beam',
+			name: 'Solar Beam',
+			power: 120,
+			pp: 10,
+			priority: 0,
+			target: 'normal',
+			type: 'Grass' as const,
+		};
+		const catalog = DuelmonCatalog.fromDataset(
+			DuelmonDatasetMother.create({ moves: [...DuelmonDatasetMother.moves(), charge] })
+		).getRight();
+		const request = valid();
+
+		combatant(request, 0).moveIds = ['solar-beam'];
+
+		const result = DuelmonCombatStart.fromContent(request, catalog, DuelmonCombatStartMother.DEFINITIONS);
+
+		expect(result.isLeft()).toBe(true);
+
+		const [error] = result.getLeft();
+
+		expect(error?.reason).toBe('unsupported-move');
+		expect(error?.path).toBe('groups.0.combatants.0.creature.moves.0');
+		expect(error?.message).toContain('charge');
+	});
+
 	it('rejects a missing loadout', () => {
 		const request = valid();
 
@@ -197,5 +230,92 @@ describe('DuelmonCombatStart.fromContent', () => {
 			path: 'groups.0.attributes.activeCombatantIds',
 			reason: 'invalid-active-combatant',
 		});
+	});
+
+	it('aggregates structural request errors with content errors', () => {
+		const request = valid();
+		const extraGroup = structuredClone(group(request, 1));
+
+		extraGroup.id = 'extra';
+		extraGroup.activeCombatantIds = ['extra-combatant'];
+
+		const [extraCombatant] = extraGroup.combatants;
+
+		if (!extraCombatant) {
+			throw new Error('Missing extra combatant');
+		}
+
+		extraCombatant.id = 'extra-combatant';
+		request.groups.push(extraGroup);
+		combatant(request, 0).moveIds = ['ember-burst', 'missing'];
+
+		const errors = errorsOf(request);
+
+		expectError(errors, { path: 'groups', reason: 'invalid-group-count' });
+		expectError(errors, {
+			path: 'groups.0.combatants.0.creature.moves.1',
+			reason: 'unknown-move',
+		});
+	});
+});
+
+describe('Phase 1 minimum content set', () => {
+	const catalog = DuelmonCombatStartMother.catalog();
+	const SPECIES_IDS = ['aquafin', 'emberling', 'sprout'] as const;
+	const MOVE_IDS = ['aqua-burst', 'ember-burst', 'leaf-lash', 'shade', 'tackle'] as const;
+	const LOADOUTS = {
+		aquafin: ['aqua-burst', 'tackle'],
+		emberling: ['ember-burst', 'tackle'],
+		sprout: ['leaf-lash', 'tackle'],
+	} as const;
+
+	function speciesView(id: string): DuelmonSpecies {
+		const species = catalog.findSpecies(id);
+
+		if (!species) {
+			throw new Error(`Missing fixture species "${id}"`);
+		}
+
+		return DuelmonSpecies.fromSpecies(species);
+	}
+
+	function moveView(id: string): DuelmonMove {
+		const move = catalog.findMove(id);
+
+		if (!move) {
+			throw new Error(`Missing fixture move "${id}"`);
+		}
+
+		return DuelmonMove.fromMove(move);
+	}
+
+	it('provides three creatures with distinct types', () => {
+		const types = SPECIES_IDS.flatMap(id => speciesView(id).types);
+
+		expect(SPECIES_IDS).toHaveLength(3);
+		expect(new Set(types).size).toBeGreaterThanOrEqual(2);
+	});
+
+	it('provides four to six simple moves with physical and special categories', () => {
+		const moves = MOVE_IDS.map(id => moveView(id));
+
+		expect(moves.length).toBeGreaterThanOrEqual(4);
+		expect(moves.length).toBeLessThanOrEqual(6);
+
+		for (const move of moves) {
+			expect(Phase1MoveConstraints.unsupportedReason(move)).toBeUndefined();
+		}
+
+		expect(moves.some(move => move.category === 'Physical')).toBe(true);
+		expect(moves.some(move => move.category === 'Special')).toBe(true);
+	});
+
+	it('includes an affinity case and loadouts drawn from the minimum set', () => {
+		expect(catalog.typeMultipliers('Fire', ['Water'])).toEqual([0.5]);
+		expect(catalog.typeMultipliers('Water', ['Fire'])).toEqual([2]);
+
+		for (const id of Object.values(LOADOUTS).flat()) {
+			expect(MOVE_IDS).toContain(id);
+		}
 	});
 });

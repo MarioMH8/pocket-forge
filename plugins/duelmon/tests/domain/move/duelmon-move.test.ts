@@ -126,6 +126,24 @@ describe('DuelmonMove', () => {
 		expect(syntheticMove({ critRatio: 1 }).hasHighCritRatio).toBe(false);
 	});
 
+	it('exposes Showdown flags and flag predicates', () => {
+		const move = syntheticMove({
+			flags: [
+				{ name: 'charge', value: 1 },
+				{ name: 'contact', value: 1 },
+			],
+		});
+
+		expect(move.flags).toEqual([
+			{ name: 'charge', value: 1 },
+			{ name: 'contact', value: 1 },
+		]);
+		expect(move.hasFlag('charge')).toBe(true);
+		expect(move.hasFlag('contact')).toBe(true);
+		expect(move.hasFlag('noreturn')).toBe(false);
+		expect(syntheticMove().flags).toEqual([]);
+	});
+
 	it('round-trips the wrapped snapshot', () => {
 		const move = catalogMove('flare');
 

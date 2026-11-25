@@ -19,10 +19,9 @@ the `Combat` snapshot.
 ## Fixture
 
 The fixed starting point is the one exposed by `DuelmonCombatStartMother`, the
-same fixture used by the start, display, and history tasks. It preserves the
-values fixed in [the initial battle state](./85-initial-battle-state.md) — level
-50, seed 42, and the same HP totals — with the neutral identifiers of the current
-dataset fixture.
+same fixture used by the start, display, and history tasks. It matches the values
+fixed in [the initial battle state](./85-initial-battle-state.md): level 50, seed
+42, the same HP totals, and the same identifiers.
 
 | Field | Value |
 | --- | --- |
@@ -30,7 +29,7 @@ dataset fixture.
 | Groups | `player`, `opponent` |
 | Active combatants | `player-emberling`, `opponent-aquafin` |
 | Player creature | `emberling`, Fire, HP 99/99, moves `ember-burst`, `tackle` |
-| Opponent creature | `aquafin`, Water, HP 104/104, move `tackle` |
+| Opponent creature | `aquafin`, Water, HP 104/104, moves `aqua-burst`, `tackle` |
 | Random state | `{ seed: 42, state: 42 }` |
 
 The tests read the state through `DuelmonCombat`, `DuelmonCombatantGroup`, and
@@ -63,9 +62,11 @@ Moves outside the Phase 1 slice are rejected before any `Combat` is built:
 - `oath` is a Status move.
 - `flare` has a secondary effect.
 - `quick-jab` has non-zero priority.
+- A synthetic move with a `charge` flag.
 
 Each rejection uses `reason: 'unsupported-move'`, reports the move path, and
-explains why the move is outside Phase 1.
+explains why the move is outside Phase 1. The flag case lives in the content
+start tests because it needs a catalog entry outside the shared fixture.
 
 ### Phase 1 state surface
 
@@ -74,9 +75,10 @@ Phase 1 battle attributes: `attack`, `defense`, `hp`, `level`, `maxHp`,
 `special`, and `speed`. It does not expose `status`, `movePp`, stat stages, or
 other out-of-phase battle state.
 
-Every started move is damaging, always hits, has zero priority, and has no
+Every started move is damaging, always hits, has zero priority, has no
 primary status, volatile status, secondary effect, stat-stage change, drain,
-recoil, multi-hit behavior, or high critical-hit ratio.
+recoil, multi-hit behavior, or high critical-hit ratio, and carries no
+turn-changing flag.
 
 The readable report and the history text omit PP, accuracy, priority, status,
 seed, and raw battle stats.
@@ -94,8 +96,8 @@ Executed on 2026-11-25:
 
 | Command | Result |
 | --- | --- |
-| `bun test plugins/duelmon/tests/integration/combat-start.test.ts --conditions=development` | 8 pass, 0 fail, 112 expect() calls |
-| `bun test plugins/duelmon --conditions=development` | 188 pass, 0 fail, 633 expect() calls, 24 files |
+| `bun test plugins/duelmon/tests/integration/combat-start.test.ts --conditions=development` | 8 pass, 0 fail, 124 expect() calls |
+| `bun test plugins/duelmon --conditions=development` | 204 pass, 0 fail, 701 expect() calls, 24 files |
 | `bun run typecheck` | Pass |
 | `bun run lint:fix` | Pass, no findings |
 
@@ -106,6 +108,7 @@ Executed on 2026-11-25:
 | Invalid content rejected without a partial combat | `rejects out-of-phase content without a partial combat` | Pass |
 | No functions outside Phase 1 are exposed | `exposes only the Phase 1 state surface` and `does not expose information outside Phase 1 in the readable text` | Pass |
 | The history records the start | `records the start in the history from the same combat` | Pass |
+| Minimum set has three creatures, five simple moves, physical and special coverage, and an affinity case | `Phase 1 minimum content set` tests in `duelmon-combat-start.content.test.ts` | Pass |
 | Results documented | This document | Pass |
 
 ## Acceptance criteria
