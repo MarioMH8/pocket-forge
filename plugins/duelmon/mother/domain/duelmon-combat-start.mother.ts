@@ -128,7 +128,7 @@ export default class DuelmonCombatStartMother {
 					combatants: [
 						{
 							attributes: { ...AQUAFIN_ATTRIBUTES },
-							creature: this.creature('aquafin-1', 'aquafin', ['tackle']),
+							creature: this.creature('aquafin-1', 'aquafin', ['aqua-burst', 'tackle']),
 							groupId: 'opponent',
 							id: 'opponent-aquafin',
 						},
@@ -170,7 +170,7 @@ export default class DuelmonCombatStartMother {
 						{
 							creatureId: 'aquafin-1',
 							id: 'opponent-aquafin',
-							moveIds: ['tackle'],
+							moveIds: ['aqua-burst', 'tackle'],
 							speciesId: 'aquafin',
 						},
 					],

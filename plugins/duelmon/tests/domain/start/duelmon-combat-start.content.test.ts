@@ -1,7 +1,7 @@
 import { Combat } from '@pocket-forge/combat/domain';
 import { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type { DuelmonCombatStartError, DuelmonCombatStartRequest } from '@pocket-forge/duelmon/domain';
-import { DuelmonCombatStart } from '@pocket-forge/duelmon/domain';
+import { DuelmonCombatStart, DuelmonMove, DuelmonSpecies, Phase1MoveConstraints } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatStartMother } from '@pocket-forge/duelmon/mother/domain';
 import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domain';
 import { describe, expect, it } from 'bun:test';
@@ -256,5 +256,66 @@ describe('DuelmonCombatStart.fromContent', () => {
 			path: 'groups.0.combatants.0.creature.moves.1',
 			reason: 'unknown-move',
 		});
+	});
+});
+
+describe('Phase 1 minimum content set', () => {
+	const catalog = DuelmonCombatStartMother.catalog();
+	const SPECIES_IDS = ['aquafin', 'emberling', 'sprout'] as const;
+	const MOVE_IDS = ['aqua-burst', 'ember-burst', 'leaf-lash', 'shade', 'tackle'] as const;
+	const LOADOUTS = {
+		aquafin: ['aqua-burst', 'tackle'],
+		emberling: ['ember-burst', 'tackle'],
+		sprout: ['leaf-lash', 'tackle'],
+	} as const;
+
+	function speciesView(id: string): DuelmonSpecies {
+		const species = catalog.findSpecies(id);
+
+		if (!species) {
+			throw new Error(`Missing fixture species "${id}"`);
+		}
+
+		return DuelmonSpecies.fromSpecies(species);
+	}
+
+	function moveView(id: string): DuelmonMove {
+		const move = catalog.findMove(id);
+
+		if (!move) {
+			throw new Error(`Missing fixture move "${id}"`);
+		}
+
+		return DuelmonMove.fromMove(move);
+	}
+
+	it('provides three creatures with distinct types', () => {
+		const types = SPECIES_IDS.flatMap(id => speciesView(id).types);
+
+		expect(SPECIES_IDS).toHaveLength(3);
+		expect(new Set(types).size).toBeGreaterThanOrEqual(2);
+	});
+
+	it('provides four to six simple moves with physical and special categories', () => {
+		const moves = MOVE_IDS.map(id => moveView(id));
+
+		expect(moves.length).toBeGreaterThanOrEqual(4);
+		expect(moves.length).toBeLessThanOrEqual(6);
+
+		for (const move of moves) {
+			expect(Phase1MoveConstraints.unsupportedReason(move)).toBeUndefined();
+		}
+
+		expect(moves.some(move => move.category === 'Physical')).toBe(true);
+		expect(moves.some(move => move.category === 'Special')).toBe(true);
+	});
+
+	it('includes an affinity case and loadouts drawn from the minimum set', () => {
+		expect(catalog.typeMultipliers('Fire', ['Water'])).toEqual([0.5]);
+		expect(catalog.typeMultipliers('Water', ['Fire'])).toEqual([2]);
+
+		for (const id of Object.values(LOADOUTS).flat()) {
+			expect(MOVE_IDS).toContain(id);
+		}
 	});
 });

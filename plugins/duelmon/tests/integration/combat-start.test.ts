@@ -107,7 +107,7 @@ describe('Phase 1 combat start product scenarios', () => {
 		expect(opponentCombatant.species().id).toBe('aquafin');
 		expect(opponentCombatant.species().types).toEqual(['Water']);
 		expect([opponentCombatant.hp, opponentCombatant.maxHp]).toEqual([104, 104]);
-		expect(opponentCombatant.moves().map(move => move.id)).toEqual(['tackle']);
+		expect(opponentCombatant.moves().map(move => move.id)).toEqual(['aqua-burst', 'tackle']);
 	});
 
 	it('renders the started state as readable text', () => {
@@ -116,6 +116,7 @@ describe('Phase 1 combat start product scenarios', () => {
 		expect(text).toContain('player-emberling (emberling) [Fire] HP 99/99');
 		expect(text).toContain('opponent-aquafin (aquafin) [Water] HP 104/104');
 		expect(text).toContain('ember-burst (Fire / Special / 40 power)');
+		expect(text).toContain('aqua-burst (Water / Special / 40 power)');
 		expect(text).toContain('tackle (Normal / Physical / 35 power)');
 	});
 

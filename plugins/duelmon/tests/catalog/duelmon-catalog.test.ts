@@ -16,7 +16,7 @@ describe('DuelmonCatalog.fromDataset', () => {
 
 		expect(result.isRight()).toBe(true);
 		expect(current.species).toHaveLength(7);
-		expect(current.moves).toHaveLength(9);
+		expect(current.moves).toHaveLength(11);
 		expect(species?.id).toBe('stonelet');
 		expect(species?.attributes.value).toMatchObject({
 			baseAtk: 80,

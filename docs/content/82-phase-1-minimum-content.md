@@ -11,30 +11,30 @@ needed to start a one-on-one battle in Phase 1; it does not define combat rules,
 engine behavior, or public APIs. It lives under `docs/content/` as an internal
 record for the epic; it is not part of the published documentation site.
 
-The content comes from the private, locally generated Gen 1 dataset produced by
-`@pocket-forge/duelmon-dataset`. That dataset is never committed or distributed.
-Only the selected rows are reproduced here as internal metadata for traceability;
-the full generated dataset is not included, committed, or redistributed.
+The content is selected from the private, locally generated Gen 1 dataset produced
+by `@pocket-forge/duelmon-dataset`. That dataset is never committed or distributed.
+Only the selected rows are mirrored in the neutral fixture used by the plugin
+tests; the full generated dataset is not included, committed, or redistributed.
 
 This document does not modify the neutral core described in
 [ADR-0001](../adr/0001-preserve-a-neutral-original-game-domain.md). Duelmon remains
-a private consumer of the neutral Combat domain. The dataset display names below
-are reproduced only for internal traceability; the public domain vocabulary stays
-neutral (`Creature`, `Affinity`, and the neutral catalog entities).
+a private consumer of the neutral Combat domain. The fixture uses neutral
+identifiers, so the public domain vocabulary stays neutral (`Creature`, `Affinity`,
+and the neutral catalog entities).
 
 ## Minimum set
 
 The set contains three creatures and five moves. It covers the Fire, Water, Grass,
-Poison, Normal, and Flying types, at least one physical and one special move, and
-several effectiveness cases.
+Normal, and Ghost types, at least one physical and one special move, and several
+effectiveness cases.
 
 ### Creatures
 
 | ID | Name | Types | HP | Atk | Def | spa | spd | Speed | baseSpecial |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|
-| `charmander` | Charmander | Fire | 39 | 52 | 43 | 50 | 50 | 65 | 50 |
-| `squirtle` | Squirtle | Water | 44 | 48 | 65 | 50 | 50 | 43 | 50 |
-| `bulbasaur` | Bulbasaur | Grass / Poison | 45 | 49 | 49 | 65 | 65 | 45 | 65 |
+| `emberling` | Emberling | Fire | 39 | 52 | 43 | 60 | 50 | 65 | 60 |
+| `aquafin` | Aquafin | Water | 44 | 48 | 65 | 50 | 50 | 43 | 50 |
+| `sprout` | Sprout | Grass | 50 | 50 | 50 | 65 | 50 | 50 | 65 |
 
 The generated dataset stores Special Attack (`spa`) and Special Defense (`spd`)
 separately. `DuelmonCatalog` collapses them into a single `baseSpecial` attribute
@@ -45,23 +45,23 @@ traceability, but `baseSpecial` is the value the catalog exposes.
 
 | ID | Name | Type | Category | Power | Accuracy | PP | Target |
 |---|---|---|---:|---:|---:|---:|---|
-| `tackle` | Tackle | Normal | Physical | 40 | 100 | 35 | normal |
-| `scratch` | Scratch | Normal | Physical | 40 | 100 | 35 | normal |
-| `watergun` | Water Gun | Water | Special | 40 | 100 | 25 | normal |
-| `vinewhip` | Vine Whip | Grass | Special | 45 | 100 | 25 | normal |
-| `peck` | Peck | Flying | Physical | 35 | 100 | 35 | any |
+| `tackle` | Tackle | Normal | Physical | 35 | 100 | 35 | normal |
+| `ember-burst` | Ember Burst | Fire | Special | 40 | 100 | 25 | normal |
+| `aqua-burst` | Aqua Burst | Water | Special | 40 | 100 | 25 | normal |
+| `leaf-lash` | Leaf Lash | Grass | Physical | 45 | 100 | 25 | normal |
+| `shade` | Shade | Ghost | Special | 45 | 100 | 15 | normal |
 
 None of the selected moves has a status condition, stat change, secondary effect,
-volatile status, drain, recoil, multi-hit, or high critical-hit ratio. All have
-priority 0 and accuracy 100.
+volatile status, drain, recoil, multi-hit, high critical-hit ratio, or turn-changing
+flag. All have priority 0 and accuracy 100.
 
 ### Loadouts
 
 | Creature | Moves |
 |---|---|
-| Charmander | `tackle`, `scratch` |
-| Squirtle | `watergun`, `tackle` |
-| Bulbasaur | `vinewhip`, `peck` |
+| Emberling | `ember-burst`, `tackle` |
+| Aquafin | `aqua-burst`, `tackle` |
+| Sprout | `leaf-lash`, `tackle` |
 
 Loadouts are content choices for Phase 1. They are not learnsets and do not imply
 progression rules.
@@ -70,35 +70,36 @@ progression rules.
 
 Multipliers are computed against the generated Gen 1 type chart and expressed as
 the final product for the defender's type combination. The table covers every
-loadout move against every selected creature.
+selected move against every selected creature.
 
-| Move | Charmander | Squirtle | Bulbasaur |
+| Move | Emberling | Aquafin | Sprout |
 |---|---:|---:|---:|
-| Water Gun | 2x | 0.5x | 0.5x |
-| Vine Whip | 0.5x | 2x | 0.25x |
-| Peck | 1x | 1x | 2x |
+| Ember Burst | 0.5x | 0.5x | 2x |
+| Aqua Burst | 2x | 0.5x | 0.5x |
+| Leaf Lash | 0.5x | 2x | 0.5x |
+| Shade | 1x | 1x | 1x |
 | Tackle | 1x | 1x | 1x |
-| Scratch | 1x | 1x | 1x |
 
 The set therefore demonstrates super-effective, not-very-effective, and neutral
-damage. It does not include an immunity case: no Ghost creature is selected, even
-though the type chart supports Normal against Ghost at 0x.
+damage. It does not include an immunity case: no selected creature has a type that
+is immune to a selected move, even though the type chart supports Normal against
+Ghost at 0x.
 
 ## Phase 1 demo
 
-The demo uses Charmander against Squirtle:
+The demo uses Emberling against Aquafin:
 
-1. Charmander is the active creature for the player.
-2. Squirtle is the active creature for the opponent.
+1. Emberling is the active creature for the player.
+2. Aquafin is the active creature for the opponent.
 3. The initial state shows both creatures' HP, types, moves, and active creature.
-4. Charmander uses Tackle; Tackle is neutral against Squirtle.
-5. Squirtle uses Water Gun; Water Gun is super effective against Charmander.
+4. Emberling uses Ember Burst; Fire is not very effective against Water.
+5. Aquafin uses Aqua Burst; Water is super effective against Fire.
 6. The exchange repeats until one active creature's HP reaches 0. That is the
    Phase 1 end condition; no additional content is needed.
 
-The epic's illustrative "Tackle against Ember" is adapted to "Tackle against Water
-Gun" because no simple Fire move is selected. The effectiveness case is carried by
-Water Gun against Charmander. A Fire move is deferred to a later phase.
+The epic's illustrative "Tackle against Ember" is adapted to "Ember Burst against
+Aqua Burst": the simple Fire and Water moves carry the effectiveness cases without
+adding status, priority, or secondary effects.
 
 ## Exclusions
 
@@ -125,21 +126,23 @@ comes from `spa`; `spd` is not part of the neutral catalog.
 ### Battle start (#86)
 
 Build the battle from the selected content. Validate that every referenced creature
-and move exists in the catalog and that each move satisfies the Phase 1 constraints.
+and move exists in the catalog, that each move satisfies the Phase 1 constraints,
+and that the move flags do not declare a turn-changing effect.
 
 ### Product tests (#89)
 
-Cover valid content (Charmander against Squirtle), incomplete content (a missing
-move), and invalid content (a move with a status or secondary effect).
+Cover valid content (Emberling against Aquafin), incomplete content (a missing
+move), and invalid content (a move with a status, secondary effect, or unsupported
+flag).
 
 ## Acceptance criteria
 
-- [x] Two or three creatures with types: Charmander, Squirtle, Bulbasaur.
-- [x] Four to six simple moves: Tackle, Scratch, Water Gun, Vine Whip, Peck.
-- [x] At least one physical and one special move: Tackle, Scratch, and Peck are
-      physical; Water Gun and Vine Whip are special.
-- [x] At least two types and an effectiveness case: six types and 2x, 0.5x, and
-      0.25x cases.
+- [x] Two or three creatures with types: Emberling, Aquafin, Sprout.
+- [x] Four to six simple moves: Tackle, Ember Burst, Aqua Burst, Leaf Lash, Shade.
+- [x] At least one physical and one special move: Tackle and Leaf Lash are
+      physical; Ember Burst, Aqua Burst, and Shade are special.
+- [x] At least two types and an effectiveness case: five types and 2x and 0.5x
+      cases.
 - [x] Documented and sufficient for the Phase 1 demo.
 
 ## References

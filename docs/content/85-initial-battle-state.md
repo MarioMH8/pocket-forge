@@ -42,7 +42,7 @@ opponent side. Group ids are stable strings (`player` and `opponent` in the demo
 
 | Field | Phase 1 meaning | Phase 1 value |
 |---|---|---|
-| `id` | Stable combat identifier | `demo-1` |
+| `id` | Stable combat identifier | `combat-1` |
 | `status` | Combat lifecycle | `active` |
 | `attributes` | Combat-level battle attributes | `{}` |
 | `randomPocket` | Deterministic random state | `{ seed: 42, state: 42 }` |
@@ -137,13 +137,13 @@ Stat = base + 5
 
 | Creature | Types | Level | Current HP | Max HP | Attack | Defense | Special | Speed | Loadout |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| Charmander | Fire | 50 | 99 | 99 | 57 | 48 | 55 | 70 | `tackle`, `scratch` |
-| Squirtle | Water | 50 | 104 | 104 | 53 | 70 | 55 | 48 | `watergun`, `tackle` |
-| Bulbasaur | Grass / Poison | 50 | 105 | 105 | 54 | 54 | 70 | 50 | `vinewhip`, `peck` |
+| Emberling | Fire | 50 | 99 | 99 | 57 | 48 | 65 | 70 | `ember-burst`, `tackle` |
+| Aquafin | Water | 50 | 104 | 104 | 53 | 70 | 55 | 48 | `aqua-burst`, `tackle` |
+| Sprout | Grass | 50 | 110 | 110 | 55 | 55 | 70 | 55 | `leaf-lash`, `tackle` |
 
 The level-50 formula is a Phase 1 simplification, not a progression system. The
-demo still respects the narrative in #84: Charmander (Speed 70) acts before
-Squirtle (Speed 48), and Water Gun does not faint Charmander in one hit. The
+demo still respects the narrative in #84: Emberling (Speed 70) acts before
+Aquafin (Speed 48), and Aqua Burst does not faint Emberling in one hit. The
 exchange therefore lasts more than one round, as described in
 [Phase 1 demo](#phase-1-demo).
 
@@ -151,13 +151,13 @@ exchange therefore lasts more than one round, as described in
 
 The Phase 1 demo starts from the following fixed point:
 
-- Content: Charmander on the player side and Squirtle on the opponent side, using
+- Content: Emberling on the player side and Aquafin on the opponent side, using
   the loadouts from #84.
 - Level: `50`; IVs and EVs: `0`.
 - Random seed: `42`, so `RandomPocket` starts at `{ seed: 42, state: 42 }`.
-- Stable identifiers: combat `demo-1`; groups `player` and `opponent`;
-  combatants `player-charmander` and `opponent-squirtle`; creatures
-  `charmander-1` and `squirtle-1`.
+- Stable identifiers: combat `combat-1`; groups `player` and `opponent`;
+  combatants `player-emberling` and `opponent-aquafin`; creatures
+  `emberling-1` and `aquafin-1`.
 
 The JSON below is the canonical fixed starting point for the Phase 1 demo. It is
 the state #86 must reproduce and the fixture #89 can use.
@@ -168,7 +168,7 @@ the state #86 must reproduce and the fixture #89 can use.
   "groups": [
     {
       "attributes": {
-        "activeCombatantIds": ["player-charmander"]
+        "activeCombatantIds": ["player-emberling"]
       },
       "combatants": [
         {
@@ -178,37 +178,37 @@ the state #86 must reproduce and the fixture #89 can use.
             "hp": 99,
             "level": 50,
             "maxHp": 99,
-            "special": 55,
+            "special": 65,
             "speed": 70
           },
           "creature": {
             "abilities": [],
             "attributes": {},
-            "id": "charmander-1",
+            "id": "emberling-1",
             "moves": [
               {
                 "attributes": {
                   "accuracy": 100,
                   "alwaysHits": true,
-                  "category": "Physical",
+                  "category": "Special",
                   "power": 40,
-                  "pp": 35,
+                  "pp": 25,
                   "priority": 0,
-                  "type": "Normal"
+                  "type": "Fire"
                 },
-                "id": "tackle"
+                "id": "ember-burst"
               },
               {
                 "attributes": {
                   "accuracy": 100,
                   "alwaysHits": true,
                   "category": "Physical",
-                  "power": 40,
+                  "power": 35,
                   "pp": 35,
                   "priority": 0,
                   "type": "Normal"
                 },
-                "id": "scratch"
+                "id": "tackle"
               }
             ],
             "species": {
@@ -216,22 +216,22 @@ the state #86 must reproduce and the fixture #89 can use.
                 "baseAtk": 52,
                 "baseDef": 43,
                 "baseHp": 39,
-                "baseSpecial": 50,
+                "baseSpecial": 60,
                 "baseSpeed": 65,
                 "types": ["Fire"]
               },
-              "id": "charmander"
+              "id": "emberling"
             }
           },
           "groupId": "player",
-          "id": "player-charmander"
+          "id": "player-emberling"
         }
       ],
       "id": "player"
     },
     {
       "attributes": {
-        "activeCombatantIds": ["opponent-squirtle"]
+        "activeCombatantIds": ["opponent-aquafin"]
       },
       "combatants": [
         {
@@ -247,7 +247,7 @@ the state #86 must reproduce and the fixture #89 can use.
           "creature": {
             "abilities": [],
             "attributes": {},
-            "id": "squirtle-1",
+            "id": "aquafin-1",
             "moves": [
               {
                 "attributes": {
@@ -259,14 +259,14 @@ the state #86 must reproduce and the fixture #89 can use.
                   "priority": 0,
                   "type": "Water"
                 },
-                "id": "watergun"
+                "id": "aqua-burst"
               },
               {
                 "attributes": {
                   "accuracy": 100,
                   "alwaysHits": true,
                   "category": "Physical",
-                  "power": 40,
+                  "power": 35,
                   "pp": 35,
                   "priority": 0,
                   "type": "Normal"
@@ -283,17 +283,17 @@ the state #86 must reproduce and the fixture #89 can use.
                 "baseSpeed": 43,
                 "types": ["Water"]
               },
-              "id": "squirtle"
+              "id": "aquafin"
             }
           },
           "groupId": "opponent",
-          "id": "opponent-squirtle"
+          "id": "opponent-aquafin"
         }
       ],
       "id": "opponent"
     }
   ],
-  "id": "demo-1",
+  "id": "combat-1",
   "randomPocket": {
     "seed": 42,
     "state": 42
@@ -336,6 +336,7 @@ carries a machine-readable `reason`, a readable message, and a dot-separated
 |---|---|---|
 | Combat id is required | `invalid-combat` | `id` |
 | Status is `active` | `invalid-combat` | `status` |
+| Combat attributes are empty | `invalid-attribute` | `attributes.<key>` |
 | Exactly two groups | `invalid-group-count` | `groups` |
 | Exactly one combatant per group | `invalid-combatant-count` | `groups.<n>.combatants` |
 | Group and combatant ids are unique | `duplicate-id` | `groups.<n>.id` / `groups.<n>.combatants.<m>.id` |
@@ -344,8 +345,14 @@ carries a machine-readable `reason`, a readable message, and a dot-separated
 | Required battle attributes are present | `missing-attribute` | `groups.<n>.combatants.<m>.attributes.<key>` |
 | Numeric attributes satisfy their ranges | `invalid-attribute` | `groups.<n>.combatants.<m>.attributes.<key>` |
 | Current HP is positive and does not exceed max HP | `invalid-hp` | `groups.<n>.combatants.<m>.attributes.hp` |
+| Creature id is present | `missing-id` | `groups.<n>.combatants.<m>.creature.id` |
+| Creature attributes are empty | `invalid-attribute` | `groups.<n>.combatants.<m>.creature.attributes.<key>` |
+| Creature abilities are empty | `invalid-combat` | `groups.<n>.combatants.<m>.creature.abilities` |
 | Species id is present | `missing-species` | `groups.<n>.combatants.<m>.creature.species.id` |
 | Species types are present | `missing-types` | `groups.<n>.combatants.<m>.creature.species.attributes.types` |
+| Species base stats are present and in range | `missing-attribute` / `invalid-attribute` | `groups.<n>.combatants.<m>.creature.species.attributes.<key>` |
+| Move attributes are present and in range | `missing-attribute` / `invalid-attribute` | `groups.<n>.combatants.<m>.creature.moves.<k>.attributes.<key>` |
+| Move snapshot is inside the Phase 1 slice | `unsupported-move` | `groups.<n>.combatants.<m>.creature.moves.<k>` |
 | At least one move is present | `missing-moves` | `groups.<n>.combatants.<m>.creature.moves` |
 | At most four moves, without duplicate ids | `invalid-moves` | `groups.<n>.combatants.<m>.creature.moves` |
 | Random state is present and valid | `invalid-random-pocket` | `randomPocket` |
@@ -353,25 +360,27 @@ carries a machine-readable `reason`, a readable message, and a dot-separated
 Content-resolution errors are part of the same error type and are added by #86:
 an unknown species, an unknown move, or a move outside the Phase 1 constraints
 must fail with a clear reason and path, never with a half-built combat.
+`fromContent` aggregates structural request errors and content errors before it
+returns, so a request that violates both contracts reports both sets.
 
 ## Phase 1 demo
 
 The initial state for the demo is:
 
-1. The player group has `player-charmander` as its active combatant: Fire,
-   99/99 HP, moves `tackle` and `scratch`.
-2. The opponent group has `opponent-squirtle` as its active combatant: Water,
-   104/104 HP, moves `watergun` and `tackle`.
+1. The player group has `player-emberling` as its active combatant: Fire,
+   99/99 HP, moves `ember-burst` and `tackle`.
+2. The opponent group has `opponent-aquafin` as its active combatant: Water,
+   104/104 HP, moves `aqua-burst` and `tackle`.
 3. Both creatures show their current and maximum HP, types, moves, and the active
    combatant.
-4. Charmander uses Tackle; Tackle is neutral against Squirtle.
-5. Squirtle uses Water Gun; Water Gun is super effective against Charmander.
-6. The exchange repeats. With the level-50 values above, Water Gun does not faint
-   Charmander in one hit, so Squirtle wins on the second Water Gun.
+4. Emberling uses Ember Burst; Fire is not very effective against Water.
+5. Aquafin uses Aqua Burst; Water is super effective against Fire.
+6. The exchange repeats. With the level-50 values above, Aqua Burst does not faint
+   Emberling in one hit, so Aquafin wins after several Aqua Bursts.
 
 Turn order and damage resolution are not part of this task. The level-50 values
 are a sanity check that the initial state keeps the documented demo multi-turn
-and lets Charmander act first.
+and lets Emberling act first.
 
 ## Exclusions
 
@@ -413,8 +422,8 @@ separate hand-built summary.
 
 ### Product tests (#89)
 
-Use the fixed starting point in this document. Cover valid content (Charmander
-against Squirtle), incomplete content (a missing move), and invalid content (a
+Use the fixed starting point in this document. Cover valid content (Emberling
+against Aquafin), incomplete content (a missing move), and invalid content (a
 move with a status or secondary effect). Assert that no partial combat is
 returned, that functions outside Phase 1 are not exposed, and that the history
 records the start.
