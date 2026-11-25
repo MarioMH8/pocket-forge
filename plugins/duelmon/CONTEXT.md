@@ -107,6 +107,10 @@ _Avoid_: Stat modifier, buff
 The ordered resolution of the actions declared for one turn: priority and effective Speed determine order, the Combat Engine resolves each action, and the turn returns one Combat Resolution with events renumbered in turn order.
 _Avoid_: Game loop, round, battle manager
 
+**Duelmon Turn Declaration**:
+The parsed input of one declared turn action: one actor, one Move, and one target. Phase 1 declarations use the `combatant` target scope; validation restricts it to an active opposing combatant. A declaration is input, not state; it is never stored in `Combat` and has no pending or confirmed variant.
+_Avoid_: Pending action, selected move state, action queue item
+
 **Switch Action**:
 The Duelmon action that changes the active subset of a Combatant Group. It is not bound to a Move and is resolved from the plugin's discriminated input.
 _Avoid_: Swap, replacement
