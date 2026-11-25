@@ -102,6 +102,11 @@ An invalid or absent declaration returns `Either.left(CombatResolutionError[])`
 without resolving anything: no default Move, no partial state, no events, and
 no randomness consumed.
 
+A malformed Combat is not a declaration rejection. The combat start contract
+already validates each group's `activeCombatantIds`, so the semantic views treat
+a broken snapshot as a programmer error; the rejection matrix only covers
+declarations resolved against a combat that satisfies the start contract.
+
 ### Combat Turn service (story 4)
 
 The service receives one declaration per actor, orders them by priority and
