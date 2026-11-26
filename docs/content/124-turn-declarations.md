@@ -58,7 +58,9 @@ ordering is not applied here; #125 sorts these declarations with
 4. Each parsed declaration is validated by `DuelmonTurnDeclaration.validate`.
    The set reuses that rule set instead of repeating it: the actor exists and is
    active, the Move exists in the catalog and is known by the actor's creature,
-   and the target is an active combatant of the only opposing group.
+   and the target is an active combatant of the only opposing group. The set
+   then applies `Phase1MoveConstraints` at the turn boundary, so a Move outside
+   the Phase 1 support policy is rejected with `rejected` on `input.moveId`.
 5. Exactly one declaration per group is accepted. The same actor declared twice
    is rejected, and a second declaration for an already declared group is also
    rejected.
@@ -86,6 +88,7 @@ for example `declarations.0.input.actorId`.
 | `moveId` is missing or empty | `invalid-input` | `declarations.<index>.input.moveId` |
 | Move is unknown to the catalog | `invalid-input` | `declarations.<index>.input.moveId` |
 | Move is known to the catalog but not by the creature | `rejected` | `declarations.<index>.input.moveId` |
+| Move is outside the Phase 1 support policy (Status, no power, can miss, non-zero priority, effects, flags) | `rejected` | `declarations.<index>.input.moveId` |
 | Target is absent or not an object | `invalid-input` | `declarations.<index>.input.target` |
 | Target scope is not `combatant` | `invalid-target` | `declarations.<index>.input.target.scope` |
 | Target is unknown, inactive, from the actor group, or outside the only opposing group | `invalid-target` | `declarations.<index>.input.target.id` |

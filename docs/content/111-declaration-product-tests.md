@@ -128,10 +128,11 @@ neither mutates the battle nor advances the turn or consumes randomness.
 declarations are accepted against the same unchanged combat, and neither
 transition is applied.
 
-Phase 1 has no declaration set or turn service yet, so the test proves that
-each active combatant can declare and that the combat stays unchanged. It does
-not prove that a future turn service composes the two declarations into one
-turn.
+This test is a plugin-boundary check: it proves that each active combatant can
+declare independently and that the combat stays unchanged. The declaration set
+(#124) and the turn service (#125) later compose the two declarations into one
+turn; that contract is covered by their own product tests, not by this plugin
+scenario.
 
 ### Value over the unit tests
 
