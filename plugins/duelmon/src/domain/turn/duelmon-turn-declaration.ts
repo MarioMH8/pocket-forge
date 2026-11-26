@@ -56,8 +56,8 @@ class DuelmonTurnDeclaration {
 	 *
 	 * The target must use the `combatant` scope. The actor must exist and be
 	 * active in its group, the Move must exist in the catalog and belong to the
-	 * actor's creature, and the target must be an active combatant of the
-	 * opposing group.
+	 * actor's creature, and the target must be an active combatant of the only
+	 * opposing group (Phase 1 is one versus one).
 	 *
 	 * @param catalog - Duelmon catalog.
 	 * @param combat - Current combat snapshot.
@@ -126,20 +126,22 @@ class DuelmonTurnDeclaration {
 			);
 		}
 
-		if (target.groupId === actorGroup.id) {
-			return DuelmonFailure.fail(
-				'invalid-target',
-				`Target "${target.id}" belongs to the actor's group`,
-				'input.target.id'
-			);
-		}
-
 		const targetGroup = combatView.group(target.groupId);
 
 		if (!targetGroup?.activeCombatantIds.includes(target.id)) {
 			return DuelmonFailure.fail(
 				'invalid-target',
-				`Target "${target.id}" is not an active combatant of the opposing group`,
+				`Target "${target.id}" is not an active combatant`,
+				'input.target.id'
+			);
+		}
+
+		const opposingGroups = combatView.groups().filter(group => group.id !== actorGroup.id);
+
+		if (opposingGroups.length !== 1 || target.groupId !== opposingGroups[0]?.id) {
+			return DuelmonFailure.fail(
+				'invalid-target',
+				`Target "${target.id}" is not in the opposing group`,
 				'input.target.id'
 			);
 		}
