@@ -410,4 +410,56 @@ describe('UseMoveAction', () => {
 			expect(combat.toPrimitives()).toEqual(before);
 		});
 	});
+
+	describe('rejection guarantees', () => {
+		it('rejects an absent declaration without resolving, consuming randomness, or emitting events', () => {
+			const combat = DuelmonCombatMother.useMoveCombat();
+			const before = combat.toPrimitives();
+			const randomPocket = combat.randomPocket.toPrimitives();
+			const actionBindings = DuelmonCombatMother.useMoveBindings();
+
+			// A binding exists for the actor's first Move, so a default fallback would resolve instead of rejecting.
+			expect(actionBindings.find('ember-burst')).toBeDefined();
+
+			const result = PLUGIN.resolve({
+				actionBindings,
+				combat,
+				input: {
+					actorId: ATTACKER_ID,
+					target: { id: TARGET_ID, scope: 'combatant' },
+				},
+			});
+
+			// A rejection carries no transition, so it emits no events.
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()).toHaveLength(1);
+			expect(result.getLeft()[0]?.reason).toBe('invalid-input');
+			expect(result.getLeft()[0]?.path).toBe('input.moveId');
+			expect(combat.toPrimitives()).toEqual(before);
+			expect(combat.randomPocket.toPrimitives()).toEqual(randomPocket);
+		});
+
+		it('rejects an invalid declaration without resolving, consuming randomness, or emitting events', () => {
+			const combat = DuelmonCombatMother.useMoveCombat();
+			const before = combat.toPrimitives();
+			const randomPocket = combat.randomPocket.toPrimitives();
+			const result = PLUGIN.resolve({
+				actionBindings: DuelmonCombatMother.useMoveBindings(['missing-move']),
+				combat,
+				input: {
+					actorId: ATTACKER_ID,
+					moveId: 'missing-move',
+					target: { id: TARGET_ID, scope: 'combatant' },
+				},
+			});
+
+			// A rejection carries no transition, so it emits no events.
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()).toHaveLength(1);
+			expect(result.getLeft()[0]?.reason).toBe('invalid-input');
+			expect(result.getLeft()[0]?.path).toBe('input.moveId');
+			expect(combat.toPrimitives()).toEqual(before);
+			expect(combat.randomPocket.toPrimitives()).toEqual(randomPocket);
+		});
+	});
 });
