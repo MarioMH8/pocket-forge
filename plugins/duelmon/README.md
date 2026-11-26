@@ -107,11 +107,11 @@ unsupported, or out-of-Phase-1 declarations are rejected with aggregated
 failures; nothing is resolved, no events are emitted, and the `Combat` stays
 unchanged. The policy is a turn-content rule, not a generic action rule:
 `DuelmonTurnDeclaration.validate` and the plugin keep applying their own
-contracts, so the engine and `useMove` still resolve the generic actions and
-report their own category, accuracy, or effect failures for callers that do not
-go through a Phase 1 turn. The set exposes its declarations
-in combat order and looks them up by group or actor. Speed ordering and
-resolution belong to the turn service (#125). See
+contracts; for callers that do not go through a Phase 1 turn, the engine still
+resolves bound actions and `useMove` keeps reporting its own category, accuracy,
+or effect failures. The set exposes its declarations in combat order and looks
+them up by group or actor. Speed ordering and resolution belong to the turn
+service (#125). See
 [Phase 1 turn declarations](../../docs/content/124-turn-declarations.md).
 
 ## Ordering declared actions

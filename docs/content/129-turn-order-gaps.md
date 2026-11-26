@@ -7,7 +7,7 @@
 
 ## Scope and privacy
 
-This document is internal to the Duelmon plugin. It records the four gaps a
+This document is internal to the Duelmon plugin. It records the four gaps an
 independent review found in the delivered Phase 1 turn order (#123–#128) and how
 this task closes them.
 
