@@ -59,6 +59,29 @@ types, and loadout moves. It does not render PP, accuracy, priority, status
 conditions, stat stages, or other information outside Phase 1. Views keep no
 manual copy of the state: the `Combat` snapshot remains the source of truth.
 
+## Declaring a turn action
+
+A turn declaration is the same parsed shape as the plugin input: one actor,
+one Move, and one target. `DuelmonCombatInput.parse` validates the runtime
+shape and returns `Either<CombatResolutionError[], DuelmonCombatInput>`:
+
+```ts
+const declaration = DuelmonCombatInput.parse({
+  actorId: 'player-emberling',
+  moveId: 'ember-burst',
+  target: { id: 'opponent-aquafin', scope: 'combatant' },
+}).getRight();
+```
+
+Phase 1 declarations target a combatant; the shared input also carries the
+target scopes used by the other registered actions. A declaration without a
+`moveId` is rejected instead of selecting a default Move, and one declaration
+carries exactly one Move. The declaration is input, not state: parsing it does
+not change the `Combat`, and `Combat` has no pending or confirmed action state.
+Actor activity, Move ownership, and target validity are not checked by the
+parser; they belong to declaration validation against the combat before the
+turn resolves.
+
 ## Recording the start
 
 `DuelmonCombatHistory` records the combat in the basic history as ordered,
@@ -128,7 +151,7 @@ The per-type truncation matters: Ice against Water/Flying starts from a base of
 
 This slice covers a single damaging hit per action. It does not implement:
 
-- PP tracking or move selection.
+- PP tracking or the combat turn service that consumes declarations.
 - Status conditions, volatile statuses, or stat stages.
 - Critical hits and their ratio.
 - Secondary effects, drain, recoil, or multi-hit moves.

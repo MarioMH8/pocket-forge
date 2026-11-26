@@ -13,6 +13,12 @@ function isNonEmptyString(value: unknown): value is string {
 /**
  * Plugin-owned input accepted by the Duelmon action plugin.
  *
+ * This is also the shape of a declared turn action: one actor, one Move, and
+ * one target. The turn service will consume one declaration per actor; the
+ * declaration is input, not state, so it is never stored in `Combat` and has
+ * no pending or confirmed variant. Phase 1 move declarations target a
+ * combatant through `{ scope: 'combatant', id }`.
+ *
  * The input is parsed once by the plugin and then handed to the selected
  * action resolver with its target already shaped as a value object.
  */
@@ -23,10 +29,14 @@ class DuelmonCombatInput {
 	readonly actorId: string;
 	/**
 	 * Move identifier used to look up the action set binding.
+	 *
+	 * A declaration carries exactly one Move; there is no default.
 	 */
 	readonly moveId: string;
 	/**
 	 * Target selection validated against the current Combat.
+	 *
+	 * Phase 1 turn declarations use the `combatant` scope with an id.
 	 */
 	readonly target: DuelmonTarget;
 
@@ -59,8 +69,19 @@ class DuelmonCombatInput {
 	/**
 	 * Validates the plugin-owned input shape at runtime.
 	 *
+	 * The actor, Move, and target are all required. A missing or empty
+	 * `moveId` is rejected instead of selecting a default Move.
+	 *
 	 * @param value - Untrusted plugin input.
 	 * @returns The validated input, or structured `invalid-input` failures.
+	 * @example
+	 * ```ts
+	 * const parsed = DuelmonCombatInput.parse({
+	 * 	actorId: 'player-emberling',
+	 * 	moveId: 'ember-burst',
+	 * 	target: { scope: 'combatant', id: 'opponent-aquafin' },
+	 * });
+	 * ```
 	 */
 	static parse(value: unknown): Either<CombatResolutionError[], DuelmonCombatInput> {
 		if (!DuelmonRecord.isRecord(value)) {
