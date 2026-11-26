@@ -113,6 +113,62 @@ function combatWithReversedGroups(): Combat {
 	return CombatEntity.fromPrimitives(primitives);
 }
 
+function combatWithSingleGroup(): Combat {
+	const primitives = basePrimitives();
+	const [playerGroup] = primitives.groups;
+
+	if (!playerGroup) {
+		throw new Error('Fixture is missing the player group');
+	}
+
+	return CombatEntity.fromPrimitives({ ...primitives, groups: [playerGroup] });
+}
+
+function combatWithNoActiveCombatants(): Combat {
+	const primitives = basePrimitives();
+	const playerGroup = primitives.groups[0];
+
+	if (!playerGroup) {
+		throw new Error('Fixture is missing the player group');
+	}
+
+	primitives.groups[0] = {
+		...playerGroup,
+		attributes: { ...playerGroup.attributes, activeCombatantIds: [] },
+	};
+
+	return CombatEntity.fromPrimitives(primitives);
+}
+
+function combatWithKnownMoves(combatantId: string, moveIds: readonly string[]): Combat {
+	const primitives = basePrimitives();
+	const catalog = DuelmonCombatStartMother.catalog();
+	const moves = moveIds.map(moveId => {
+		const move = catalog.findMove(moveId);
+
+		if (!move) {
+			throw new Error(`Fixture is missing the move "${moveId}"`);
+		}
+
+		return move.toPrimitives();
+	});
+
+	return CombatEntity.fromPrimitives({
+		...primitives,
+		groups: primitives.groups.map(group => ({
+			...group,
+			combatants: group.combatants.map(combatant =>
+				combatant.id === combatantId
+					? {
+							...combatant,
+							creature: { ...combatant.creature, moves: [...combatant.creature.moves, ...moves] },
+						}
+					: combatant
+			),
+		})),
+	});
+}
+
 describe('DuelmonTurnDeclarations', () => {
 	it('accepts one valid declaration per group in both input orders', () => {
 		const forward = receive(combat(), validDeclarations());
@@ -202,6 +258,34 @@ describe('DuelmonTurnDeclarations', () => {
 		expect(result.getLeft().some(error => error.message === 'Missing declaration for group "opponent"')).toBe(true);
 	});
 
+	it('rejects a declaration list that is not an array', () => {
+		for (const input of [{ actorId: PLAYER }, 'declarations']) {
+			const result = receive(combat(), input);
+
+			expectRejected(result, { path: 'declarations', reason: 'invalid-input' });
+			expect(result.getLeft()).toHaveLength(1);
+			expect(result.getLeft()[0]?.message).toBe('A Phase 1 turn requires one declaration per group');
+		}
+	});
+
+	it('rejects a list with three declarations', () => {
+		const result = receive(combat(), [
+			declaration(PLAYER, PLAYER_MOVE, OPPONENT),
+			declaration(OPPONENT, OPPONENT_MOVE, PLAYER),
+			declaration(PLAYER, 'tackle', OPPONENT),
+		]);
+
+		expectRejected(result, { path: 'declarations', reason: 'invalid-input' });
+		expect(
+			result
+				.getLeft()
+				.some(
+					error => error.message === 'A Phase 1 turn requires exactly one declaration per group, received 3'
+				)
+		).toBe(true);
+		expectRejected(result, { path: 'declarations.2.input.actorId', reason: 'invalid-input' });
+	});
+
 	it('aggregates failures from both declarations in one pass', () => {
 		const result = receive(combat(), [
 			declaration(PLAYER, 'missing-move', OPPONENT),
@@ -258,6 +342,39 @@ describe('DuelmonTurnDeclarations', () => {
 		expectRejected(result, { path: 'declarations.0.input.moveId', reason: 'rejected' });
 	});
 
+	it('rejects a Status Move at the turn boundary with the Phase 1 policy', () => {
+		const result = receive(combatWithKnownMoves(PLAYER, ['oath']), [
+			declaration(PLAYER, 'oath', OPPONENT),
+			declaration(OPPONENT, OPPONENT_MOVE, PLAYER),
+		]);
+
+		expectRejected(result, { path: 'declarations.0.input.moveId', reason: 'rejected' });
+		expect(
+			result.getLeft().some(error => error.message === 'Move "oath" is a Status move, which is outside Phase 1')
+		).toBe(true);
+		expect(result.getLeft().some(error => error.message === 'Missing declaration for group "player"')).toBe(true);
+	});
+
+	it('rejects a non-zero priority Move at the turn boundary with the Phase 1 policy', () => {
+		const result = receive(combatWithKnownMoves(PLAYER, ['quick-jab']), [
+			declaration(PLAYER, 'quick-jab', OPPONENT),
+			declaration(OPPONENT, OPPONENT_MOVE, PLAYER),
+		]);
+
+		expectRejected(result, { path: 'declarations.0.input.moveId', reason: 'rejected' });
+		expect(
+			result
+				.getLeft()
+				.some(error => error.message === 'Move "quick-jab" has non-zero priority, which is outside Phase 1')
+		).toBe(true);
+	});
+
+	it('still accepts a supported Move added to the creature loadout', () => {
+		const result = receive(combatWithKnownMoves(PLAYER, [PLAYER_MOVE]), validDeclarations());
+
+		expect(result.isRight()).toBe(true);
+	});
+
 	it('rejects a target from the actor group', () => {
 		const result = receive(combat(), [
 			declaration(PLAYER, PLAYER_MOVE, PLAYER),
@@ -283,6 +400,32 @@ describe('DuelmonTurnDeclarations', () => {
 		]);
 
 		expectRejected(result, { path: 'combat.groups', reason: 'incompatible-contract' });
+	});
+
+	it('rejects a combat with a single group', () => {
+		const result = receive(combatWithSingleGroup(), [declaration(PLAYER, PLAYER_MOVE, OPPONENT)]);
+
+		expectRejected(result, { path: 'combat.groups', reason: 'incompatible-contract' });
+		expect(
+			result.getLeft().some(error => error.message === 'Phase 1 requires exactly two groups, received 1')
+		).toBe(true);
+	});
+
+	it('rejects a group with no active combatant', () => {
+		const result = receive(combatWithNoActiveCombatants(), validDeclarations());
+
+		expectRejected(result, {
+			path: 'combat.groups.0.attributes.activeCombatantIds',
+			reason: 'incompatible-contract',
+		});
+		expect(
+			result
+				.getLeft()
+				.some(
+					error =>
+						error.message === 'Phase 1 group "player" requires exactly one active combatant, received 0'
+				)
+		).toBe(true);
 	});
 
 	it('rejects a combat with two active combatants in a group', () => {

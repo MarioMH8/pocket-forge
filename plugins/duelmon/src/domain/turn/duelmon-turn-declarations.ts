@@ -6,6 +6,7 @@ import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 
 import { DuelmonCombat } from '../combat/duelmon-combat';
 import type { DuelmonCombatantGroup } from '../combat/duelmon-combatant-group';
+import { Phase1MoveConstraints } from '../start/phase-1-move.constraints';
 import { DuelmonCombatInput } from '../support/duelmon-combat.input';
 import { DuelmonTurnDeclaration } from './duelmon-turn-declaration';
 
@@ -87,11 +88,17 @@ class DuelmonTurnDeclarations {
 	 * Receives and validates the declarations of one Phase 1 turn.
 	 *
 	 * Every declaration is parsed with `DuelmonCombatInput.parse` and validated
-	 * with `DuelmonTurnDeclaration.validate`. The set-level rules require a
-	 * strict one-versus-one combat and exactly one declaration per group, so a
-	 * missing, extra, or duplicated declaration is rejected before anything is
-	 * resolved. Every failure found in the pass is aggregated, and its path is
-	 * prefixed with `declarations.<index>`.
+	 * with `DuelmonTurnDeclaration.validate`. The turn boundary also applies the
+	 * Phase 1 move-support policy, so a Move the combat start would reject cannot
+	 * enter a turn either. The set-level rules require a strict one-versus-one
+	 * combat and exactly one declaration per group, so a missing, extra, or
+	 * duplicated declaration is rejected before anything is resolved. Every
+	 * failure found in the pass is aggregated, and its path is prefixed with
+	 * `declarations.<index>`.
+	 *
+	 * The policy lives here and not in `DuelmonTurnDeclaration.validate` or the
+	 * plugin: the generic engine keeps resolving any bound action, while a Phase 1
+	 * turn only accepts supported content.
 	 *
 	 * @param catalog - Duelmon catalog.
 	 * @param combat - Current combat snapshot.
@@ -191,6 +198,14 @@ class DuelmonTurnDeclarations {
 						`${path}.input.actorId`
 					)
 				);
+
+				continue;
+			}
+
+			const unsupportedReason = Phase1MoveConstraints.unsupportedReason(declaration.move);
+
+			if (unsupportedReason !== undefined) {
+				errors.push(new CombatResolutionErrorEntity('rejected', unsupportedReason, `${path}.input.moveId`));
 
 				continue;
 			}
