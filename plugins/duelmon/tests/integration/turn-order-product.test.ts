@@ -316,7 +316,9 @@ describe('Phase 1 turn order product scenarios', () => {
 		expect(history.entries()[1]?.action).toEqual({
 			actorId: PLAYER,
 			moveId: PLAYER_MOVE,
+			speed: 70,
 			targetId: OPPONENT,
+			tieBreak: false,
 		});
 		expect([hpOf(resolution.combat, PLAYER), hpOf(resolution.combat, OPPONENT)]).toEqual([99, 0]);
 
@@ -408,6 +410,39 @@ describe('Phase 1 turn order product scenarios', () => {
 				.entries()
 				.map(entry => entry.kind)
 		).toEqual(['start', 'action']);
+	});
+
+	it('skips the second action when the first leaves the other at zero HP without a completion rule', () => {
+		const combatState = combat({ opponentHp: 15 });
+		const result = turn().resolve(combatState, declarations());
+
+		expect(result.isRight()).toBe(true);
+
+		if (result.isLeft()) {
+			return;
+		}
+
+		const { actions, resolution } = result.getRight();
+		const history = recorded(combatState, result);
+
+		expect(actions).toHaveLength(1);
+		expect(actions.map(action => action.actorId)).toEqual([PLAYER]);
+		expect(resolution.outcome).toBeUndefined();
+		expect(resolution.combat.status).toBe('active');
+		expect(hpOf(resolution.combat, OPPONENT)).toBe(0);
+		expect(moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
+		expect(resolution.events.some(event => event.payload['attackerId'] === OPPONENT)).toBe(false);
+		expect(history.entries().map(entry => entry.kind)).toEqual(['start', 'action']);
+		expect(history.entries()[1]?.action?.actorId).toBe(PLAYER);
+		expect(history.entries().at(-1)?.combat).toEqual(resolution.combat.toPrimitives());
+
+		const [only] = actions;
+
+		if (!only) {
+			throw new Error('Expected one resolved action');
+		}
+
+		expect(resolution.combat.toPrimitives()).toEqual(only.combat.toPrimitives());
 	});
 
 	it('rejects an absent declaration list without resolving or changing the combat', () => {
@@ -526,6 +561,71 @@ describe('Phase 1 turn order product scenarios', () => {
 		expect(combatState.randomPocket.toPrimitives()).toEqual({ seed: 42, state: 42 });
 	});
 
+	it('lets a reader explain the order from the history alone', () => {
+		const combatState = startCombat();
+		const result = turn().resolve(combatState, declarations());
+
+		expect(result.isRight()).toBe(true);
+
+		if (result.isLeft()) {
+			return;
+		}
+
+		const [, first, second] = recorded(combatState, result).entries();
+
+		expect(first?.action).toEqual({
+			actorId: PLAYER,
+			moveId: PLAYER_MOVE,
+			speed: 70,
+			targetId: OPPONENT,
+			tieBreak: false,
+		});
+		expect(second?.action).toEqual({
+			actorId: OPPONENT,
+			moveId: OPPONENT_MOVE,
+			speed: 48,
+			targetId: PLAYER,
+			tieBreak: false,
+		});
+
+		const explanation = [first?.text ?? '', second?.text ?? ''].join('\n');
+
+		expect(explanation).toContain('(Speed 70 > 48)');
+		expect(explanation).toContain('(Speed 48 < 70)');
+		expect(first?.text.startsWith(`${PLAYER} acted first with ${PLAYER_MOVE} on ${OPPONENT}`)).toBe(true);
+		expect(second?.text.startsWith(`${OPPONENT} acted second with ${OPPONENT_MOVE} on ${PLAYER}`)).toBe(true);
+	});
+
+	it('explains an equal-Speed tie from the history alone', () => {
+		const combatState = combat({ opponentSpeed: 70 });
+		const result = turn().resolve(combatState, declarations());
+
+		expect(result.isRight()).toBe(true);
+
+		if (result.isLeft()) {
+			return;
+		}
+
+		const [, first, second] = recorded(combatState, result).entries();
+
+		expect(first?.action).toEqual({
+			actorId: PLAYER,
+			moveId: PLAYER_MOVE,
+			speed: 70,
+			targetId: OPPONENT,
+			tieBreak: true,
+		});
+		expect(second?.action).toEqual({
+			actorId: OPPONENT,
+			moveId: OPPONENT_MOVE,
+			speed: 70,
+			targetId: PLAYER,
+			tieBreak: true,
+		});
+		expect(first?.text).toContain('(Speed 70 = 70, fixed combat order)');
+		expect(second?.text).toContain('(Speed 70 = 70, fixed combat order)');
+	});
+
 	it('records the real order, identity, and successor snapshot of every action', () => {
 		const combatState = startCombat();
 		const result = turn().resolve(combatState, declarations());
@@ -542,8 +642,20 @@ describe('Phase 1 turn order product scenarios', () => {
 
 		expect(history.entries().map(entry => entry.kind)).toEqual(['start', 'action', 'action']);
 		expect(start?.combat).toEqual(combatState.toPrimitives());
-		expect(first?.action).toEqual({ actorId: PLAYER, moveId: PLAYER_MOVE, targetId: OPPONENT });
-		expect(second?.action).toEqual({ actorId: OPPONENT, moveId: OPPONENT_MOVE, targetId: PLAYER });
+		expect(first?.action).toEqual({
+			actorId: PLAYER,
+			moveId: PLAYER_MOVE,
+			speed: 70,
+			targetId: OPPONENT,
+			tieBreak: false,
+		});
+		expect(second?.action).toEqual({
+			actorId: OPPONENT,
+			moveId: OPPONENT_MOVE,
+			speed: 48,
+			targetId: PLAYER,
+			tieBreak: false,
+		});
 		expect(
 			history
 				.entries()
@@ -571,9 +683,11 @@ describe('Phase 1 turn order product scenarios', () => {
 		expect(hpOf(CombatEntity.fromPrimitives(second.combat), PLAYER)).toBe(57);
 		expect(hpOf(CombatEntity.fromPrimitives(second.combat), OPPONENT)).toBe(89);
 
-		expect(first.text.startsWith(`${PLAYER} used ${PLAYER_MOVE} on ${OPPONENT}`)).toBe(true);
+		expect(first.text.startsWith(`${PLAYER} acted first with ${PLAYER_MOVE} on ${OPPONENT}`)).toBe(true);
+		expect(first.text).toContain('(Speed 70 > 48)');
 		expect(first.text).toContain('opponent-aquafin (aquafin) [Water] HP 89/104');
-		expect(second.text.startsWith(`${OPPONENT} used ${OPPONENT_MOVE} on ${PLAYER}`)).toBe(true);
+		expect(second.text.startsWith(`${OPPONENT} acted second with ${OPPONENT_MOVE} on ${PLAYER}`)).toBe(true);
+		expect(second.text).toContain('(Speed 48 < 70)');
 		expect(second.text).toContain('player-emberling (emberling) [Fire] HP 57/99');
 		expect(second.text).toContain('opponent-aquafin (aquafin) [Water] HP 89/104');
 

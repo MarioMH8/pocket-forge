@@ -1,6 +1,7 @@
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 import type { Combat, CombatPrimitives } from '@pocket-forge/combat/domain';
 
+import { DuelmonCombat } from '../combat/duelmon-combat';
 import { DuelmonCombatReport } from '../report/duelmon-combat-report';
 
 /**
@@ -12,7 +13,7 @@ import { DuelmonCombatReport } from '../report/duelmon-combat-report';
 type DuelmonCombatHistoryEntryKind = 'action' | 'start';
 
 /**
- * Actor, Move, and target identifiers of a recorded action.
+ * Actor, Move, target, and order information of a recorded action.
  */
 interface DuelmonCombatHistoryActionPrimitives {
 	/**
@@ -24,9 +25,17 @@ interface DuelmonCombatHistoryActionPrimitives {
 	 */
 	readonly moveId: string;
 	/**
+	 * Actor Speed read from the state used to order the turn.
+	 */
+	readonly speed: number;
+	/**
 	 * Target combatant identifier.
 	 */
 	readonly targetId: string;
+	/**
+	 * Whether the fixed combat order decided an equal-Speed tie.
+	 */
+	readonly tieBreak: boolean;
 }
 
 /**
@@ -106,7 +115,7 @@ class DuelmonCombatHistoryEntry {
 	 * Records one action the turn actually resolved.
 	 *
 	 * @param combat - Successor combat snapshot produced by the action.
-	 * @param action - Actor, Move, and target identifiers of the action.
+	 * @param action - Actor, Move, target, and order information of the action.
 	 * @returns The action entry.
 	 */
 	static action(combat: Combat, action: DuelmonCombatHistoryActionPrimitives): DuelmonCombatHistoryEntry {
@@ -114,11 +123,7 @@ class DuelmonCombatHistoryEntry {
 			action,
 			combat: combat.toPrimitives(),
 			kind: 'action',
-			text: [
-				`${action.actorId} used ${action.moveId} on ${action.targetId}`,
-				'',
-				DuelmonCombatReport.fromCombat(combat).toString(),
-			].join('\n'),
+			text: [this.actionLine(combat, action), '', DuelmonCombatReport.fromCombat(combat).toString()].join('\n'),
 		});
 	}
 
@@ -146,6 +151,42 @@ class DuelmonCombatHistoryEntry {
 			kind: 'start',
 			text: DuelmonCombatReport.fromCombat(combat).toString(),
 		});
+	}
+
+	/**
+	 * Builds the readable explanation of why the action ran in its position.
+	 *
+	 * Phase 1 actions do not modify Speed, so the successor snapshot keeps the
+	 * same Speed values the turn used to order it. The line therefore names both
+	 * Speeds and, on an equal-Speed tie, the fixed combat order that decided it.
+	 *
+	 * @param combat - Successor combat snapshot of the action.
+	 * @param action - Recorded action with its order information.
+	 * @returns The action line that precedes the report.
+	 */
+	private static actionLine(combat: Combat, action: DuelmonCombatHistoryActionPrimitives): string {
+		const combatants = DuelmonCombat.fromCombat(combat)
+			.groups()
+			.flatMap(group => group.combatants());
+		const actorPosition = combatants.findIndex(combatant => combatant.id === action.actorId);
+		const other =
+			combatants.find(combatant => combatant.id === action.targetId) ??
+			combatants.find(combatant => combatant.id !== action.actorId);
+		const otherPosition = other ? combatants.findIndex(combatant => combatant.id === other.id) : -1;
+		const otherSpeed = other?.speed;
+		const isActorGoesFirst =
+			otherSpeed === undefined || action.speed !== otherSpeed
+				? otherSpeed === undefined || action.speed > otherSpeed
+				: actorPosition < otherPosition;
+		const order = isActorGoesFirst ? 'first' : 'second';
+		const relation =
+			otherSpeed === undefined
+				? `Speed ${String(action.speed)}`
+				: action.tieBreak
+					? `Speed ${String(action.speed)} = ${String(otherSpeed)}, fixed combat order`
+					: `Speed ${String(action.speed)} ${action.speed > otherSpeed ? '>' : '<'} ${String(otherSpeed)}`;
+
+		return `${action.actorId} acted ${order} with ${action.moveId} on ${action.targetId} (${relation})`;
 	}
 
 	/**

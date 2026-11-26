@@ -35,7 +35,9 @@ const EXCLUDED_VALUES = ['48', '50', '57', '65', '70'];
 const ACTION = {
 	actorId: 'player-emberling',
 	moveId: 'ember-burst',
+	speed: 70,
 	targetId: 'opponent-aquafin',
+	tieBreak: false,
 };
 
 function combatAfterHit(): Combat {
@@ -146,11 +148,12 @@ describe('DuelmonCombatHistoryEntry', () => {
 		expect(DuelmonCombatHistoryEntry.action(combat, ACTION).combat).toEqual(combat.toPrimitives());
 	});
 
-	it('identifies the action in the readable text and reuses the report', () => {
+	it('identifies the action and explains its order in the readable text', () => {
 		const combat = combatAfterHit();
 		const entry = DuelmonCombatHistoryEntry.action(combat, ACTION);
 
-		expect(entry.text.startsWith('player-emberling used ember-burst on opponent-aquafin')).toBe(true);
+		expect(entry.text.startsWith('player-emberling acted first with ember-burst on opponent-aquafin')).toBe(true);
+		expect(entry.text).toContain('(Speed 70 > 48)');
 		expect(entry.text).toContain(DuelmonCombatReport.fromCombat(combat).toString());
 		expect(entry.text).toContain('opponent-aquafin (aquafin) [Water] HP 84/104');
 	});
@@ -159,7 +162,48 @@ describe('DuelmonCombatHistoryEntry', () => {
 		const entry = actionEntry();
 		const report = DuelmonCombatReport.fromCombat(Combat.fromPrimitives(entry.combat)).toString();
 
-		expect(entry.text).toBe(`player-emberling used ember-burst on opponent-aquafin\n\n${report}`);
+		expect(entry.text).toBe(
+			`player-emberling acted first with ember-burst on opponent-aquafin (Speed 70 > 48)\n\n${report}`
+		);
+	});
+
+	it('explains an equal-Speed tie with the fixed combat order', () => {
+		const primitives = DuelmonCombatStartMother.primitives();
+		const opponent = primitives.groups.find(group => group.id === 'opponent')?.combatants[0];
+
+		if (!opponent) {
+			throw new Error('Start fixture is missing the opponent combatant');
+		}
+
+		opponent.attributes['speed'] = 70;
+
+		const entry = DuelmonCombatHistoryEntry.action(Combat.fromPrimitives(primitives), {
+			...ACTION,
+			tieBreak: true,
+		});
+
+		expect(entry.text.startsWith('player-emberling acted first with ember-burst on opponent-aquafin')).toBe(true);
+		expect(entry.text).toContain('(Speed 70 = 70, fixed combat order)');
+	});
+
+	it('explains a slower action as acting second', () => {
+		const primitives = DuelmonCombatStartMother.primitives();
+		const opponent = primitives.groups.find(group => group.id === 'opponent')?.combatants[0];
+
+		if (!opponent) {
+			throw new Error('Start fixture is missing the opponent combatant');
+		}
+
+		const entry = DuelmonCombatHistoryEntry.action(Combat.fromPrimitives(primitives), {
+			actorId: 'opponent-aquafin',
+			moveId: 'aqua-burst',
+			speed: 48,
+			targetId: 'player-emberling',
+			tieBreak: false,
+		});
+
+		expect(entry.text.startsWith('opponent-aquafin acted second with aqua-burst on player-emberling')).toBe(true);
+		expect(entry.text).toContain('(Speed 48 < 70)');
 	});
 
 	it('round-trips action primitives', () => {

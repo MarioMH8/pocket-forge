@@ -160,10 +160,23 @@ The test asserts that:
 - Each entry snapshot equals the successor snapshot of the same action.
 - The first snapshot shows opponent HP 89/104; the second shows player HP 57/99
   and opponent HP 89/104, so the history reflects the state after every action.
-- The action text names the actor, Move, and target, and the report text inside
-  the entry renders the same HP values as the snapshot.
+- The action text names the actor, Move, and target, and explains the order with
+  both Speeds: `(Speed 70 > 48)` for the first action and `(Speed 48 < 70)` for
+  the second. Each entry also carries `speed` and `tieBreak`, so the order is
+  explainable from the history alone.
+- The report text inside the entry renders the same HP values as the snapshot.
 - The history primitives round-trip through `DuelmonCombatHistory.fromPrimitives`.
 - A knockout turn records only `[start, action]` for the completing action.
+
+### Order from the history alone
+
+`lets a reader explain the order from the history alone` reads only the recorded
+entries. Each entry exposes the actor Speed (`70` and `48`) and `tieBreak:
+false`, and the text contains both Speeds and their relation. The equal-Speed
+case (`explains an equal-Speed tie from the history alone`) exposes `70` for both
+actions with `tieBreak: true` and the text
+`(Speed 70 = 70, fixed combat order)`, so a reader can explain the order without
+reading internal docs or the implementation.
 
 ### No priority, stat stages, or random ties
 
@@ -192,6 +205,7 @@ are intentionally absent from this matrix.
 | Knockout keeps the completed combat, outcome, and winner | `stops after the faster player knocks the opponent out in the first action`; `stops after the faster opponent knocks the player out in the first action` | Pass |
 | Missing or invalid declaration is rejected without resolving | `rejects an absent declaration list without resolving or changing the combat`; `rejects a missing declaration without resolving or changing the combat`; `rejects a duplicated declaration without resolving or changing the combat`; `rejects an unknown or unknown-to-the-creature Move without resolving`; `rejects an invalid target without resolving or changing the combat` | Pass |
 | The order is recorded in the history | `records the real order, identity, and successor snapshot of every action` | Pass |
+| A reader can explain the order from the history alone | `lets a reader explain the order from the history alone`; `explains an equal-Speed tie from the history alone` | Pass |
 | No priority, stat stages, or random tie-breaks | `does not depend on the declared Move or on speed stages`; `keeps the equal-Speed order across different random seeds`; `is reproducible from the same starting point without mutating the combat` | Pass |
 | The state is updated after every action | `resolves the faster player first and reflects the state after each action`; `records the real order, identity, and successor snapshot of every action` | Pass |
 | Results documented | This document | Pass |

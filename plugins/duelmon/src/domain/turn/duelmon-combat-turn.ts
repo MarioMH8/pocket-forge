@@ -33,6 +33,15 @@ interface DuelmonTurnActionInput {
 }
 
 /**
+ * Declaration paired with the order information the turn records.
+ */
+interface DuelmonOrderedDeclaration {
+	readonly declaration: DuelmonTurnDeclaration;
+	readonly speed: number;
+	readonly tieBreak: boolean;
+}
+
+/**
  * Phase 1 combat turn.
  *
  * The service receives the two declarations of a turn, orders them with
@@ -101,26 +110,32 @@ class DuelmonCombatTurn {
 	 *
 	 * The order is built once from the starting combat and applied to the
 	 * combatant views of the declarations. Higher Speed goes first; equal Speed
-	 * falls back to the combatant position in the Combat.
+	 * falls back to the combatant position in the Combat. Each ordered
+	 * declaration keeps the Speed read from that snapshot and whether the fixed
+	 * order decided an equal-Speed tie.
 	 *
 	 * @param combat - Combat that defines the order.
 	 * @param declarations - Validated declarations, one per group.
-	 * @returns The declarations sorted from fastest to slowest.
+	 * @returns The declarations sorted from fastest to slowest, with their order
+	 * information.
 	 * @throws {InvalidArgumentError} When an ordered combatant has no matching
 	 * declaration.
 	 */
 	private static orderDeclarations(
 		combat: Combat,
 		declarations: readonly DuelmonTurnDeclaration[]
-	): readonly DuelmonTurnDeclaration[] {
+	): readonly DuelmonOrderedDeclaration[] {
 		const byActorId = new Map<string, DuelmonTurnDeclaration>(
 			declarations.map(declaration => [declaration.actor.id, declaration])
+		);
+		const speeds = new Map<string, number>(
+			declarations.map(declaration => [declaration.actor.id, this.speedOf(combat, declaration.actor.id)])
 		);
 		const orderedCombatants = DuelmonSpeedOrder.fromCombat(combat).sort(
 			declarations.map(declaration => DuelmonCombatant.fromCombatant(declaration.actor))
 		);
 
-		const ordered: DuelmonTurnDeclaration[] = [];
+		const ordered: DuelmonOrderedDeclaration[] = [];
 
 		for (const combatant of orderedCombatants) {
 			const declaration = byActorId.get(combatant.id);
@@ -132,7 +147,12 @@ class DuelmonCombatTurn {
 				);
 			}
 
-			ordered.push(declaration);
+			const speed = speeds.get(combatant.id) ?? combatant.speed;
+			const isTieBreak = declarations.some(
+				candidate => candidate.actor.id !== combatant.id && speeds.get(candidate.actor.id) === speed
+			);
+
+			ordered.push({ declaration, speed, tieBreak: isTieBreak });
 		}
 
 		return ordered;
@@ -147,6 +167,29 @@ class DuelmonCombatTurn {
 	 */
 	private static renumber(events: readonly CombatEvent[], offset: number): readonly CombatEvent[] {
 		return events.map((event, index) => ({ ...event, sequence: offset + index + 1 }));
+	}
+
+	/**
+	 * Reads the Speed of one combatant from a combat snapshot.
+	 *
+	 * @param combat - Combat that defines the current battle state.
+	 * @param actorId - Combatant identifier.
+	 * @returns The actor Speed.
+	 * @throws {InvalidArgumentError} When the combatant is not part of the combat.
+	 */
+	private static speedOf(combat: Combat, actorId: string): number {
+		for (const group of DuelmonCombat.fromCombat(combat).groups()) {
+			const combatant = group.combatant(actorId);
+
+			if (combatant) {
+				return combatant.speed;
+			}
+		}
+
+		throw new InvalidArgumentError(
+			`Combatant "${actorId}" does not belong to the combat of this turn`,
+			'DuelmonCombatTurn'
+		);
 	}
 
 	/**
@@ -171,10 +214,11 @@ class DuelmonCombatTurn {
 	 * engine and the actions are pure, so no state is persisted on failure.
 	 *
 	 * The returned actions list the exact declarations the service resolved, in
-	 * the real resolution order, each with the successor snapshot of its action.
-	 * It is the canonical input for the history added in #127: because an omitted
-	 * declaration never reaches the engine, it cannot produce an action or a
-	 * history entry.
+	 * the real resolution order, each with the successor snapshot of its action,
+	 * the actor Speed read from the starting state, and whether the fixed order
+	 * decided an equal-Speed tie. It is the canonical input for the combat
+	 * history: because an omitted declaration never reaches the engine, it cannot
+	 * produce an action or a history entry.
 	 *
 	 * @param combat - Active combat snapshot that starts the turn.
 	 * @param declarations - Unparsed declarations, one per combat group.
@@ -209,7 +253,9 @@ class DuelmonCombatTurn {
 		const actions: DuelmonCombatTurnAction[] = [];
 		const events: CombatEvent[] = [];
 
-		for (const declaration of ordered) {
+		for (const orderedDeclaration of ordered) {
+			const { declaration } = orderedDeclaration;
+
 			if (!DuelmonCombatTurn.isStanding(current, declaration.actor.id)) {
 				continue;
 			}
@@ -228,7 +274,9 @@ class DuelmonCombatTurn {
 					declaration.actor.id,
 					declaration.moveId,
 					declaration.target.id,
-					resolved.combat
+					resolved.combat,
+					orderedDeclaration.speed,
+					orderedDeclaration.tieBreak
 				)
 			);
 			events.push(...DuelmonCombatTurn.renumber(resolved.events, events.length));
