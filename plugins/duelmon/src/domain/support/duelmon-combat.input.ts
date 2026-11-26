@@ -6,10 +6,6 @@ import { DuelmonRecord } from './duelmon-record';
 import type { DuelmonTarget } from './duelmon-target';
 import { DuelmonTarget as DuelmonTargetValue } from './duelmon-target';
 
-function isNonEmptyString(value: unknown): value is string {
-	return typeof value === 'string' && value.trim().length > 0;
-}
-
 /**
  * Plugin-owned input accepted by the Duelmon action plugin.
  *
@@ -90,7 +86,7 @@ class DuelmonCombatInput {
 
 		const { actorId, moveId, target } = value;
 
-		if (!isNonEmptyString(actorId)) {
+		if (!this.isNonEmptyString(actorId)) {
 			return DuelmonFailure.fail(
 				'invalid-input',
 				'Duelmon combat input actorId must be a non-empty string',
@@ -98,7 +94,7 @@ class DuelmonCombatInput {
 			);
 		}
 
-		if (!isNonEmptyString(moveId)) {
+		if (!this.isNonEmptyString(moveId)) {
 			return DuelmonFailure.fail(
 				'invalid-input',
 				'Duelmon combat input moveId must be a non-empty string',
@@ -113,6 +109,16 @@ class DuelmonCombatInput {
 		}
 
 		return Either.right(new DuelmonCombatInput(actorId, moveId, parsedTarget.getRight()));
+	}
+
+	/**
+	 * Narrows an unknown value to a non-empty string.
+	 *
+	 * @param value - Candidate value.
+	 * @returns Whether the value is a non-empty string.
+	 */
+	private static isNonEmptyString(value: unknown): value is string {
+		return typeof value === 'string' && value.trim().length > 0;
 	}
 }
 
