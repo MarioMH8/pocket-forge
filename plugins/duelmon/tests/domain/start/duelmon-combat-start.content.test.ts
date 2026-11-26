@@ -53,6 +53,26 @@ class CombatStartContentFixture {
 		return value;
 	}
 
+	static moveView(id: string): DuelmonMove {
+		const move = DuelmonCombatStartMother.catalog().findMove(id);
+
+		if (!move) {
+			throw new Error(`Missing fixture move "${id}"`);
+		}
+
+		return DuelmonMove.fromMove(move);
+	}
+
+	static speciesView(id: string): DuelmonSpecies {
+		const species = DuelmonCombatStartMother.catalog().findSpecies(id);
+
+		if (!species) {
+			throw new Error(`Missing fixture species "${id}"`);
+		}
+
+		return DuelmonSpecies.fromSpecies(species);
+	}
+
 	static start(request: DuelmonCombatStartRequest) {
 		return DuelmonCombatStart.fromContent(
 			request,
@@ -279,35 +299,15 @@ describe('Phase 1 minimum content set', () => {
 		sprout: ['leaf-lash', 'tackle'],
 	} as const;
 
-	function speciesView(id: string): DuelmonSpecies {
-		const species = catalog.findSpecies(id);
-
-		if (!species) {
-			throw new Error(`Missing fixture species "${id}"`);
-		}
-
-		return DuelmonSpecies.fromSpecies(species);
-	}
-
-	function moveView(id: string): DuelmonMove {
-		const move = catalog.findMove(id);
-
-		if (!move) {
-			throw new Error(`Missing fixture move "${id}"`);
-		}
-
-		return DuelmonMove.fromMove(move);
-	}
-
 	it('provides three creatures with distinct types', () => {
-		const types = SPECIES_IDS.flatMap(id => speciesView(id).types);
+		const types = SPECIES_IDS.flatMap(id => CombatStartContentFixture.speciesView(id).types);
 
 		expect(SPECIES_IDS).toHaveLength(3);
 		expect(new Set(types).size).toBeGreaterThanOrEqual(2);
 	});
 
 	it('provides four to six simple moves with physical and special categories', () => {
-		const moves = MOVE_IDS.map(id => moveView(id));
+		const moves = MOVE_IDS.map(id => CombatStartContentFixture.moveView(id));
 
 		expect(moves.length).toBeGreaterThanOrEqual(4);
 		expect(moves.length).toBeLessThanOrEqual(6);
