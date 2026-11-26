@@ -104,7 +104,7 @@ A battle attribute in the -6..+6 range for attack, defense, special, speed, accu
 _Avoid_: Stat modifier, buff
 
 **Duelmon Combat Turn**:
-The ordered resolution of the actions declared for one turn, implemented by the `DuelmonCombatTurn` service. It receives the two validated declarations, orders them by Phase 1 Speed, resolves each declared action through the Combat Engine with the successor Combat of the previous one, skips an actor that no longer has positive hit points, and returns one Combat Resolution with the merged events renumbered in turn order. Phase 1 applies no priority, stat stages, paralysis, or random tie-breaks.
+The ordered resolution of the actions declared for one turn, implemented by the `DuelmonCombatTurn` service. It receives the two validated declarations, orders them by Phase 1 Speed, resolves each declared action through the Combat Engine with the successor Combat of the previous one, skips an actor that no longer has positive hit points, and returns one Combat Resolution with the merged events renumbered in turn order. It stops at the action that completes the battle, keeps the engine outcome and winner, and never resolves, emits events for, or consumes PP or randomness for the remaining declaration. A turn over a combat that is already completed is rejected before validating the declarations, so no action is accepted after the end. Phase 1 applies no priority, stat stages, paralysis, or random tie-breaks.
 _Avoid_: Game loop, round, battle manager
 
 **Phase 1 Speed Order**:
