@@ -11,57 +11,6 @@ import { DuelmonCombatInput } from '../support/duelmon-combat.input';
 import { DuelmonTurnDeclaration } from './duelmon-turn-declaration';
 
 /**
- * Adds the position of a declaration to the path of a nested failure.
- *
- * @param error - Failure produced while parsing or validating one declaration.
- * @param prefix - Path of the declaration inside the received list.
- * @returns A failure that keeps the reason and message with a prefixed path.
- */
-function prefixPath(error: CombatResolutionError, prefix: string): CombatResolutionError {
-	return new CombatResolutionErrorEntity(
-		error.reason,
-		error.message,
-		error.path === undefined ? prefix : `${prefix}.${error.path}`
-	);
-}
-
-/**
- * Collects the strict one-versus-one shape required by Phase 1.
- *
- * @param groups - Groups of the combat in combat order.
- * @returns Every combat-shape failure.
- */
-function phaseOneShapeErrors(groups: readonly DuelmonCombatantGroup[]): CombatResolutionError[] {
-	const errors: CombatResolutionError[] = [];
-
-	if (groups.length !== 2) {
-		errors.push(
-			new CombatResolutionErrorEntity(
-				'incompatible-contract',
-				`Phase 1 requires exactly two groups, received ${String(groups.length)}`,
-				'combat.groups'
-			)
-		);
-	}
-
-	for (const [index, group] of groups.entries()) {
-		const activeCombatantIds = group.activeCombatantIds;
-
-		if (activeCombatantIds.length !== 1) {
-			errors.push(
-				new CombatResolutionErrorEntity(
-					'incompatible-contract',
-					`Phase 1 group "${group.id}" requires exactly one active combatant, received ${String(activeCombatantIds.length)}`,
-					`combat.groups.${String(index)}.attributes.activeCombatantIds`
-				)
-			);
-		}
-	}
-
-	return errors;
-}
-
-/**
  * The two declarations of one Phase 1 turn, validated together.
  *
  * The set receives one unparsed declaration per combat group, parses and
@@ -118,7 +67,7 @@ class DuelmonTurnDeclarations {
 		declarations: unknown
 	): Either<CombatResolutionError[], DuelmonTurnDeclarations> {
 		const groups = DuelmonCombat.fromCombat(combat).groups();
-		const shapeErrors = phaseOneShapeErrors(groups);
+		const shapeErrors = this.phaseOneShapeErrors(groups);
 
 		if (shapeErrors.length > 0) {
 			return Either.left(shapeErrors);
@@ -156,7 +105,7 @@ class DuelmonTurnDeclarations {
 			const parsed = DuelmonCombatInput.parse(input);
 
 			if (parsed.isLeft()) {
-				errors.push(...parsed.getLeft().map(error => prefixPath(error, path)));
+				errors.push(...parsed.getLeft().map(error => this.prefixPath(error, path)));
 
 				continue;
 			}
@@ -164,7 +113,7 @@ class DuelmonTurnDeclarations {
 			const validated = DuelmonTurnDeclaration.validate(catalog, combat, parsed.getRight());
 
 			if (validated.isLeft()) {
-				errors.push(...validated.getLeft().map(error => prefixPath(error, path)));
+				errors.push(...validated.getLeft().map(error => this.prefixPath(error, path)));
 
 				continue;
 			}
@@ -242,6 +191,57 @@ class DuelmonTurnDeclarations {
 		}
 
 		return Either.right(new DuelmonTurnDeclarations(ordered));
+	}
+
+	/**
+	 * Collects the strict one-versus-one shape required by Phase 1.
+	 *
+	 * @param groups - Groups of the combat in combat order.
+	 * @returns Every combat-shape failure.
+	 */
+	private static phaseOneShapeErrors(groups: readonly DuelmonCombatantGroup[]): CombatResolutionError[] {
+		const errors: CombatResolutionError[] = [];
+
+		if (groups.length !== 2) {
+			errors.push(
+				new CombatResolutionErrorEntity(
+					'incompatible-contract',
+					`Phase 1 requires exactly two groups, received ${String(groups.length)}`,
+					'combat.groups'
+				)
+			);
+		}
+
+		for (const [index, group] of groups.entries()) {
+			const activeCombatantIds = group.activeCombatantIds;
+
+			if (activeCombatantIds.length !== 1) {
+				errors.push(
+					new CombatResolutionErrorEntity(
+						'incompatible-contract',
+						`Phase 1 group "${group.id}" requires exactly one active combatant, received ${String(activeCombatantIds.length)}`,
+						`combat.groups.${String(index)}.attributes.activeCombatantIds`
+					)
+				);
+			}
+		}
+
+		return errors;
+	}
+
+	/**
+	 * Adds the position of a declaration to the path of a nested failure.
+	 *
+	 * @param error - Failure produced while parsing or validating one declaration.
+	 * @param prefix - Path of the declaration inside the received list.
+	 * @returns A failure that keeps the reason and message with a prefixed path.
+	 */
+	private static prefixPath(error: CombatResolutionError, prefix: string): CombatResolutionError {
+		return new CombatResolutionErrorEntity(
+			error.reason,
+			error.message,
+			error.path === undefined ? prefix : `${prefix}.${error.path}`
+		);
 	}
 
 	/**
