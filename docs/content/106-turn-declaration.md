@@ -96,6 +96,17 @@ active, the Move belongs to the actor's creature, and the target is an active
 opposing combatant. Reuse `DuelmonFailure.fail` so every rejection keeps a
 `reason` and a `path`.
 
+### Validation boundary (#118)
+
+The rules live in `DuelmonTurnDeclaration.validate`, not inside
+`UseMoveResolution`. `DuelmonCombatPlugin` validates a `useMove` declaration
+before dispatching it, so the action resolves only a declaration that is
+already valid. The target must belong to the only opposing group; a third group
+is not a Phase 1 target. Phase 1 move declarations bind every content Move to
+`useMove`; generic actions such as `modifyAttribute` stay outside the
+turn-declaration contract. See
+[Turn declaration boundary](./118-turn-declaration-boundary.md).
+
 ### Rejection matrix (#108 and #111)
 
 An invalid or absent declaration returns `Either.left(CombatResolutionError[])`

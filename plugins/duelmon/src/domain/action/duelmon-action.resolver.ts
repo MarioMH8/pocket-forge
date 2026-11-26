@@ -7,6 +7,7 @@ import type {
 } from '@pocket-forge/combat-engine/domain';
 
 import type { DuelmonCombatInput } from '../support';
+import type { DuelmonTurnDeclaration } from '../turn/duelmon-turn-declaration';
 
 /**
  * Resolves one Duelmon action bound to a Move.
@@ -22,11 +23,13 @@ export default interface DuelmonActionResolver {
 	 * @param context - Immutable action context.
 	 * @param input - Parsed Duelmon input.
 	 * @param binding - Action binding that selected this action.
+	 * @param declaration - Declaration already validated at the plugin boundary, when the action consumes one.
 	 * @returns The resulting transition, or every resolution failure.
 	 */
 	resolve(
 		context: CombatActionContext,
 		input: DuelmonCombatInput,
-		binding: CombatActionBinding
+		binding: CombatActionBinding,
+		declaration?: DuelmonTurnDeclaration
 	): Either<CombatResolutionError[], CombatTransition>;
 }

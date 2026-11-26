@@ -11,6 +11,7 @@ import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type { DuelmonAction, DuelmonActionResolver, UseMoveMechanics } from './action';
 import { DuelmonActionCatalog, ModifyAttributeAction, UseMoveAction } from './action';
 import { DuelmonCombatInput, DuelmonFailure } from './support';
+import { DuelmonTurnDeclaration } from './turn/duelmon-turn-declaration';
 
 /**
  * Duelmon Combat plugin.
@@ -23,9 +24,17 @@ import { DuelmonCombatInput, DuelmonFailure } from './support';
  */
 class DuelmonCombatPlugin implements CombatActionResolver {
 	/**
+	 * Actions that consume a validated turn declaration.
+	 *
+	 * Phase 1 move declarations bind every Move to `useMove`. Generic actions
+	 * such as `modifyAttribute` stay outside the turn-declaration contract.
+	 */
+	private static readonly DECLARATION_ACTIONS: ReadonlySet<string> = new Set([UseMoveAction.ID]);
+	/**
 	 * Actions registered by this plugin.
 	 */
 	readonly actions: DuelmonActionCatalog;
+	private readonly catalog: DuelmonCatalog;
 	private readonly resolvers: ReadonlyMap<string, DuelmonActionResolver>;
 
 	constructor(
@@ -42,6 +51,7 @@ class DuelmonCombatPlugin implements CombatActionResolver {
 		}
 
 		this.actions = new DuelmonActionCatalog(actions);
+		this.catalog = catalog;
 		this.resolvers = resolvers;
 	}
 
@@ -70,8 +80,9 @@ class DuelmonCombatPlugin implements CombatActionResolver {
 	/**
 	 * Resolves a bound Duelmon action into a successor Combat.
 	 *
-	 * The plugin only parses the input, finds the binding, and delegates to the
-	 * resolver registered for the bound action.
+	 * The plugin parses the input, finds the binding, validates a turn
+	 * declaration when the bound action consumes one, and delegates to the
+	 * resolver registered for the action.
 	 *
 	 * @param context - Immutable action context.
 	 * @returns The resulting transition, or every resolution failure.
@@ -104,7 +115,17 @@ class DuelmonCombatPlugin implements CombatActionResolver {
 			);
 		}
 
-		return resolver.resolve(context, input, binding);
+		if (!DuelmonCombatPlugin.DECLARATION_ACTIONS.has(binding.actionId)) {
+			return resolver.resolve(context, input, binding);
+		}
+
+		const declaration = DuelmonTurnDeclaration.validate(this.catalog, context.combat, input);
+
+		if (declaration.isLeft()) {
+			return Either.left(declaration.getLeft());
+		}
+
+		return resolver.resolve(context, input, binding, declaration.getRight());
 	}
 }
 

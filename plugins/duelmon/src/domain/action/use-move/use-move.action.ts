@@ -16,6 +16,7 @@ import { DuelmonCombatant } from '../../combat/duelmon-combatant';
 import { DuelmonCombatEvents } from '../../event';
 import type { DuelmonCombatInput } from '../../support';
 import { DuelmonCombatAttributes, DuelmonFailure } from '../../support';
+import { DuelmonTurnDeclaration } from '../../turn/duelmon-turn-declaration';
 import type DuelmonAction from '../duelmon-action';
 import type { UseMoveMechanics } from './use-move.mechanics';
 import { UseMoveResolution } from './use-move.resolution';
@@ -74,20 +75,36 @@ class UseMoveAction implements DuelmonAction {
 	 * @param context - Immutable action context.
 	 * @param input - Parsed Duelmon input.
 	 * @param _binding - Action binding that selected this action.
+	 * @param declaration - Declaration already validated at the plugin boundary.
 	 * @returns The resulting transition, or every resolution failure.
 	 */
 	resolve(
 		context: CombatActionContext,
 		input: DuelmonCombatInput,
-		_binding: CombatActionBinding
+		_binding: CombatActionBinding,
+		declaration?: DuelmonTurnDeclaration
 	): Either<CombatResolutionError[], CombatTransition> {
-		const resolvedTarget = input.target.resolve(context.combat, 'combatant');
+		let turnDeclaration = declaration;
 
-		if (resolvedTarget.isLeft()) {
-			return Either.left(resolvedTarget.getLeft());
+		if (!turnDeclaration) {
+			const validated = DuelmonTurnDeclaration.validate(this.catalog, context.combat, input);
+
+			if (validated.isLeft()) {
+				return Either.left(validated.getLeft());
+			}
+
+			turnDeclaration = validated.getRight();
 		}
 
-		const resolution = UseMoveResolution.create(this.catalog, context.combat, input, resolvedTarget.getRight());
+		if (!turnDeclaration.move.isDamaging) {
+			return DuelmonFailure.fail(
+				'rejected',
+				`Move "${turnDeclaration.moveId}" does not have a damaging category`,
+				'input.moveId'
+			);
+		}
+
+		const resolution = UseMoveResolution.create(this.catalog, turnDeclaration);
 
 		if (resolution.isLeft()) {
 			return Either.left(resolution.getLeft());

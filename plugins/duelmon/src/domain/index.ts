@@ -68,3 +68,4 @@ export { DuelmonCombatInput } from './support/duelmon-combat.input';
 export { DuelmonFailure } from './support/duelmon-failure';
 export type { DuelmonTargetScope } from './support/duelmon-target';
 export { DuelmonTarget, ResolvedDuelmonTarget } from './support/duelmon-target';
+export { DuelmonTurnDeclaration } from './turn/duelmon-turn-declaration';

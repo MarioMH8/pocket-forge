@@ -80,7 +80,10 @@ carries exactly one Move. The declaration is input, not state: parsing it does
 not change the `Combat`, and `Combat` has no pending or confirmed action state.
 Actor activity, Move ownership, and target validity are not checked by the
 parser; they belong to declaration validation against the combat before the
-turn resolves.
+turn resolves. `DuelmonTurnDeclaration.validate` owns those rules and the
+plugin applies them to `useMove` declarations before dispatch. Phase 1 move
+declarations bind every content Move to `useMove`; generic actions such as
+`modifyAttribute` stay outside the turn-declaration contract.
 
 ## Recording the start
 
