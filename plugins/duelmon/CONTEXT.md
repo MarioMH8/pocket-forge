@@ -40,11 +40,11 @@ A human-readable text projection of a Duelmon Combat View for the minimal Phase 
 _Avoid_: Log formatter, screen model
 
 **Duelmon Combat History**:
-Ordered, serializable record of what happened in a Duelmon combat. Each entry keeps the canonical `Combat` snapshot it records; the history never replaces the Combat as the source of truth.
+Ordered, serializable record of what happened in a Duelmon combat. Each entry keeps the canonical `Combat` snapshot it records; the history never replaces the Combat as the source of truth. Recording a turn appends one action entry per resolved action, in resolution order, and never records a declaration the turn skipped.
 _Avoid_: Combat log file, event store
 
 **Duelmon Combat History Entry**:
-One immutable item of the Duelmon Combat History. The Phase 1 start entry carries the recorded event kind, the serialized `Combat` primitives, and the readable report text.
+One immutable item of the Duelmon Combat History. A start entry carries `kind: 'start'`, the serialized `Combat` primitives, and the readable report text; an action entry carries `kind: 'action'`, the actor, Move, and target identifiers, and the snapshot and report of the action's successor Combat. The invariant is that the action identifiers are present exactly when the kind is `action`.
 _Avoid_: Log line, message
 
 **Duelmon Combat Start**:
@@ -104,8 +104,16 @@ A battle attribute in the -6..+6 range for attack, defense, special, speed, accu
 _Avoid_: Stat modifier, buff
 
 **Duelmon Combat Turn**:
-The ordered resolution of the actions declared for one turn, implemented by the `DuelmonCombatTurn` service. It receives the two validated declarations, orders them by Phase 1 Speed, resolves each declared action through the Combat Engine with the successor Combat of the previous one, skips an actor that no longer has positive hit points, and returns one Combat Resolution with the merged events renumbered in turn order. It stops at the action that completes the battle, keeps the engine outcome and winner, and never resolves, emits events for, or consumes PP or randomness for the remaining declaration. A turn over a combat that is already completed is rejected before validating the declarations, so no action is accepted after the end. Phase 1 applies no priority, stat stages, paralysis, or random tie-breaks.
+The ordered resolution of the actions declared for one turn, implemented by the `DuelmonCombatTurn` service. It receives the two validated declarations, orders them by Phase 1 Speed, resolves each declared action through the Combat Engine with the successor Combat of the previous one, skips an actor that no longer has positive hit points, and returns a Duelmon Combat Turn Result with one Combat Resolution whose events are merged and renumbered in turn order. It stops at the action that completes the battle, keeps the engine outcome and winner, and never resolves, emits events for, or consumes PP or randomness for the remaining declaration. A turn over a combat that is already completed is rejected before validating the declarations, so no action is accepted after the end. Phase 1 applies no priority, stat stages, paralysis, or random tie-breaks.
 _Avoid_: Game loop, round, battle manager
+
+**Duelmon Combat Turn Result**:
+The value returned by a successful Duelmon Combat Turn: the single Combat Resolution with the merged and renumbered events, plus the actions the turn actually resolved in their real order. A declaration that was skipped or never reached is absent from the actions.
+_Avoid_: Turn report, resolution wrapper
+
+**Duelmon Combat Turn Action**:
+One action a Duelmon Combat Turn actually resolved, carrying the actor, Move, and target identifiers and the Combat snapshot produced by that action. The action order is the canonical order the history records.
+_Avoid_: Action log line, event projection
 
 **Phase 1 Speed Order**:
 The deterministic order Phase 1 applies to the combatants that declare an action: higher battle Speed first, and equal Speed broken by the combatant position in the Combat (group order, then combatant order). It reads `speed` from the battle state and never applies priority, stat stages, paralysis, or randomness.
