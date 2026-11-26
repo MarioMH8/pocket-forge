@@ -68,6 +68,7 @@ export { DuelmonCombatInput } from './support/duelmon-combat.input';
 export { DuelmonFailure } from './support/duelmon-failure';
 export type { DuelmonTargetScope } from './support/duelmon-target';
 export { DuelmonTarget, ResolvedDuelmonTarget } from './support/duelmon-target';
+export { DuelmonCombatTurn } from './turn/duelmon-combat-turn';
 export { DuelmonSpeedOrder } from './turn/duelmon-speed-order';
 export { DuelmonTurnDeclaration } from './turn/duelmon-turn-declaration';
 export { DuelmonTurnDeclarations } from './turn/duelmon-turn-declarations';
