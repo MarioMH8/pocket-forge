@@ -12,72 +12,74 @@ import { describe, expect, it } from 'bun:test';
 const PLAYER_ID = 'player-emberling';
 const OPPONENT_ID = 'opponent-aquafin';
 
-function activeCombatants(combat: Combat): readonly DuelmonCombatant[] {
-	return DuelmonCombat.fromCombat(combat)
-		.groups()
-		.flatMap(group => group.activeCombatants());
-}
-
-function combatant(combat: Combat, id: string): DuelmonCombatant {
-	const found = activeCombatants(combat).find(candidate => candidate.id === id);
-
-	if (!found) {
-		throw new Error(`Missing active combatant "${id}"`);
+class SpeedOrderFixture {
+	static activeCombatants(combat: Combat): readonly DuelmonCombatant[] {
+		return DuelmonCombat.fromCombat(combat)
+			.groups()
+			.flatMap(group => group.activeCombatants());
 	}
 
-	return found;
-}
+	static combatant(combat: Combat, id: string): DuelmonCombatant {
+		const found = this.activeCombatants(combat).find(candidate => candidate.id === id);
 
-function ids(combatants: readonly DuelmonCombatant[]): readonly string[] {
-	return combatants.map(candidate => candidate.id);
-}
+		if (!found) {
+			throw new Error(`Missing active combatant "${id}"`);
+		}
 
-function orderOf(
-	combat: Combat,
-	combatants: readonly DuelmonCombatant[] = activeCombatants(combat)
-): readonly string[] {
-	return ids(DuelmonSpeedOrder.fromCombat(combat).sort(combatants));
+		return found;
+	}
+
+	static ids(combatants: readonly DuelmonCombatant[]): readonly string[] {
+		return combatants.map(candidate => candidate.id);
+	}
+
+	static orderOf(
+		combat: Combat,
+		combatants: readonly DuelmonCombatant[] = this.activeCombatants(combat)
+	): readonly string[] {
+		return this.ids(DuelmonSpeedOrder.fromCombat(combat).sort(combatants));
+	}
 }
 
 describe('DuelmonSpeedOrder', () => {
 	it('reads Speed from the combatant battle attributes', () => {
 		const combat = DuelmonCombatMother.speedOrderCombat();
 
-		expect(combatant(combat, PLAYER_ID).speed).toBe(70);
-		expect(combatant(combat, OPPONENT_ID).speed).toBe(48);
+		expect(SpeedOrderFixture.combatant(combat, PLAYER_ID).speed).toBe(70);
+		expect(SpeedOrderFixture.combatant(combat, OPPONENT_ID).speed).toBe(48);
 	});
 
 	it('puts the faster combatant first regardless of the input order', () => {
 		const combat = DuelmonCombatMother.speedOrderCombat();
-		const player = combatant(combat, PLAYER_ID);
-		const opponent = combatant(combat, OPPONENT_ID);
+		const player = SpeedOrderFixture.combatant(combat, PLAYER_ID);
+		const opponent = SpeedOrderFixture.combatant(combat, OPPONENT_ID);
 
-		expect(orderOf(combat, [opponent, player])).toEqual([PLAYER_ID, OPPONENT_ID]);
-		expect(orderOf(combat, [player, opponent])).toEqual([PLAYER_ID, OPPONENT_ID]);
+		expect(SpeedOrderFixture.orderOf(combat, [opponent, player])).toEqual([PLAYER_ID, OPPONENT_ID]);
+		expect(SpeedOrderFixture.orderOf(combat, [player, opponent])).toEqual([PLAYER_ID, OPPONENT_ID]);
 	});
 
 	it('puts the faster opponent first when the player is slower', () => {
 		const combat = DuelmonCombatMother.speedOrderCombat({ opponent: { speed: 80 } });
 
-		expect(orderOf(combat)).toEqual([OPPONENT_ID, PLAYER_ID]);
+		expect(SpeedOrderFixture.orderOf(combat)).toEqual([OPPONENT_ID, PLAYER_ID]);
 	});
 
 	it('breaks equal speeds by the combatant position in the combat', () => {
 		const combat = DuelmonCombatMother.speedOrderCombat({ opponent: { speed: 70 } });
-		const player = combatant(combat, PLAYER_ID);
-		const opponent = combatant(combat, OPPONENT_ID);
+		const player = SpeedOrderFixture.combatant(combat, PLAYER_ID);
+		const opponent = SpeedOrderFixture.combatant(combat, OPPONENT_ID);
 
-		expect(orderOf(combat, [player, opponent])).toEqual([PLAYER_ID, OPPONENT_ID]);
-		expect(orderOf(combat, [opponent, player])).toEqual([PLAYER_ID, OPPONENT_ID]);
+		expect(SpeedOrderFixture.orderOf(combat, [player, opponent])).toEqual([PLAYER_ID, OPPONENT_ID]);
+		expect(SpeedOrderFixture.orderOf(combat, [opponent, player])).toEqual([PLAYER_ID, OPPONENT_ID]);
 	});
 
 	it('follows the group order for equal speeds', () => {
 		const combat = DuelmonCombatMother.speedOrderCombat({ opponent: { speed: 70 }, playerFirst: false });
-		const player = combatant(combat, PLAYER_ID);
-		const opponent = combatant(combat, OPPONENT_ID);
+		const player = SpeedOrderFixture.combatant(combat, PLAYER_ID);
+		const opponent = SpeedOrderFixture.combatant(combat, OPPONENT_ID);
 
-		expect(orderOf(combat, [player, opponent])).toEqual([OPPONENT_ID, PLAYER_ID]);
-		expect(orderOf(combat, [opponent, player])).toEqual([OPPONENT_ID, PLAYER_ID]);
+		expect(SpeedOrderFixture.orderOf(combat, [player, opponent])).toEqual([OPPONENT_ID, PLAYER_ID]);
+		expect(SpeedOrderFixture.orderOf(combat, [opponent, player])).toEqual([OPPONENT_ID, PLAYER_ID]);
 	});
 
 	it('ignores speed stages and compares the battle speed attribute', () => {
@@ -86,7 +88,7 @@ describe('DuelmonSpeedOrder', () => {
 			player: { attributes: { speedStage: 6 }, speed: 50 },
 		});
 
-		expect(orderOf(staged)).toEqual([OPPONENT_ID, PLAYER_ID]);
+		expect(SpeedOrderFixture.orderOf(staged)).toEqual([OPPONENT_ID, PLAYER_ID]);
 	});
 
 	it('ignores paralysis and compares the battle speed attribute', () => {
@@ -94,7 +96,7 @@ describe('DuelmonSpeedOrder', () => {
 			player: { attributes: { status: 'paralysis' } },
 		});
 
-		expect(orderOf(paralyzed)).toEqual([PLAYER_ID, OPPONENT_ID]);
+		expect(SpeedOrderFixture.orderOf(paralyzed)).toEqual([PLAYER_ID, OPPONENT_ID]);
 	});
 
 	it('uses the documented tie order even when a combatant is paralyzed', () => {
@@ -103,13 +105,13 @@ describe('DuelmonSpeedOrder', () => {
 			player: { attributes: { status: 'paralysis' } },
 		});
 
-		expect(orderOf(combat)).toEqual([PLAYER_ID, OPPONENT_ID]);
+		expect(SpeedOrderFixture.orderOf(combat)).toEqual([PLAYER_ID, OPPONENT_ID]);
 	});
 
 	it('compares both directions and identifies the same combatant', () => {
 		const combat = DuelmonCombatMother.speedOrderCombat();
-		const player = combatant(combat, PLAYER_ID);
-		const opponent = combatant(combat, OPPONENT_ID);
+		const player = SpeedOrderFixture.combatant(combat, PLAYER_ID);
+		const opponent = SpeedOrderFixture.combatant(combat, OPPONENT_ID);
 		const order = DuelmonSpeedOrder.fromCombat(combat);
 
 		expect(order.compare(player, opponent)).toBeLessThan(0);
@@ -122,14 +124,14 @@ describe('DuelmonSpeedOrder', () => {
 		const first = CombatEntity.fromPrimitives(structuredClone(primitives));
 		const second = CombatEntity.fromPrimitives(structuredClone(primitives));
 		const before = first.toPrimitives();
-		const input = activeCombatants(first);
-		const inputIds = ids(input);
-		const expected = orderOf(first, input);
+		const input = SpeedOrderFixture.activeCombatants(first);
+		const inputIds = SpeedOrderFixture.ids(input);
+		const expected = SpeedOrderFixture.orderOf(first, input);
 
 		expect(expected).toEqual([PLAYER_ID, OPPONENT_ID]);
-		expect(orderOf(second)).toEqual(expected);
-		expect(orderOf(first, input.toReversed())).toEqual(expected);
-		expect(ids(input)).toEqual(inputIds);
+		expect(SpeedOrderFixture.orderOf(second)).toEqual(expected);
+		expect(SpeedOrderFixture.orderOf(first, input.toReversed())).toEqual(expected);
+		expect(SpeedOrderFixture.ids(input)).toEqual(inputIds);
 		expect(first.toPrimitives()).toEqual(before);
 	});
 
@@ -149,8 +151,8 @@ describe('DuelmonSpeedOrder', () => {
 			)
 		);
 
-		expect(() => DuelmonSpeedOrder.fromCombat(combat).sort([combatant(combat, PLAYER_ID), intruder])).toThrow(
-			'does not belong to the combat'
-		);
+		expect(() =>
+			DuelmonSpeedOrder.fromCombat(combat).sort([SpeedOrderFixture.combatant(combat, PLAYER_ID), intruder])
+		).toThrow('does not belong to the combat');
 	});
 });

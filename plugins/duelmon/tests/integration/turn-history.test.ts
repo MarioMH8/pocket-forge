@@ -24,74 +24,76 @@ interface CombatOverrides {
 	readonly opponentHp?: number;
 }
 
-function engine(rules: readonly CombatRule[] = RULES): CombatEngineEntity {
-	return new CombatEngineEntity(
-		CombatSetup.create({
-			actionBindings: BINDINGS,
-			actions: PLUGIN,
-			rules,
-		})
-	);
-}
+class TurnHistoryFixture {
+	static combat(overrides: CombatOverrides = {}): Combat {
+		const primitives: CombatPrimitives = this.startCombat().toPrimitives();
+		const opponent = primitives.groups.find(group => group.id === 'opponent')?.combatants[0];
 
-function turn(rules: readonly CombatRule[] = RULES): DuelmonCombatTurn {
-	return new DuelmonCombatTurn(CATALOG, engine(rules));
-}
+		if (!opponent) {
+			throw new Error('Started combat is missing the opponent combatant');
+		}
 
-function startCombat(): Combat {
-	const result = DuelmonCombatStart.fromContent(
-		DuelmonCombatStartMother.request(),
-		CATALOG,
-		DuelmonCombatStartMother.DEFINITIONS
-	);
+		if (overrides.opponentHp !== undefined) {
+			opponent.attributes['hp'] = overrides.opponentHp;
+		}
 
-	expect(result.isRight()).toBe(true);
-
-	return result.getRight();
-}
-
-function combat(overrides: CombatOverrides = {}): Combat {
-	const primitives: CombatPrimitives = startCombat().toPrimitives();
-	const opponent = primitives.groups.find(group => group.id === 'opponent')?.combatants[0];
-
-	if (!opponent) {
-		throw new Error('Started combat is missing the opponent combatant');
+		return CombatEntity.fromPrimitives(primitives);
 	}
 
-	if (overrides.opponentHp !== undefined) {
-		opponent.attributes['hp'] = overrides.opponentHp;
+	static declarations() {
+		return [this.input(PLAYER, PLAYER_MOVE, OPPONENT), this.input(OPPONENT, OPPONENT_MOVE, PLAYER)];
 	}
 
-	return CombatEntity.fromPrimitives(primitives);
-}
+	static engine(rules: readonly CombatRule[] = RULES): CombatEngineEntity {
+		return new CombatEngineEntity(
+			CombatSetup.create({
+				actionBindings: BINDINGS,
+				actions: PLUGIN,
+				rules,
+			})
+		);
+	}
 
-function input(actorId: string, moveId: string, targetId: string) {
-	return {
-		actorId,
-		moveId,
-		target: { id: targetId, scope: 'combatant' as const },
-	};
-}
+	static eventAttackerIds(events: readonly { payload: Record<string, unknown>; type: string }[]): readonly string[] {
+		return events
+			.filter(event => event.type === 'move-used' || event.type === 'move-missed')
+			.map(event => String(event.payload['attackerId']));
+	}
 
-function declarations() {
-	return [input(PLAYER, PLAYER_MOVE, OPPONENT), input(OPPONENT, OPPONENT_MOVE, PLAYER)];
-}
+	static input(actorId: string, moveId: string, targetId: string) {
+		return {
+			actorId,
+			moveId,
+			target: { id: targetId, scope: 'combatant' as const },
+		};
+	}
 
-function knockoutRules(): readonly CombatRule[] {
-	return [DuelmonCombatMother.compositionRule(), DuelmonCombatMother.hpCompletionRule()];
-}
+	static knockoutRules(): readonly CombatRule[] {
+		return [DuelmonCombatMother.compositionRule(), DuelmonCombatMother.hpCompletionRule()];
+	}
 
-function eventAttackerIds(events: readonly { payload: Record<string, unknown>; type: string }[]): readonly string[] {
-	return events
-		.filter(event => event.type === 'move-used' || event.type === 'move-missed')
-		.map(event => String(event.payload['attackerId']));
+	static startCombat(): Combat {
+		const result = DuelmonCombatStart.fromContent(
+			DuelmonCombatStartMother.request(),
+			CATALOG,
+			DuelmonCombatStartMother.DEFINITIONS
+		);
+
+		expect(result.isRight()).toBe(true);
+
+		return result.getRight();
+	}
+
+	static turn(rules: readonly CombatRule[] = RULES): DuelmonCombatTurn {
+		return new DuelmonCombatTurn(CATALOG, this.engine(rules));
+	}
 }
 
 describe('Turn history', () => {
 	it('records the real action order after the start', () => {
-		const combatState = startCombat();
+		const combatState = TurnHistoryFixture.startCombat();
 		const history = DuelmonCombatHistory.start(combatState);
-		const result = turn().resolve(combatState, declarations());
+		const result = TurnHistoryFixture.turn().resolve(combatState, TurnHistoryFixture.declarations());
 
 		expect(result.isRight()).toBe(true);
 
@@ -122,12 +124,12 @@ describe('Turn history', () => {
 				.map(entry => entry.action?.targetId)
 		).toEqual([OPPONENT, PLAYER]);
 		expect(turnResult.actions.map(action => action.actorId)).toEqual([PLAYER, OPPONENT]);
-		expect(eventAttackerIds(turnResult.resolution.events)).toEqual([PLAYER, OPPONENT]);
+		expect(TurnHistoryFixture.eventAttackerIds(turnResult.resolution.events)).toEqual([PLAYER, OPPONENT]);
 	});
 
 	it('records the successor snapshot of each action', () => {
-		const combatState = startCombat();
-		const result = turn().resolve(combatState, declarations());
+		const combatState = TurnHistoryFixture.startCombat();
+		const result = TurnHistoryFixture.turn().resolve(combatState, TurnHistoryFixture.declarations());
 
 		expect(result.isRight()).toBe(true);
 
@@ -148,8 +150,8 @@ describe('Turn history', () => {
 	});
 
 	it('records one readable entry per action with the report of its snapshot', () => {
-		const combatState = startCombat();
-		const result = turn().resolve(combatState, declarations());
+		const combatState = TurnHistoryFixture.startCombat();
+		const result = TurnHistoryFixture.turn().resolve(combatState, TurnHistoryFixture.declarations());
 
 		expect(result.isRight()).toBe(true);
 
@@ -172,8 +174,11 @@ describe('Turn history', () => {
 	});
 
 	it('records exactly the completing action when the first action ends the battle', () => {
-		const combatState = combat({ opponentHp: 1 });
-		const result = turn(knockoutRules()).resolve(combatState, declarations());
+		const combatState = TurnHistoryFixture.combat({ opponentHp: 1 });
+		const result = TurnHistoryFixture.turn(TurnHistoryFixture.knockoutRules()).resolve(
+			combatState,
+			TurnHistoryFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
 
@@ -194,8 +199,8 @@ describe('Turn history', () => {
 	});
 
 	it('does not duplicate an action', () => {
-		const combatState = startCombat();
-		const result = turn().resolve(combatState, declarations());
+		const combatState = TurnHistoryFixture.startCombat();
+		const result = TurnHistoryFixture.turn().resolve(combatState, TurnHistoryFixture.declarations());
 
 		expect(result.isRight()).toBe(true);
 
@@ -215,8 +220,8 @@ describe('Turn history', () => {
 	});
 
 	it('appends a second turn without duplicating or losing the previous entries', () => {
-		const combatState = startCombat();
-		const firstTurn = turn().resolve(combatState, declarations());
+		const combatState = TurnHistoryFixture.startCombat();
+		const firstTurn = TurnHistoryFixture.turn().resolve(combatState, TurnHistoryFixture.declarations());
 
 		expect(firstTurn.isRight()).toBe(true);
 
@@ -225,7 +230,10 @@ describe('Turn history', () => {
 		}
 
 		const firstHistory = DuelmonCombatHistory.start(combatState).recordTurn(firstTurn.getRight());
-		const secondTurn = turn().resolve(firstTurn.getRight().resolution.combat, declarations());
+		const secondTurn = TurnHistoryFixture.turn().resolve(
+			firstTurn.getRight().resolution.combat,
+			TurnHistoryFixture.declarations()
+		);
 
 		expect(secondTurn.isRight()).toBe(true);
 
@@ -248,10 +256,10 @@ describe('Turn history', () => {
 	});
 
 	it('does not mutate the previous history and round-trips the recorded one', () => {
-		const combatState = startCombat();
+		const combatState = TurnHistoryFixture.startCombat();
 		const previous = DuelmonCombatHistory.start(combatState);
 		const before = previous.toPrimitives();
-		const result = turn().resolve(combatState, declarations());
+		const result = TurnHistoryFixture.turn().resolve(combatState, TurnHistoryFixture.declarations());
 
 		expect(result.isRight()).toBe(true);
 
@@ -269,8 +277,14 @@ describe('Turn history', () => {
 	});
 
 	it('is reproducible from the same starting point', () => {
-		const first = turn().resolve(startCombat(), declarations());
-		const second = turn().resolve(startCombat(), declarations());
+		const first = TurnHistoryFixture.turn().resolve(
+			TurnHistoryFixture.startCombat(),
+			TurnHistoryFixture.declarations()
+		);
+		const second = TurnHistoryFixture.turn().resolve(
+			TurnHistoryFixture.startCombat(),
+			TurnHistoryFixture.declarations()
+		);
 
 		expect(first.isRight()).toBe(true);
 		expect(second.isRight()).toBe(true);
@@ -279,8 +293,10 @@ describe('Turn history', () => {
 			return;
 		}
 
-		expect(DuelmonCombatHistory.start(startCombat()).recordTurn(first.getRight()).toPrimitives()).toEqual(
-			DuelmonCombatHistory.start(startCombat()).recordTurn(second.getRight()).toPrimitives()
+		expect(
+			DuelmonCombatHistory.start(TurnHistoryFixture.startCombat()).recordTurn(first.getRight()).toPrimitives()
+		).toEqual(
+			DuelmonCombatHistory.start(TurnHistoryFixture.startCombat()).recordTurn(second.getRight()).toPrimitives()
 		);
 	});
 });

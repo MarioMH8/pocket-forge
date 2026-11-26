@@ -50,12 +50,198 @@ interface CombatOverrides {
 	readonly playerSpeed?: number;
 }
 
-function isAttributeRecord(value: AttributeValue | undefined): value is AttributeRecord {
-	return typeof value === 'object' && !Array.isArray(value);
-}
+class CombatTurnFixture {
+	static activeCombatant(combatState: Combat, id: string): DuelmonCombatant {
+		const found = DuelmonCombat.fromCombat(combatState)
+			.groups()
+			.flatMap(group => group.combatants())
+			.find(combatant => combatant.id === id);
 
-function isAttributeRecordArray(value: AttributeValue | undefined): value is AttributeRecord[] {
-	return Array.isArray(value) && value.every(isAttributeRecord);
+		if (!found) {
+			throw new Error(`Missing combatant "${id}"`);
+		}
+
+		return found;
+	}
+
+	static combat(overrides: CombatOverrides = {}): Combat {
+		const primitives: CombatPrimitives = DuelmonCombatStartMother.primitives();
+		const player = primitives.groups.find(group => group.id === 'player');
+		const opponent = primitives.groups.find(group => group.id === 'opponent');
+		const playerCombatant = player?.combatants[0];
+		const opponentCombatant = opponent?.combatants[0];
+
+		if (!playerCombatant || !opponentCombatant) {
+			throw new Error('Start fixture is missing a combatant');
+		}
+
+		if (overrides.playerSpeed !== undefined) {
+			playerCombatant.attributes['speed'] = overrides.playerSpeed;
+		}
+
+		if (overrides.opponentSpeed !== undefined) {
+			opponentCombatant.attributes['speed'] = overrides.opponentSpeed;
+		}
+
+		if (overrides.playerHp !== undefined) {
+			playerCombatant.attributes['hp'] = overrides.playerHp;
+		}
+
+		if (overrides.opponentHp !== undefined) {
+			opponentCombatant.attributes['hp'] = overrides.opponentHp;
+		}
+
+		if (overrides.playerFirst === false) {
+			primitives.groups.reverse();
+		}
+
+		return CombatEntity.fromPrimitives(primitives);
+	}
+
+	static combatWithKnownMoves(combatantId: string, moveIds: readonly string[]): Combat {
+		const primitives: CombatPrimitives = DuelmonCombatStartMother.primitives();
+		const moves = moveIds.map(moveId => {
+			const move = CATALOG.findMove(moveId);
+
+			if (!move) {
+				throw new Error(`Fixture is missing the move "${moveId}"`);
+			}
+
+			return move.toPrimitives();
+		});
+
+		return CombatEntity.fromPrimitives({
+			...primitives,
+			groups: primitives.groups.map(group => ({
+				...group,
+				combatants: group.combatants.map(combatant =>
+					combatant.id === combatantId
+						? {
+								...combatant,
+								creature: { ...combatant.creature, moves: [...combatant.creature.moves, ...moves] },
+							}
+						: combatant
+				),
+			})),
+		});
+	}
+
+	static completed(state: Combat): Combat {
+		return CombatEntity.fromPrimitives({ ...state.toPrimitives(), status: 'completed' });
+	}
+
+	/**
+	 * Reduces the current PP of the Move used by the acting combatant.
+	 *
+	 * @param attributes - Acting combatant attributes.
+	 * @param moveId - Move being resolved.
+	 * @returns The attributes with the Move PP decreased.
+	 */
+	static consumeMovePp(attributes: AttributeValues, moveId: string): AttributeValues {
+		const movePp = attributes['movePp'];
+
+		if (!this.isAttributeRecordArray(movePp)) {
+			return attributes;
+		}
+
+		return {
+			...attributes,
+			movePp: movePp.map(entry =>
+				entry['moveId'] === moveId && typeof entry['current'] === 'number'
+					? { ...entry, current: Math.max(0, entry['current'] - 1) }
+					: entry
+			),
+		};
+	}
+
+	static declaration(actorId: string, moveId: string, targetId: string) {
+		return {
+			actorId,
+			moveId,
+			target: { id: targetId, scope: 'combatant' as const },
+		};
+	}
+
+	static declarations() {
+		return [this.declaration(PLAYER, PLAYER_MOVE, OPPONENT), this.declaration(OPPONENT, OPPONENT_MOVE, PLAYER)];
+	}
+
+	static engineWith(
+		resolver: StubResolver,
+		moveIds: readonly string[] = [PLAYER_MOVE, OPPONENT_MOVE],
+		rules: readonly CombatRule[] = []
+	): CombatEngine {
+		const actionBindings = DuelmonCombatMother.useMoveBindings(moveIds);
+
+		return new CombatEngineEntity(
+			CombatSetup.create({
+				actionBindings,
+				actions: resolver,
+				rules,
+			})
+		);
+	}
+
+	static movePpCurrent(state: Combat, combatantId: string, moveId: string): number | undefined {
+		const combatant = state
+			.toPrimitives()
+			.groups.flatMap(group => group.combatants)
+			.find(candidate => candidate.id === combatantId);
+		const movePp = combatant?.attributes['movePp'];
+
+		if (!this.isAttributeRecordArray(movePp)) {
+			return undefined;
+		}
+
+		const current = movePp.find(entry => entry['moveId'] === moveId)?.['current'];
+
+		return typeof current === 'number' ? current : undefined;
+	}
+
+	static moveUsedPairs(events: readonly { payload: Record<string, unknown>; type: string }[]): readonly string[] {
+		return events
+			.filter(event => event.type === 'move-used')
+			.map(event => `${String(event.payload['attackerId'])}:${String(event.payload['moveId'])}`);
+	}
+
+	static turnWith(
+		resolver: StubResolver,
+		moveIds: readonly string[] = [PLAYER_MOVE, OPPONENT_MOVE],
+		rules: readonly CombatRule[] = []
+	): DuelmonCombatTurn {
+		return new DuelmonCombatTurn(CATALOG, this.engineWith(resolver, moveIds, rules));
+	}
+
+	static withMovePp(state: Combat, entries: Readonly<Record<string, readonly AttributeRecord[]>>): Combat {
+		const primitives = state.toPrimitives();
+
+		return CombatEntity.fromPrimitives({
+			...primitives,
+			groups: primitives.groups.map(group => ({
+				...group,
+				combatants: group.combatants.map(combatant => {
+					const movePp = entries[combatant.id];
+
+					if (!movePp) {
+						return combatant;
+					}
+
+					return {
+						...combatant,
+						attributes: { ...combatant.attributes, movePp: [...movePp] },
+					};
+				}),
+			})),
+		});
+	}
+
+	private static isAttributeRecord(value: AttributeValue | undefined): value is AttributeRecord {
+		return typeof value === 'object' && !Array.isArray(value);
+	}
+
+	private static isAttributeRecordArray(value: AttributeValue | undefined): value is AttributeRecord[] {
+		return Array.isArray(value) && value.every(entry => this.isAttributeRecord(entry));
+	}
 }
 
 /**
@@ -76,30 +262,6 @@ class StubResolver implements CombatActionResolver {
 	constructor(options: StubOptions = {}) {
 		this.damage = options.damage ?? {};
 		this.rejectedMoveIds = new Set(options.rejectedMoveIds);
-	}
-
-	/**
-	 * Reduces the current PP of the Move used by the acting combatant.
-	 *
-	 * @param attributes - Acting combatant attributes.
-	 * @param moveId - Move being resolved.
-	 * @returns The attributes with the Move PP decreased.
-	 */
-	private static consumeMovePp(attributes: AttributeValues, moveId: string): AttributeValues {
-		const movePp = attributes['movePp'];
-
-		if (!isAttributeRecordArray(movePp)) {
-			return attributes;
-		}
-
-		return {
-			...attributes,
-			movePp: movePp.map(entry =>
-				entry['moveId'] === moveId && typeof entry['current'] === 'number'
-					? { ...entry, current: Math.max(0, entry['current'] - 1) }
-					: entry
-			),
-		};
 	}
 
 	resolve(context: CombatActionContext): Either<CombatResolutionError[], CombatTransition> {
@@ -138,7 +300,7 @@ class StubResolver implements CombatActionResolver {
 						combatant.id === input.actorId
 							? {
 									...combatant,
-									attributes: StubResolver.consumeMovePp(combatant.attributes, input.moveId),
+									attributes: CombatTurnFixture.consumeMovePp(combatant.attributes, input.moveId),
 								}
 							: combatant;
 
@@ -188,147 +350,6 @@ class StubResolver implements CombatActionResolver {
 	}
 }
 
-function combat(overrides: CombatOverrides = {}): Combat {
-	const primitives: CombatPrimitives = DuelmonCombatStartMother.primitives();
-	const player = primitives.groups.find(group => group.id === 'player');
-	const opponent = primitives.groups.find(group => group.id === 'opponent');
-	const playerCombatant = player?.combatants[0];
-	const opponentCombatant = opponent?.combatants[0];
-
-	if (!playerCombatant || !opponentCombatant) {
-		throw new Error('Start fixture is missing a combatant');
-	}
-
-	if (overrides.playerSpeed !== undefined) {
-		playerCombatant.attributes['speed'] = overrides.playerSpeed;
-	}
-
-	if (overrides.opponentSpeed !== undefined) {
-		opponentCombatant.attributes['speed'] = overrides.opponentSpeed;
-	}
-
-	if (overrides.playerHp !== undefined) {
-		playerCombatant.attributes['hp'] = overrides.playerHp;
-	}
-
-	if (overrides.opponentHp !== undefined) {
-		opponentCombatant.attributes['hp'] = overrides.opponentHp;
-	}
-
-	if (overrides.playerFirst === false) {
-		primitives.groups.reverse();
-	}
-
-	return CombatEntity.fromPrimitives(primitives);
-}
-
-function declaration(actorId: string, moveId: string, targetId: string) {
-	return {
-		actorId,
-		moveId,
-		target: { id: targetId, scope: 'combatant' as const },
-	};
-}
-
-function combatWithKnownMoves(combatantId: string, moveIds: readonly string[]): Combat {
-	const primitives: CombatPrimitives = DuelmonCombatStartMother.primitives();
-	const moves = moveIds.map(moveId => {
-		const move = CATALOG.findMove(moveId);
-
-		if (!move) {
-			throw new Error(`Fixture is missing the move "${moveId}"`);
-		}
-
-		return move.toPrimitives();
-	});
-
-	return CombatEntity.fromPrimitives({
-		...primitives,
-		groups: primitives.groups.map(group => ({
-			...group,
-			combatants: group.combatants.map(combatant =>
-				combatant.id === combatantId
-					? {
-							...combatant,
-							creature: { ...combatant.creature, moves: [...combatant.creature.moves, ...moves] },
-						}
-					: combatant
-			),
-		})),
-	});
-}
-
-function declarations() {
-	return [declaration(PLAYER, PLAYER_MOVE, OPPONENT), declaration(OPPONENT, OPPONENT_MOVE, PLAYER)];
-}
-
-function engineWith(
-	resolver: StubResolver,
-	moveIds: readonly string[] = [PLAYER_MOVE, OPPONENT_MOVE],
-	rules: readonly CombatRule[] = []
-): CombatEngine {
-	const actionBindings = DuelmonCombatMother.useMoveBindings(moveIds);
-
-	return new CombatEngineEntity(
-		CombatSetup.create({
-			actionBindings,
-			actions: resolver,
-			rules,
-		})
-	);
-}
-
-function turnWith(
-	resolver: StubResolver,
-	moveIds: readonly string[] = [PLAYER_MOVE, OPPONENT_MOVE],
-	rules: readonly CombatRule[] = []
-): DuelmonCombatTurn {
-	return new DuelmonCombatTurn(CATALOG, engineWith(resolver, moveIds, rules));
-}
-
-function withMovePp(state: Combat, entries: Readonly<Record<string, readonly AttributeRecord[]>>): Combat {
-	const primitives = state.toPrimitives();
-
-	return CombatEntity.fromPrimitives({
-		...primitives,
-		groups: primitives.groups.map(group => ({
-			...group,
-			combatants: group.combatants.map(combatant => {
-				const movePp = entries[combatant.id];
-
-				if (!movePp) {
-					return combatant;
-				}
-
-				return {
-					...combatant,
-					attributes: { ...combatant.attributes, movePp: [...movePp] },
-				};
-			}),
-		})),
-	});
-}
-
-function movePpCurrent(state: Combat, combatantId: string, moveId: string): number | undefined {
-	const combatant = state
-		.toPrimitives()
-		.groups.flatMap(group => group.combatants)
-		.find(candidate => candidate.id === combatantId);
-	const movePp = combatant?.attributes['movePp'];
-
-	if (!isAttributeRecordArray(movePp)) {
-		return undefined;
-	}
-
-	const current = movePp.find(entry => entry['moveId'] === moveId)?.['current'];
-
-	return typeof current === 'number' ? current : undefined;
-}
-
-function completed(state: Combat): Combat {
-	return CombatEntity.fromPrimitives({ ...state.toPrimitives(), status: 'completed' });
-}
-
 /**
  * Engine double that returns a resolution the real engine cannot produce.
  *
@@ -357,29 +378,13 @@ class InconsistentEngine extends CombatEngineEntity {
 	}
 }
 
-function activeCombatant(combatState: Combat, id: string): DuelmonCombatant {
-	const found = DuelmonCombat.fromCombat(combatState)
-		.groups()
-		.flatMap(group => group.combatants())
-		.find(combatant => combatant.id === id);
-
-	if (!found) {
-		throw new Error(`Missing combatant "${id}"`);
-	}
-
-	return found;
-}
-
-function moveUsedPairs(events: readonly { payload: Record<string, unknown>; type: string }[]): readonly string[] {
-	return events
-		.filter(event => event.type === 'move-used')
-		.map(event => `${String(event.payload['attackerId'])}:${String(event.payload['moveId'])}`);
-}
-
 describe('DuelmonCombatTurn', () => {
 	it('resolves the fastest declared actor first and the slower one afterwards', () => {
 		const resolver = new StubResolver({ damage: { [OPPONENT_MOVE]: 5, [PLAYER_MOVE]: 10 } });
-		const result = turnWith(resolver).resolve(combat(), declarations());
+		const result = CombatTurnFixture.turnWith(resolver).resolve(
+			CombatTurnFixture.combat(),
+			CombatTurnFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
 		expect(resolver.calls.map(call => call.actorId)).toEqual([PLAYER, OPPONENT]);
@@ -387,7 +392,10 @@ describe('DuelmonCombatTurn', () => {
 
 	it('threads the successor combat of each action into the next action', () => {
 		const resolver = new StubResolver({ damage: { [OPPONENT_MOVE]: 5, [PLAYER_MOVE]: 10 } });
-		const result = turnWith(resolver).resolve(combat(), declarations());
+		const result = CombatTurnFixture.turnWith(resolver).resolve(
+			CombatTurnFixture.combat(),
+			CombatTurnFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
 
@@ -399,43 +407,49 @@ describe('DuelmonCombatTurn', () => {
 			return;
 		}
 
-		expect(activeCombatant(secondCall.combat, OPPONENT).hp).toBe(94);
-		expect(activeCombatant(secondCall.combat, PLAYER).hp).toBe(99);
+		expect(CombatTurnFixture.activeCombatant(secondCall.combat, OPPONENT).hp).toBe(94);
+		expect(CombatTurnFixture.activeCombatant(secondCall.combat, PLAYER).hp).toBe(99);
 
 		const resolution = result.getRight().resolution;
 
-		expect(activeCombatant(resolution.combat, OPPONENT).hp).toBe(94);
-		expect(activeCombatant(resolution.combat, PLAYER).hp).toBe(94);
+		expect(CombatTurnFixture.activeCombatant(resolution.combat, OPPONENT).hp).toBe(94);
+		expect(CombatTurnFixture.activeCombatant(resolution.combat, PLAYER).hp).toBe(94);
 	});
 
 	it('skips an actor that is no longer standing when its action comes up', () => {
 		const resolver = new StubResolver({ damage: { [PLAYER_MOVE]: 10 } });
-		const result = turnWith(resolver).resolve(combat({ opponentHp: 5 }), declarations());
+		const result = CombatTurnFixture.turnWith(resolver).resolve(
+			CombatTurnFixture.combat({ opponentHp: 5 }),
+			CombatTurnFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
 		expect(resolver.calls.map(call => call.actorId)).toEqual([PLAYER]);
 
 		const resolution = result.getRight().resolution;
 
-		expect(activeCombatant(resolution.combat, OPPONENT).isFainted).toBe(true);
+		expect(CombatTurnFixture.activeCombatant(resolution.combat, OPPONENT).isFainted).toBe(true);
 		expect(resolution.events.map(event => event.sequence)).toEqual([1, 2]);
 	});
 
 	it('stops the turn after the first action completes the combat', () => {
 		const rules: readonly CombatRule[] = [DuelmonCombatMother.hpCompletionRule()];
 		const resolver = new StubResolver({ damage: { [PLAYER_MOVE]: 10 } });
-		const combatState = withMovePp(combat({ opponentHp: 5 }), {
+		const combatState = CombatTurnFixture.withMovePp(CombatTurnFixture.combat({ opponentHp: 5 }), {
 			[OPPONENT]: [{ current: 20, max: 20, moveId: OPPONENT_MOVE }],
 			[PLAYER]: [{ current: 20, max: 20, moveId: PLAYER_MOVE }],
 		});
-		const first = engineWith(
+		const first = CombatTurnFixture.engineWith(
 			new StubResolver({ damage: { [PLAYER_MOVE]: 10 } }),
 			[PLAYER_MOVE, OPPONENT_MOVE],
 			rules
 		)
-			.resolve(combatState, declaration(PLAYER, PLAYER_MOVE, OPPONENT))
+			.resolve(combatState, CombatTurnFixture.declaration(PLAYER, PLAYER_MOVE, OPPONENT))
 			.getRight();
-		const result = turnWith(resolver, [PLAYER_MOVE, OPPONENT_MOVE], rules).resolve(combatState, declarations());
+		const result = CombatTurnFixture.turnWith(resolver, [PLAYER_MOVE, OPPONENT_MOVE], rules).resolve(
+			combatState,
+			CombatTurnFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
 
@@ -450,25 +464,25 @@ describe('DuelmonCombatTurn', () => {
 		expect(resolution.combat.toPrimitives()).toEqual(first.combat.toPrimitives());
 		expect(resolution.outcome).toEqual(CombatOutcome.victory('player'));
 		expect(resolution.outcome?.isVictory() ? resolution.outcome.winnerGroupId : undefined).toBe('player');
-		expect(activeCombatant(resolution.combat, OPPONENT).isFainted).toBe(true);
-		expect(activeCombatant(resolution.combat, PLAYER).hp).toBe(99);
-		expect(movePpCurrent(resolution.combat, PLAYER, PLAYER_MOVE)).toBe(19);
-		expect(movePpCurrent(resolution.combat, OPPONENT, OPPONENT_MOVE)).toBe(20);
+		expect(CombatTurnFixture.activeCombatant(resolution.combat, OPPONENT).isFainted).toBe(true);
+		expect(CombatTurnFixture.activeCombatant(resolution.combat, PLAYER).hp).toBe(99);
+		expect(CombatTurnFixture.movePpCurrent(resolution.combat, PLAYER, PLAYER_MOVE)).toBe(19);
+		expect(CombatTurnFixture.movePpCurrent(resolution.combat, OPPONENT, OPPONENT_MOVE)).toBe(20);
 		expect(resolution.events.map(event => event.type)).toEqual([
 			'move-used',
 			'attribute-modified',
 			'combat-completed',
 		]);
 		expect(resolution.events.map(event => event.sequence)).toEqual([1, 2, 3]);
-		expect(moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
+		expect(CombatTurnFixture.moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
 		expect(resolution.events.some(event => event.payload['attackerId'] === OPPONENT)).toBe(false);
 	});
 
 	it('rejects a turn over a combat that already completed without resolving anything', () => {
 		const resolver = new StubResolver({ damage: { [PLAYER_MOVE]: 10 } });
-		const combatState = completed(combat());
+		const combatState = CombatTurnFixture.completed(CombatTurnFixture.combat());
 		const before = combatState.toPrimitives();
-		const result = turnWith(resolver).resolve(combatState, declarations());
+		const result = CombatTurnFixture.turnWith(resolver).resolve(combatState, CombatTurnFixture.declarations());
 
 		expect(result.isLeft()).toBe(true);
 
@@ -484,7 +498,10 @@ describe('DuelmonCombatTurn', () => {
 
 	it('does not validate declarations after the combat completed', () => {
 		const resolver = new StubResolver();
-		const result = turnWith(resolver).resolve(completed(combat()), undefined);
+		const result = CombatTurnFixture.turnWith(resolver).resolve(
+			CombatTurnFixture.completed(CombatTurnFixture.combat()),
+			undefined
+		);
 
 		expect(result.isLeft()).toBe(true);
 
@@ -497,11 +514,11 @@ describe('DuelmonCombatTurn', () => {
 	});
 
 	it('rejects a completed combat that the engine returned without an outcome', () => {
-		const combatState = combat();
-		const result = new DuelmonCombatTurn(CATALOG, new InconsistentEngine(completed(combatState))).resolve(
-			combatState,
-			declarations()
-		);
+		const combatState = CombatTurnFixture.combat();
+		const result = new DuelmonCombatTurn(
+			CATALOG,
+			new InconsistentEngine(CombatTurnFixture.completed(combatState))
+		).resolve(combatState, CombatTurnFixture.declarations());
 
 		expect(result.isLeft()).toBe(true);
 
@@ -513,11 +530,11 @@ describe('DuelmonCombatTurn', () => {
 	});
 
 	it('rejects an engine outcome that did not complete the combat', () => {
-		const combatState = combat();
+		const combatState = CombatTurnFixture.combat();
 		const result = new DuelmonCombatTurn(
 			CATALOG,
 			new InconsistentEngine(combatState, CombatOutcome.victory('player'))
-		).resolve(combatState, declarations());
+		).resolve(combatState, CombatTurnFixture.declarations());
 
 		expect(result.isLeft()).toBe(true);
 
@@ -530,11 +547,14 @@ describe('DuelmonCombatTurn', () => {
 
 	it('resolves exactly the Move declared by each side and no other action', () => {
 		const resolver = new StubResolver();
-		const result = turnWith(resolver, [PLAYER_MOVE, OPPONENT_MOVE, 'tackle']).resolve(combat(), declarations());
+		const result = CombatTurnFixture.turnWith(resolver, [PLAYER_MOVE, OPPONENT_MOVE, 'tackle']).resolve(
+			CombatTurnFixture.combat(),
+			CombatTurnFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
 		expect(resolver.calls.map(call => call.moveId)).toEqual([PLAYER_MOVE, OPPONENT_MOVE]);
-		expect(moveUsedPairs(result.getRight().resolution.events)).toEqual([
+		expect(CombatTurnFixture.moveUsedPairs(result.getRight().resolution.events)).toEqual([
 			`${PLAYER}:${PLAYER_MOVE}`,
 			`${OPPONENT}:${OPPONENT_MOVE}`,
 		]);
@@ -542,7 +562,10 @@ describe('DuelmonCombatTurn', () => {
 
 	it('merges and renumbers the events of every action continuously', () => {
 		const resolver = new StubResolver();
-		const result = turnWith(resolver).resolve(combat(), declarations());
+		const result = CombatTurnFixture.turnWith(resolver).resolve(
+			CombatTurnFixture.combat(),
+			CombatTurnFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
 		expect(result.getRight().resolution.events.map(event => event.sequence)).toEqual([1, 2, 3, 4]);
@@ -550,15 +573,18 @@ describe('DuelmonCombatTurn', () => {
 
 	it('breaks equal speeds by the fixed combat order', () => {
 		const first = new StubResolver();
-		const firstResult = turnWith(first).resolve(combat({ opponentSpeed: 70 }), declarations());
+		const firstResult = CombatTurnFixture.turnWith(first).resolve(
+			CombatTurnFixture.combat({ opponentSpeed: 70 }),
+			CombatTurnFixture.declarations()
+		);
 
 		expect(firstResult.isRight()).toBe(true);
 		expect(first.calls.map(call => call.actorId)).toEqual([PLAYER, OPPONENT]);
 
 		const reversed = new StubResolver();
-		const reversedResult = turnWith(reversed).resolve(
-			combat({ opponentSpeed: 70, playerFirst: false }),
-			declarations()
+		const reversedResult = CombatTurnFixture.turnWith(reversed).resolve(
+			CombatTurnFixture.combat({ opponentSpeed: 70, playerFirst: false }),
+			CombatTurnFixture.declarations()
 		);
 
 		expect(reversedResult.isRight()).toBe(true);
@@ -566,8 +592,14 @@ describe('DuelmonCombatTurn', () => {
 	});
 
 	it('exposes the Speed read from the ordered state and whether a tie was broken', () => {
-		const different = turnWith(new StubResolver()).resolve(combat(), declarations());
-		const tied = turnWith(new StubResolver()).resolve(combat({ opponentSpeed: 70 }), declarations());
+		const different = CombatTurnFixture.turnWith(new StubResolver()).resolve(
+			CombatTurnFixture.combat(),
+			CombatTurnFixture.declarations()
+		);
+		const tied = CombatTurnFixture.turnWith(new StubResolver()).resolve(
+			CombatTurnFixture.combat({ opponentSpeed: 70 }),
+			CombatTurnFixture.declarations()
+		);
 
 		expect(different.isRight()).toBe(true);
 		expect(tied.isRight()).toBe(true);
@@ -592,9 +624,12 @@ describe('DuelmonCombatTurn', () => {
 			['quick-jab', 'Move "quick-jab" has non-zero priority, which is outside Phase 1'],
 		] as const) {
 			const resolver = new StubResolver();
-			const result = turnWith(resolver, [PLAYER_MOVE, OPPONENT_MOVE, moveId]).resolve(
-				combatWithKnownMoves(PLAYER, [moveId]),
-				[declaration(PLAYER, moveId, OPPONENT), declaration(OPPONENT, OPPONENT_MOVE, PLAYER)]
+			const result = CombatTurnFixture.turnWith(resolver, [PLAYER_MOVE, OPPONENT_MOVE, moveId]).resolve(
+				CombatTurnFixture.combatWithKnownMoves(PLAYER, [moveId]),
+				[
+					CombatTurnFixture.declaration(PLAYER, moveId, OPPONENT),
+					CombatTurnFixture.declaration(OPPONENT, OPPONENT_MOVE, PLAYER),
+				]
 			);
 
 			expect(result.isLeft()).toBe(true);
@@ -619,9 +654,11 @@ describe('DuelmonCombatTurn', () => {
 
 	it('does not resolve anything or consume randomness when a declaration is invalid', () => {
 		const resolver = new StubResolver();
-		const combatState = combat();
+		const combatState = CombatTurnFixture.combat();
 		const before = combatState.toPrimitives();
-		const result = turnWith(resolver).resolve(combatState, [declaration(PLAYER, PLAYER_MOVE, OPPONENT)]);
+		const result = CombatTurnFixture.turnWith(resolver).resolve(combatState, [
+			CombatTurnFixture.declaration(PLAYER, PLAYER_MOVE, OPPONENT),
+		]);
 
 		expect(result.isLeft()).toBe(true);
 		expect(resolver.calls).toHaveLength(0);
@@ -631,9 +668,9 @@ describe('DuelmonCombatTurn', () => {
 
 	it('returns the engine failures instead of a partial resolution', () => {
 		const resolver = new StubResolver({ rejectedMoveIds: [OPPONENT_MOVE] });
-		const combatState = combat();
+		const combatState = CombatTurnFixture.combat();
 		const before = combatState.toPrimitives();
-		const result = turnWith(resolver).resolve(combatState, declarations());
+		const result = CombatTurnFixture.turnWith(resolver).resolve(combatState, CombatTurnFixture.declarations());
 
 		expect(result.isLeft()).toBe(true);
 
@@ -646,11 +683,11 @@ describe('DuelmonCombatTurn', () => {
 	});
 
 	it('does not change the input combat', () => {
-		const combatState = combat();
+		const combatState = CombatTurnFixture.combat();
 		const before = combatState.toPrimitives();
-		const result = turnWith(new StubResolver({ damage: { [PLAYER_MOVE]: 10 } })).resolve(
+		const result = CombatTurnFixture.turnWith(new StubResolver({ damage: { [PLAYER_MOVE]: 10 } })).resolve(
 			combatState,
-			declarations()
+			CombatTurnFixture.declarations()
 		);
 
 		expect(result.isRight()).toBe(true);
