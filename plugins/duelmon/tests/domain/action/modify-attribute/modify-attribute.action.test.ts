@@ -13,33 +13,35 @@ const ACTOR_ID = 'combatant-a';
 const MOVE_ID = 'move-1';
 const ACTION = new ModifyAttributeAction(DuelmonCombatMother.ATTRIBUTE_DEFINITIONS);
 
-function combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
-	return combat.groups
-		.flatMap(group => group.combatants)
-		.find(combatant => combatant.id === combatantId)
-		?.attributes.toPrimitives()['power'];
-}
-
-function resolve(overrides: Record<string, AttributeValue>, target = DuelmonTarget.create('combatant', ACTOR_ID)) {
-	const combat = DuelmonCombatMother.create();
-	const actionBindings = DuelmonCombatMother.actionBindings({
-		[ModifyAttributeConfig.KEYS.attributeKey]: 'power',
-		[ModifyAttributeConfig.KEYS.operation]: 'add',
-		[ModifyAttributeConfig.KEYS.scope]: 'combatant',
-		...overrides,
-	});
-	const binding = actionBindings.find(MOVE_ID);
-
-	if (!binding) {
-		throw new Error('Missing binding');
+class ModifyAttributeFixture {
+	static combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
+		return combat.groups
+			.flatMap(group => group.combatants)
+			.find(combatant => combatant.id === combatantId)
+			?.attributes.toPrimitives()['power'];
 	}
 
-	const input = DuelmonCombatInput.create(ACTOR_ID, MOVE_ID, target);
+	static resolve(overrides: Record<string, AttributeValue>, target = DuelmonTarget.create('combatant', ACTOR_ID)) {
+		const combat = DuelmonCombatMother.create();
+		const actionBindings = DuelmonCombatMother.actionBindings({
+			[ModifyAttributeConfig.KEYS.attributeKey]: 'power',
+			[ModifyAttributeConfig.KEYS.operation]: 'add',
+			[ModifyAttributeConfig.KEYS.scope]: 'combatant',
+			...overrides,
+		});
+		const binding = actionBindings.find(MOVE_ID);
 
-	return {
-		combat,
-		result: ACTION.resolve({ actionBindings, combat, input }, input, binding),
-	};
+		if (!binding) {
+			throw new Error('Missing binding');
+		}
+
+		const input = DuelmonCombatInput.create(ACTOR_ID, MOVE_ID, target);
+
+		return {
+			combat,
+			result: ACTION.resolve({ actionBindings, combat, input }, input, binding),
+		};
+	}
 }
 
 describe('ModifyAttributeAction', () => {
@@ -50,13 +52,13 @@ describe('ModifyAttributeAction', () => {
 	});
 
 	it('updates the resolved target and emits a success event', () => {
-		const { combat, result } = resolve({ [ModifyAttributeConfig.KEYS.amount]: 7 });
+		const { combat, result } = ModifyAttributeFixture.resolve({ [ModifyAttributeConfig.KEYS.amount]: 7 });
 
 		expect(result.isRight()).toBe(true);
 
 		const transition = result.getRight();
 
-		expect(combatantPower(transition.combat, ACTOR_ID)).toBe(37);
+		expect(ModifyAttributeFixture.combatantPower(transition.combat, ACTOR_ID)).toBe(37);
 		expect(transition.events[0]).toMatchObject({
 			payload: {
 				actionId: ACTION.id,
@@ -69,11 +71,11 @@ describe('ModifyAttributeAction', () => {
 			},
 			type: 'attribute-modified',
 		});
-		expect(combatantPower(combat, ACTOR_ID)).toBe(30);
+		expect(ModifyAttributeFixture.combatantPower(combat, ACTOR_ID)).toBe(30);
 	});
 
 	it('emits a failed event and advances randomness without writing on a failed draw', () => {
-		const { combat, result } = resolve({
+		const { combat, result } = ModifyAttributeFixture.resolve({
 			[ModifyAttributeConfig.KEYS.amount]: 7,
 			[ModifyAttributeConfig.KEYS.probability]: 0,
 		});
@@ -82,7 +84,7 @@ describe('ModifyAttributeAction', () => {
 
 		const transition = result.getRight();
 
-		expect(combatantPower(transition.combat, ACTOR_ID)).toBe(30);
+		expect(ModifyAttributeFixture.combatantPower(transition.combat, ACTOR_ID)).toBe(30);
 		expect(transition.events[0]).toMatchObject({
 			payload: {
 				actionId: ACTION.id,
@@ -118,7 +120,7 @@ describe('ModifyAttributeAction', () => {
 	});
 
 	it('rejects a target scope that the binding does not expect', () => {
-		const { result } = resolve(
+		const { result } = ModifyAttributeFixture.resolve(
 			{ [ModifyAttributeConfig.KEYS.amount]: 1 },
 			DuelmonTarget.create('group', 'group-a')
 		);

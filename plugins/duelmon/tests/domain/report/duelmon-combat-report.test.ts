@@ -16,17 +16,19 @@ const EXPECTED_LINES = [
 	'      - tackle (Normal / Physical / 35 power)',
 ];
 
-function report(): DuelmonCombatReport {
-	return DuelmonCombatReport.fromCombat(DuelmonCombatStartMother.combat());
+class ReportFixture {
+	static report(): DuelmonCombatReport {
+		return DuelmonCombatReport.fromCombat(DuelmonCombatStartMother.combat());
+	}
 }
 
 describe('DuelmonCombatReport', () => {
 	it('renders the initial HP, active combatant, types, and moves', () => {
-		expect(report().lines()).toEqual(EXPECTED_LINES);
+		expect(ReportFixture.report().lines()).toEqual(EXPECTED_LINES);
 	});
 
 	it('joins the lines into a readable text', () => {
-		expect(report().toString()).toBe(EXPECTED_LINES.join('\n'));
+		expect(ReportFixture.report().toString()).toBe(EXPECTED_LINES.join('\n'));
 	});
 
 	it('builds from an existing Duelmon Combat view', () => {
@@ -36,7 +38,7 @@ describe('DuelmonCombatReport', () => {
 	});
 
 	it('does not render information outside Phase 1', () => {
-		const text = report().toString();
+		const text = ReportFixture.report().toString();
 
 		for (const excluded of [
 			'PP',
@@ -58,7 +60,7 @@ describe('DuelmonCombatReport', () => {
 	});
 
 	it('is deterministic for the same combat state', () => {
-		expect(report().lines()).toEqual(report().lines());
+		expect(ReportFixture.report().lines()).toEqual(ReportFixture.report().lines());
 	});
 
 	it('reads the same combat state that the start returns', () => {

@@ -8,39 +8,41 @@ const ACTOR_ID = 'combatant-a';
 const TARGET_ID = 'combatant-b';
 const THIRD_ID = 'combatant-c';
 
-function validate(combat: Combat, actorId = ACTOR_ID, moveId = 'ember-burst', targetId = TARGET_ID) {
-	return DuelmonTurnDeclaration.validate(
-		DuelmonCombatMother.catalog(),
-		combat,
-		DuelmonCombatInput.create(actorId, moveId, DuelmonTarget.create('combatant', targetId))
-	);
-}
+class TurnDeclarationFixture {
+	static combatWithThirdGroup(): Combat {
+		const primitives: CombatPrimitives = structuredClone(DuelmonCombatMother.useMoveCombat().toPrimitives());
+		const [firstGroup] = primitives.groups;
 
-function combatWithThirdGroup(): Combat {
-	const primitives: CombatPrimitives = structuredClone(DuelmonCombatMother.useMoveCombat().toPrimitives());
-	const [firstGroup] = primitives.groups;
+		if (!firstGroup) {
+			throw new Error('Missing first group');
+		}
 
-	if (!firstGroup) {
-		throw new Error('Missing first group');
+		const thirdGroup = {
+			...structuredClone(firstGroup),
+			attributes: { activeCombatantIds: [THIRD_ID] },
+			combatants: firstGroup.combatants.map(combatant => ({
+				...combatant,
+				groupId: 'group-c',
+				id: THIRD_ID,
+			})),
+			id: 'group-c',
+		};
+
+		return CombatEntity.fromPrimitives({ ...primitives, groups: [...primitives.groups, thirdGroup] });
 	}
 
-	const thirdGroup = {
-		...structuredClone(firstGroup),
-		attributes: { activeCombatantIds: [THIRD_ID] },
-		combatants: firstGroup.combatants.map(combatant => ({
-			...combatant,
-			groupId: 'group-c',
-			id: THIRD_ID,
-		})),
-		id: 'group-c',
-	};
-
-	return CombatEntity.fromPrimitives({ ...primitives, groups: [...primitives.groups, thirdGroup] });
+	static validate(combat: Combat, actorId = ACTOR_ID, moveId = 'ember-burst', targetId = TARGET_ID) {
+		return DuelmonTurnDeclaration.validate(
+			DuelmonCombatMother.catalog(),
+			combat,
+			DuelmonCombatInput.create(actorId, moveId, DuelmonTarget.create('combatant', targetId))
+		);
+	}
 }
 
 describe('DuelmonTurnDeclaration', () => {
 	it('returns the validated actor, Move, target, and write path', () => {
-		const result = validate(DuelmonCombatMother.useMoveCombat());
+		const result = TurnDeclarationFixture.validate(DuelmonCombatMother.useMoveCombat());
 
 		expect(result.isRight()).toBe(true);
 
@@ -54,7 +56,12 @@ describe('DuelmonTurnDeclaration', () => {
 	});
 
 	it('rejects a target from the actor group', () => {
-		const result = validate(DuelmonCombatMother.useMoveCombat(), ACTOR_ID, 'ember-burst', ACTOR_ID);
+		const result = TurnDeclarationFixture.validate(
+			DuelmonCombatMother.useMoveCombat(),
+			ACTOR_ID,
+			'ember-burst',
+			ACTOR_ID
+		);
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-target');
@@ -62,7 +69,12 @@ describe('DuelmonTurnDeclaration', () => {
 	});
 
 	it('rejects an active target from a third group', () => {
-		const result = validate(combatWithThirdGroup(), ACTOR_ID, 'ember-burst', THIRD_ID);
+		const result = TurnDeclarationFixture.validate(
+			TurnDeclarationFixture.combatWithThirdGroup(),
+			ACTOR_ID,
+			'ember-burst',
+			THIRD_ID
+		);
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-target');

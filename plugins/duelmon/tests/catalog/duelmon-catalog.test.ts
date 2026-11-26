@@ -3,8 +3,10 @@ import type { DuelmonMove } from '@pocket-forge/duelmon-dataset';
 import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
-function catalog(): DuelmonCatalog {
-	return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create()).getRight();
+class CatalogFixture {
+	static catalog(): DuelmonCatalog {
+		return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create()).getRight();
+	}
 }
 
 describe('DuelmonCatalog.fromDataset', () => {
@@ -39,14 +41,14 @@ describe('DuelmonCatalog.fromDataset', () => {
 	});
 
 	it('maps numeric accuracy to a hit check', () => {
-		expect(catalog().findMove('ember-spark')?.attributes.value).toMatchObject({
+		expect(CatalogFixture.catalog().findMove('ember-spark')?.attributes.value).toMatchObject({
 			accuracy: 90,
 			alwaysHits: false,
 		});
 	});
 
 	it('returns undefined for unknown identifiers', () => {
-		const current = catalog();
+		const current = CatalogFixture.catalog();
 
 		expect(current.findMove('missing')).toBeUndefined();
 		expect(current.findSpecies('missing')).toBeUndefined();
@@ -155,7 +157,7 @@ describe('DuelmonCatalog.fromDataset', () => {
 	});
 
 	describe('typeMultipliers', () => {
-		const current = catalog();
+		const current = CatalogFixture.catalog();
 
 		it('returns one multiplier per defender type', () => {
 			expect(current.typeMultipliers('Ice', ['Water', 'Flying'])).toEqual([0.5, 2]);

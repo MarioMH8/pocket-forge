@@ -45,49 +45,51 @@ const BINDINGS: readonly CombatActionBindingPrimitives[] = [
 	},
 ];
 
-function createCompositionRule(): CombatRule {
-	return OneVersusOneCombatRule.create(COMPOSITION_PRIMITIVES, [
-		...DuelmonCombatMother.ATTRIBUTE_DEFINITIONS,
-	]).getRight();
-}
+class ExtensibleCombatFixture {
+	static combatPower(combat: Combat): AttributeValue | undefined {
+		return combat.attributes.toPrimitives()['power'];
+	}
 
-function createCompletionRule(): CombatRule {
-	return ThresholdCombatCompletionRule.create(
-		COMPLETION_PRIMITIVES,
-		[...DuelmonCombatMother.COMPLETION_ATTRIBUTE_DEFINITIONS],
-		[...DuelmonCombatMother.ATTRIBUTE_DEFINITIONS]
-	).getRight();
-}
+	static combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
+		return combat.groups
+			.flatMap(group => group.combatants)
+			.find(combatant => combatant.id === combatantId)
+			?.attributes.toPrimitives()['power'];
+	}
 
-function compose() {
-	const composition = createCompositionRule();
-	const completion = createCompletionRule();
-	const plugin = DuelmonCombatMother.plugin();
-	const actionBindings = CombatActionBindingSet.create({ bindings: BINDINGS }, plugin.actions).getRight();
-	const rules: readonly CombatRule[] = [composition, completion];
+	static compose() {
+		const composition = this.createCompositionRule();
+		const completion = this.createCompletionRule();
+		const plugin = DuelmonCombatMother.plugin();
+		const actionBindings = CombatActionBindingSet.create({ bindings: BINDINGS }, plugin.actions).getRight();
+		const rules: readonly CombatRule[] = [composition, completion];
 
-	return {
-		actionBindings,
-		completion,
-		composition,
-		engine: new CombatEngine(CombatSetup.create({ actionBindings, actions: plugin, rules })),
-		plugin,
-	};
-}
+		return {
+			actionBindings,
+			completion,
+			composition,
+			engine: new CombatEngine(CombatSetup.create({ actionBindings, actions: plugin, rules })),
+			plugin,
+		};
+	}
 
-function combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
-	return combat.groups
-		.flatMap(group => group.combatants)
-		.find(combatant => combatant.id === combatantId)
-		?.attributes.toPrimitives()['power'];
-}
+	static createCompletionRule(): CombatRule {
+		return ThresholdCombatCompletionRule.create(
+			COMPLETION_PRIMITIVES,
+			[...DuelmonCombatMother.COMPLETION_ATTRIBUTE_DEFINITIONS],
+			[...DuelmonCombatMother.ATTRIBUTE_DEFINITIONS]
+		).getRight();
+	}
 
-function groupPower(combat: Combat, groupId: string): AttributeValue | undefined {
-	return combat.groups.find(group => group.id === groupId)?.attributes.toPrimitives()['power'];
-}
+	static createCompositionRule(): CombatRule {
+		return OneVersusOneCombatRule.create(COMPOSITION_PRIMITIVES, [
+			...DuelmonCombatMother.ATTRIBUTE_DEFINITIONS,
+		]).getRight();
+	}
 
-function combatPower(combat: Combat): AttributeValue | undefined {
-	return combat.attributes.toPrimitives()['power'];
+	static groupPower(combat: Combat, groupId: string): AttributeValue | undefined {
+		return combat.groups.find(group => group.id === groupId)?.attributes.toPrimitives()['power'];
+	}
 }
 
 const MOVE_2_INPUT = {
@@ -104,7 +106,7 @@ const MOVE_1_INPUT = {
 
 describe('Extensible combat scenario', () => {
 	it('hydrates the authored rules and builds the action bindings and completion rule', () => {
-		const composition = createCompositionRule();
+		const composition = ExtensibleCombatFixture.createCompositionRule();
 
 		expect(composition).toBeInstanceOf(OneVersusOneCombatRule);
 		expect(composition).toMatchObject({ groupConstraints: OneVersusOneCombatRule.CONSTRAINTS });
@@ -124,13 +126,13 @@ describe('Extensible combat scenario', () => {
 		expect(actionBindings.find('move-2')?.config.toPrimitives()[ModifyAttributeConfig.KEYS.scope]).toBe('group');
 		expect(actionBindings.find('move-2')?.config.toPrimitives()[ModifyAttributeConfig.KEYS.probability]).toBe(1);
 
-		const completion = createCompletionRule();
+		const completion = ExtensibleCombatFixture.createCompletionRule();
 
 		expect(completion).toBeInstanceOf(ThresholdCombatCompletionRule);
 	});
 
 	it('rejects an unknown target without mutating the initial combat', () => {
-		const { engine } = compose();
+		const { engine } = ExtensibleCombatFixture.compose();
 		const combat = DuelmonCombatMother.create();
 		const before = combat.toPrimitives();
 
@@ -146,7 +148,7 @@ describe('Extensible combat scenario', () => {
 	});
 
 	it('replays a probabilistic modification from the same combat and RandomPocket state', () => {
-		const { engine } = compose();
+		const { engine } = ExtensibleCombatFixture.compose();
 		const combat = DuelmonCombatMother.create();
 		const initialRandomPocket = combat.randomPocket.toPrimitives();
 
@@ -164,12 +166,12 @@ describe('Extensible combat scenario', () => {
 			secondResolution.combat.randomPocket.toPrimitives()
 		);
 		expect(firstResolution.combat.randomPocket.toPrimitives()).not.toEqual(initialRandomPocket);
-		expect(groupPower(firstResolution.combat, 'group-a')).toBe(45);
-		expect(combatPower(firstResolution.combat)).toBe(50);
+		expect(ExtensibleCombatFixture.groupPower(firstResolution.combat, 'group-a')).toBe(45);
+		expect(ExtensibleCombatFixture.combatPower(firstResolution.combat)).toBe(50);
 	});
 
 	it('crosses the completion threshold with attributes at combat, group, and combatant level', () => {
-		const { engine } = compose();
+		const { engine } = ExtensibleCombatFixture.compose();
 		const combat = DuelmonCombatMother.create();
 
 		const moved = engine.resolve(combat, MOVE_2_INPUT);
@@ -190,14 +192,14 @@ describe('Extensible combat scenario', () => {
 		expect(resolution.events.map(event => event.type)).toEqual(['attribute-modified', 'combat-completed']);
 		expect(resolution.events.map(event => event.sequence)).toEqual([1, 2]);
 		expect(resolution.events[1]?.payload).toEqual({ status: 'victory', winnerGroupId: 'group-a' });
-		expect(combatantPower(resolution.combat, 'combatant-a')).toBe(5);
-		expect(groupPower(resolution.combat, 'group-a')).toBe(45);
-		expect(combatPower(resolution.combat)).toBe(50);
+		expect(ExtensibleCombatFixture.combatantPower(resolution.combat, 'combatant-a')).toBe(5);
+		expect(ExtensibleCombatFixture.groupPower(resolution.combat, 'group-a')).toBe(45);
+		expect(ExtensibleCombatFixture.combatPower(resolution.combat)).toBe(50);
 		expect(activeCombat.toPrimitives()).toEqual(before);
 	});
 
 	it('rejects a resolution after completion without producing a successor', () => {
-		const { engine } = compose();
+		const { engine } = ExtensibleCombatFixture.compose();
 		const moved = engine.resolve(DuelmonCombatMother.create(), MOVE_2_INPUT).getRight();
 		const completed = engine.resolve(moved.combat, MOVE_1_INPUT).getRight();
 		const before = completed.combat.toPrimitives();

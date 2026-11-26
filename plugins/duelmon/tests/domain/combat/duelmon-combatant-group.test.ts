@@ -3,19 +3,21 @@ import { DuelmonCombatantGroup } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatStartMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
-function group(index = 0): DuelmonCombatantGroup {
-	const entry = DuelmonCombatStartMother.combat().groups[index];
+class CombatantGroupFixture {
+	static group(index = 0): DuelmonCombatantGroup {
+		const entry = DuelmonCombatStartMother.combat().groups[index];
 
-	if (!entry) {
-		throw new Error(`Missing fixture group at index ${String(index)}`);
+		if (!entry) {
+			throw new Error(`Missing fixture group at index ${String(index)}`);
+		}
+
+		return DuelmonCombatantGroup.fromGroup(entry);
 	}
-
-	return DuelmonCombatantGroup.fromGroup(entry);
 }
 
 describe('DuelmonCombatantGroup', () => {
 	it('exposes the group id and its active subset', () => {
-		const view = group();
+		const view = CombatantGroupFixture.group();
 
 		expect(view.id).toBe('player');
 		expect(view.activeCombatantIds).toEqual(['player-emberling']);
@@ -24,20 +26,20 @@ describe('DuelmonCombatantGroup', () => {
 
 	it('exposes every combatant in order', () => {
 		expect(
-			group()
+			CombatantGroupFixture.group()
 				.combatants()
 				.map(combatant => combatant.id)
 		).toEqual(['player-emberling']);
 		expect(
-			group(1)
+			CombatantGroupFixture.group(1)
 				.combatants()
 				.map(combatant => combatant.id)
 		).toEqual(['opponent-aquafin']);
 	});
 
 	it('finds a combatant by id', () => {
-		expect(group().combatant('player-emberling')?.id).toBe('player-emberling');
-		expect(group().combatant('missing')).toBeUndefined();
+		expect(CombatantGroupFixture.group().combatant('player-emberling')?.id).toBe('player-emberling');
+		expect(CombatantGroupFixture.group().combatant('missing')).toBeUndefined();
 	});
 
 	it('throws when the active subset is missing', () => {

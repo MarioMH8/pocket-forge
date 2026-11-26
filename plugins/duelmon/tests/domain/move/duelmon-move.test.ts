@@ -5,42 +5,44 @@ import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domai
 import { Move } from '@pocket-forge/move/domain';
 import { describe, expect, it } from 'bun:test';
 
-function catalog(): DuelmonCatalog {
-	return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create()).getRight();
-}
-
-function catalogMove(id: string): DuelmonMove {
-	const found = catalog().findMove(id);
-
-	if (!found) {
-		throw new Error(`Missing fixture move "${id}"`);
+class MoveFixture {
+	static catalog(): DuelmonCatalog {
+		return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create()).getRight();
 	}
 
-	return DuelmonMove.fromMove(found);
-}
+	static catalogMove(id: string): DuelmonMove {
+		const found = this.catalog().findMove(id);
 
-function syntheticMove(overrides: AttributeValues = {}): DuelmonMove {
-	return DuelmonMove.fromMove(
-		Move.create(
-			'all-effects',
-			{
-				accuracy: 100,
-				alwaysHits: true,
-				category: 'Physical',
-				power: 40,
-				pp: 35,
-				priority: 0,
-				type: 'Normal',
-				...overrides,
-			},
-			[...DuelmonAttributeDefinitions.MOVE]
-		)
-	);
+		if (!found) {
+			throw new Error(`Missing fixture move "${id}"`);
+		}
+
+		return DuelmonMove.fromMove(found);
+	}
+
+	static syntheticMove(overrides: AttributeValues = {}): DuelmonMove {
+		return DuelmonMove.fromMove(
+			Move.create(
+				'all-effects',
+				{
+					accuracy: 100,
+					alwaysHits: true,
+					category: 'Physical',
+					power: 40,
+					pp: 35,
+					priority: 0,
+					type: 'Normal',
+					...overrides,
+				},
+				[...DuelmonAttributeDefinitions.MOVE]
+			)
+		);
+	}
 }
 
 describe('DuelmonMove', () => {
 	it('exposes the neutral move attributes as typed getters', () => {
-		const move = catalogMove('tackle');
+		const move = MoveFixture.catalogMove('tackle');
 
 		expect(move.attributes).toEqual({
 			accuracy: 100,
@@ -64,7 +66,7 @@ describe('DuelmonMove', () => {
 	});
 
 	it('distinguishes Status moves', () => {
-		const move = catalogMove('oath');
+		const move = MoveFixture.catalogMove('oath');
 
 		expect(move.isStatus).toBe(true);
 		expect(move.isDamaging).toBe(false);
@@ -72,18 +74,18 @@ describe('DuelmonMove', () => {
 	});
 
 	it('exposes secondary effects and priority', () => {
-		expect(catalogMove('flare').secondary).toEqual({ chance: 10, status: 'burn' });
-		expect(catalogMove('flare').hasSecondaryEffect).toBe(true);
-		expect(catalogMove('quick-jab').priority).toBe(1);
+		expect(MoveFixture.catalogMove('flare').secondary).toEqual({ chance: 10, status: 'burn' });
+		expect(MoveFixture.catalogMove('flare').hasSecondaryEffect).toBe(true);
+		expect(MoveFixture.catalogMove('quick-jab').priority).toBe(1);
 	});
 
 	it('exposes accuracy below 100', () => {
-		expect(catalogMove('ember-spark').accuracy).toBe(90);
-		expect(catalogMove('ember-spark').alwaysHits).toBe(false);
+		expect(MoveFixture.catalogMove('ember-spark').accuracy).toBe(90);
+		expect(MoveFixture.catalogMove('ember-spark').alwaysHits).toBe(false);
 	});
 
 	it('parses every effect declaration', () => {
-		const move = syntheticMove({
+		const move = MoveFixture.syntheticMove({
 			boosts: [{ stages: 1, stat: 'atk' }],
 			critRatio: 2,
 			drain: [1, 2],
@@ -123,11 +125,11 @@ describe('DuelmonMove', () => {
 	});
 
 	it('treats a critical ratio of 1 as normal', () => {
-		expect(syntheticMove({ critRatio: 1 }).hasHighCritRatio).toBe(false);
+		expect(MoveFixture.syntheticMove({ critRatio: 1 }).hasHighCritRatio).toBe(false);
 	});
 
 	it('exposes Showdown flags and flag predicates', () => {
-		const move = syntheticMove({
+		const move = MoveFixture.syntheticMove({
 			flags: [
 				{ name: 'charge', value: 1 },
 				{ name: 'contact', value: 1 },
@@ -141,11 +143,11 @@ describe('DuelmonMove', () => {
 		expect(move.hasFlag('charge')).toBe(true);
 		expect(move.hasFlag('contact')).toBe(true);
 		expect(move.hasFlag('noreturn')).toBe(false);
-		expect(syntheticMove().flags).toEqual([]);
+		expect(MoveFixture.syntheticMove().flags).toEqual([]);
 	});
 
 	it('round-trips the wrapped snapshot', () => {
-		const move = catalogMove('flare');
+		const move = MoveFixture.catalogMove('flare');
 
 		expect(DuelmonMove.fromPrimitives(move.toPrimitives()).toPrimitives()).toEqual(move.toPrimitives());
 	});

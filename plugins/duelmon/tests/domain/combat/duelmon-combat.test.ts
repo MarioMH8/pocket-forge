@@ -2,28 +2,30 @@ import { DuelmonCombat } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatStartMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
-function combat(): DuelmonCombat {
-	return DuelmonCombat.fromCombat(DuelmonCombatStartMother.combat());
+class CombatFixture {
+	static combat(): DuelmonCombat {
+		return DuelmonCombat.fromCombat(DuelmonCombatStartMother.combat());
+	}
 }
 
 describe('DuelmonCombat', () => {
 	it('exposes the combat id and its groups in order', () => {
-		expect(combat().id).toBe('combat-1');
+		expect(CombatFixture.combat().id).toBe('combat-1');
 		expect(
-			combat()
+			CombatFixture.combat()
 				.groups()
 				.map(group => group.id)
 		).toEqual(['player', 'opponent']);
 	});
 
 	it('finds a group by id', () => {
-		expect(combat().group('player')?.id).toBe('player');
-		expect(combat().group('opponent')?.id).toBe('opponent');
-		expect(combat().group('missing')).toBeUndefined();
+		expect(CombatFixture.combat().group('player')?.id).toBe('player');
+		expect(CombatFixture.combat().group('opponent')?.id).toBe('opponent');
+		expect(CombatFixture.combat().group('missing')).toBeUndefined();
 	});
 
 	it('wraps the combatants of every group', () => {
-		const duelmonCombat = combat();
+		const duelmonCombat = CombatFixture.combat();
 
 		expect(
 			duelmonCombat
