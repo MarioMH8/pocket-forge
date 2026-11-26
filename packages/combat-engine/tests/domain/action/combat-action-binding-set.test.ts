@@ -35,17 +35,19 @@ class TestActionCatalog implements CombatActionCatalog {
 
 const CATALOG = new TestActionCatalog([TACKLE]);
 
-function primitives(overrides?: Partial<CombatActionBindingSetPrimitives>): CombatActionBindingSetPrimitives {
-	return {
-		bindings: [{ actionId: 'tackle', config: { power: 40 }, moveId: 'move-1' }],
-		...overrides,
-	};
+class BindingSetFixture {
+	static primitives(overrides?: Partial<CombatActionBindingSetPrimitives>): CombatActionBindingSetPrimitives {
+		return {
+			bindings: [{ actionId: 'tackle', config: { power: 40 }, moveId: 'move-1' }],
+			...overrides,
+		};
+	}
 }
 
 describe('CombatActionBindingSet', () => {
 	describe('create', () => {
 		it('accepts valid bindings', () => {
-			const result = CombatActionBindingSet.create(primitives(), CATALOG);
+			const result = CombatActionBindingSet.create(BindingSetFixture.primitives(), CATALOG);
 
 			expect(result.isRight()).toBe(true);
 
@@ -58,7 +60,7 @@ describe('CombatActionBindingSet', () => {
 
 		it('rejects duplicate move bindings', () => {
 			const result = CombatActionBindingSet.create(
-				primitives({
+				BindingSetFixture.primitives({
 					bindings: [
 						{ actionId: 'tackle', config: { power: 40 }, moveId: 'move-1' },
 						{ actionId: 'tackle', config: { power: 50 }, moveId: 'move-1' },
@@ -73,7 +75,7 @@ describe('CombatActionBindingSet', () => {
 
 		it('rejects unknown actions', () => {
 			const result = CombatActionBindingSet.create(
-				primitives({ bindings: [{ actionId: 'missing', config: {}, moveId: 'move-1' }] }),
+				BindingSetFixture.primitives({ bindings: [{ actionId: 'missing', config: {}, moveId: 'move-1' }] }),
 				CATALOG
 			);
 
@@ -83,7 +85,9 @@ describe('CombatActionBindingSet', () => {
 
 		it('rejects invalid configuration', () => {
 			const result = CombatActionBindingSet.create(
-				primitives({ bindings: [{ actionId: 'tackle', config: { power: 500 }, moveId: 'move-1' }] }),
+				BindingSetFixture.primitives({
+					bindings: [{ actionId: 'tackle', config: { power: 500 }, moveId: 'move-1' }],
+				}),
 				CATALOG
 			);
 
@@ -93,7 +97,7 @@ describe('CombatActionBindingSet', () => {
 
 		it('rejects empty move ids', () => {
 			const result = CombatActionBindingSet.create(
-				primitives({ bindings: [{ actionId: 'tackle', config: {}, moveId: '' }] }),
+				BindingSetFixture.primitives({ bindings: [{ actionId: 'tackle', config: {}, moveId: '' }] }),
 				CATALOG
 			);
 
@@ -103,7 +107,7 @@ describe('CombatActionBindingSet', () => {
 
 		it('rejects empty action ids', () => {
 			const result = CombatActionBindingSet.create(
-				primitives({ bindings: [{ actionId: '', config: {}, moveId: 'move-1' }] }),
+				BindingSetFixture.primitives({ bindings: [{ actionId: '', config: {}, moveId: 'move-1' }] }),
 				CATALOG
 			);
 
@@ -114,7 +118,7 @@ describe('CombatActionBindingSet', () => {
 
 	describe('fromPrimitives', () => {
 		it('hydrates without validating', () => {
-			const source = primitives();
+			const source = BindingSetFixture.primitives();
 			const set = CombatActionBindingSet.fromPrimitives(source);
 
 			expect(set.toPrimitives()).toEqual(source);
@@ -123,7 +127,7 @@ describe('CombatActionBindingSet', () => {
 
 	describe('find', () => {
 		it('finds a binding by move id', () => {
-			const set = CombatActionBindingSet.create(primitives(), CATALOG).getRight();
+			const set = CombatActionBindingSet.create(BindingSetFixture.primitives(), CATALOG).getRight();
 
 			expect(set.find('move-1')?.actionId).toBe('tackle');
 			expect(set.find('missing')).toBeUndefined();

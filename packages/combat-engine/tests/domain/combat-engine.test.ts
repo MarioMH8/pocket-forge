@@ -14,26 +14,30 @@ import {
 } from '@pocket-forge/combat-engine/domain';
 import { beforeEach, describe, expect, it } from 'bun:test';
 
-import { actionBindings, FakeActionResolver, FakeCompletionRule, FakeCompositionRule } from './engine.fakes';
+import { EngineFakes, FakeActionResolver, FakeCompletionRule, FakeCompositionRule } from './engine.fakes';
 
-function withAttributes(combat: Combat, attributes: AttributeValues): Combat {
-	return CombatEntity.fromPrimitives({ ...combat.toPrimitives(), attributes });
-}
+class EngineFixture {
+	static engineWith(rules: readonly CombatRule[], resolver: FakeActionResolver): CombatEngine {
+		return new CombatEngine(
+			CombatSetup.create({ actionBindings: EngineFakes.actionBindings(), actions: resolver, rules })
+		);
+	}
 
-function withId(combat: Combat, id: string): Combat {
-	return CombatEntity.fromPrimitives({ ...combat.toPrimitives(), id });
-}
+	static event(sequence: number, type = 'tackle'): CombatEvent {
+		return { payload: {}, sequence, type };
+	}
 
-function withStatus(combat: Combat, status: CombatPrimitives['status']): Combat {
-	return CombatEntity.fromPrimitives({ ...combat.toPrimitives(), status });
-}
+	static withAttributes(combat: Combat, attributes: AttributeValues): Combat {
+		return CombatEntity.fromPrimitives({ ...combat.toPrimitives(), attributes });
+	}
 
-function event(sequence: number, type = 'tackle'): CombatEvent {
-	return { payload: {}, sequence, type };
-}
+	static withId(combat: Combat, id: string): Combat {
+		return CombatEntity.fromPrimitives({ ...combat.toPrimitives(), id });
+	}
 
-function engineWith(rules: readonly CombatRule[], resolver: FakeActionResolver): CombatEngine {
-	return new CombatEngine(CombatSetup.create({ actionBindings: actionBindings(), actions: resolver, rules }));
+	static withStatus(combat: Combat, status: CombatPrimitives['status']): Combat {
+		return CombatEntity.fromPrimitives({ ...combat.toPrimitives(), status });
+	}
 }
 
 describe('CombatEngine', () => {
@@ -46,7 +50,7 @@ describe('CombatEngine', () => {
 		composition = new FakeCompositionRule();
 		completion = new FakeCompletionRule();
 		resolver = new FakeActionResolver();
-		engine = engineWith([composition, completion], resolver);
+		engine = EngineFixture.engineWith([composition, completion], resolver);
 	});
 
 	describe('validateComposition', () => {
@@ -70,7 +74,7 @@ describe('CombatEngine', () => {
 				Either.left([new CombatRuleError('invalid-constraints', 'First', 'groups')]);
 			second.validateWith = () => Either.left([new CombatRuleError('invalid-constraints', 'Second', 'groups')]);
 
-			const result = engineWith([composition, second, completion], resolver).validateComposition(
+			const result = EngineFixture.engineWith([composition, second, completion], resolver).validateComposition(
 				CombatMother.create()
 			);
 
@@ -79,7 +83,7 @@ describe('CombatEngine', () => {
 		});
 
 		it('skips rules without a composition hook', () => {
-			const result = engineWith([completion], resolver).validateComposition(CombatMother.create());
+			const result = EngineFixture.engineWith([completion], resolver).validateComposition(CombatMother.create());
 
 			expect(result.isRight()).toBe(true);
 		});
@@ -102,8 +106,8 @@ describe('CombatEngine', () => {
 
 		it('returns the successor, its events, and no outcome while combat continues', () => {
 			const combat = CombatMother.create();
-			const successor = withAttributes(combat, { power: 7 });
-			const events = [event(1), event(2)];
+			const successor = EngineFixture.withAttributes(combat, { power: 7 });
+			const events = [EngineFixture.event(1), EngineFixture.event(2)];
 
 			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, events));
 
@@ -123,9 +127,9 @@ describe('CombatEngine', () => {
 
 		it('produces a completed successor when a completion rule returns an outcome', () => {
 			const combat = CombatMother.create();
-			const successor = withAttributes(combat, { power: 7 });
+			const successor = EngineFixture.withAttributes(combat, { power: 7 });
 			const winnerGroupId = successor.groups[0]?.id ?? '';
-			const events = [event(1), event(2)];
+			const events = [EngineFixture.event(1), EngineFixture.event(2)];
 
 			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, events));
 			completion.outcome = CombatOutcome.victory(winnerGroupId);
@@ -154,7 +158,7 @@ describe('CombatEngine', () => {
 
 		it('accepts multiple completion rules that agree', () => {
 			const combat = CombatMother.create();
-			const successor = withAttributes(combat, { power: 7 });
+			const successor = EngineFixture.withAttributes(combat, { power: 7 });
 			const winnerGroupId = successor.groups[0]?.id ?? '';
 			const second = new FakeCompletionRule();
 
@@ -162,7 +166,10 @@ describe('CombatEngine', () => {
 			completion.outcome = CombatOutcome.victory(winnerGroupId);
 			second.outcome = CombatOutcome.victory(winnerGroupId);
 
-			const result = engineWith([composition, completion, second], resolver).resolve(combat, 'input');
+			const result = EngineFixture.engineWith([composition, completion, second], resolver).resolve(
+				combat,
+				'input'
+			);
 
 			expect(result.isRight()).toBe(true);
 			expect(result.getRight().outcome).toEqual(CombatOutcome.victory(winnerGroupId));
@@ -172,14 +179,17 @@ describe('CombatEngine', () => {
 
 		it('rejects conflicting completion outcomes', () => {
 			const combat = CombatMother.create();
-			const successor = withAttributes(combat, { power: 7 });
+			const successor = EngineFixture.withAttributes(combat, { power: 7 });
 			const second = new FakeCompletionRule();
 
 			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
 			completion.outcome = CombatOutcome.victory(successor.groups[0]?.id ?? '');
 			second.outcome = CombatOutcome.draw();
 
-			const result = engineWith([composition, completion, second], resolver).resolve(combat, 'input');
+			const result = EngineFixture.engineWith([composition, completion, second], resolver).resolve(
+				combat,
+				'input'
+			);
 
 			expect(result.isLeft()).toBe(true);
 			expect(result.getLeft()[0]).toBeInstanceOf(CombatEngineError);
@@ -189,11 +199,11 @@ describe('CombatEngine', () => {
 
 		it('skips rules without a completion hook', () => {
 			const combat = CombatMother.create();
-			const successor = withAttributes(combat, { power: 7 });
+			const successor = EngineFixture.withAttributes(combat, { power: 7 });
 
 			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
 
-			const result = engineWith([composition], resolver).resolve(combat, 'input');
+			const result = EngineFixture.engineWith([composition], resolver).resolve(combat, 'input');
 
 			expect(result.isRight()).toBe(true);
 			expect(result.getRight().outcome).toBeUndefined();
@@ -201,7 +211,7 @@ describe('CombatEngine', () => {
 
 		it('rejects a completion outcome with an unknown winning group', () => {
 			const combat = CombatMother.create();
-			const successor = withAttributes(combat, { power: 7 });
+			const successor = EngineFixture.withAttributes(combat, { power: 7 });
 
 			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
 			completion.outcome = CombatOutcome.victory('missing-group');
@@ -217,7 +227,7 @@ describe('CombatEngine', () => {
 
 		it('serializes a draw', () => {
 			const combat = CombatMother.create();
-			const successor = withAttributes(combat, { power: 7 });
+			const successor = EngineFixture.withAttributes(combat, { power: 7 });
 
 			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
 			completion.outcome = CombatOutcome.draw();
@@ -250,7 +260,8 @@ describe('CombatEngine', () => {
 		it('rejects a successor with a different combat id', () => {
 			const combat = CombatMother.create();
 
-			resolver.resolveWith = () => Either.right(CombatTransition.create(withId(combat, 'other-combat'), []));
+			resolver.resolveWith = () =>
+				Either.right(CombatTransition.create(EngineFixture.withId(combat, 'other-combat'), []));
 
 			const result = engine.resolve(combat, 'input');
 
@@ -263,7 +274,8 @@ describe('CombatEngine', () => {
 		it('rejects a successor that the resolver already completed', () => {
 			const combat = CombatMother.create();
 
-			resolver.resolveWith = () => Either.right(CombatTransition.create(withStatus(combat, 'completed'), []));
+			resolver.resolveWith = () =>
+				Either.right(CombatTransition.create(EngineFixture.withStatus(combat, 'completed'), []));
 
 			const result = engine.resolve(combat, 'input');
 
@@ -303,7 +315,7 @@ describe('CombatEngine', () => {
 
 		it('rejects a successor with an invalid composition', () => {
 			const combat = CombatMother.create();
-			const successor = withAttributes(combat, { power: 7 });
+			const successor = EngineFixture.withAttributes(combat, { power: 7 });
 
 			resolver.resolveWith = () => Either.right(CombatTransition.create(successor, []));
 			let calls = 0;
@@ -328,7 +340,7 @@ describe('CombatEngine', () => {
 			const randomPocket = combat.randomPocket;
 
 			resolver.resolveWith = () =>
-				Either.right(CombatTransition.create(withAttributes(combat, { power: 7 }), []));
+				Either.right(CombatTransition.create(EngineFixture.withAttributes(combat, { power: 7 }), []));
 
 			expect(engine.resolve(combat, 'input').isRight()).toBe(true);
 			expect(combat.toPrimitives()).toEqual(before);

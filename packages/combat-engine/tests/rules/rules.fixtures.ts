@@ -39,60 +39,62 @@ interface PowerOverrides {
 	readonly group?: number;
 }
 
-function combatPrimitives(overrides?: Partial<CombatPrimitives>, powers?: PowerOverrides): CombatPrimitives {
-	return {
-		attributes: { power: powers?.combat ?? 50 },
-		groups: [
-			CombatantGroupMother.primitives({
-				attributes: { banner: 'red', power: powers?.group ?? 40 },
-				combatants: [
-					CombatantMother.primitives({
-						attributes: { banner: 'red', power: powers?.combatant ?? 30 },
-						groupId: 'group-a',
-						id: 'combatant-a',
-					}),
-				],
-				id: 'group-a',
-			}),
-			CombatantGroupMother.primitives({
-				attributes: { banner: 'blue', power: 60 },
-				combatants: [
-					CombatantMother.primitives({
-						attributes: { banner: 'blue', power: 70 },
-						groupId: 'group-b',
-						id: 'combatant-b',
-					}),
-				],
-				id: 'group-b',
-			}),
-		],
-		id: 'combat-1',
-		randomPocket: { seed: 42, state: 42 },
-		status: 'active',
-		...overrides,
-	};
-}
+class RulesFixture {
+	static builtInCombat(overrides?: Partial<CombatPrimitives>, powers?: PowerOverrides): Combat {
+		return CombatEntity.fromPrimitives(this.combatPrimitives(overrides, powers));
+	}
 
-function builtInCombat(overrides?: Partial<CombatPrimitives>, powers?: PowerOverrides): Combat {
-	return CombatEntity.fromPrimitives(combatPrimitives(overrides, powers));
-}
-
-function compositionRule(overrides?: Partial<CombatCompositionRulePrimitives>): OneVersusOneCombatRule {
-	return OneVersusOneCombatRule.create(
-		CombatRuleMother.primitives({
-			groupConstraints: { ...OneVersusOneCombatRule.CONSTRAINTS },
+	static combatPrimitives(overrides?: Partial<CombatPrimitives>, powers?: PowerOverrides): CombatPrimitives {
+		return {
+			attributes: { power: powers?.combat ?? 50 },
+			groups: [
+				CombatantGroupMother.primitives({
+					attributes: { banner: 'red', power: powers?.group ?? 40 },
+					combatants: [
+						CombatantMother.primitives({
+							attributes: { banner: 'red', power: powers?.combatant ?? 30 },
+							groupId: 'group-a',
+							id: 'combatant-a',
+						}),
+					],
+					id: 'group-a',
+				}),
+				CombatantGroupMother.primitives({
+					attributes: { banner: 'blue', power: 60 },
+					combatants: [
+						CombatantMother.primitives({
+							attributes: { banner: 'blue', power: 70 },
+							groupId: 'group-b',
+							id: 'combatant-b',
+						}),
+					],
+					id: 'group-b',
+				}),
+			],
+			id: 'combat-1',
+			randomPocket: { seed: 42, state: 42 },
+			status: 'active',
 			...overrides,
-		}),
-		ATTRIBUTE_DEFINITIONS
-	).getRight();
+		};
+	}
+
+	static completionRule(attributes: AttributeValues = DEFAULT_COMPLETION_ATTRIBUTES): ThresholdCombatCompletionRule {
+		return ThresholdRule.create(
+			{ attributes: { ...attributes } },
+			COMPLETION_CONFIG_DEFINITIONS,
+			ATTRIBUTE_DEFINITIONS
+		).getRight();
+	}
+
+	static compositionRule(overrides?: Partial<CombatCompositionRulePrimitives>): OneVersusOneCombatRule {
+		return OneVersusOneCombatRule.create(
+			CombatRuleMother.primitives({
+				groupConstraints: { ...OneVersusOneCombatRule.CONSTRAINTS },
+				...overrides,
+			}),
+			ATTRIBUTE_DEFINITIONS
+		).getRight();
+	}
 }
 
-function completionRule(attributes: AttributeValues = DEFAULT_COMPLETION_ATTRIBUTES): ThresholdCombatCompletionRule {
-	return ThresholdRule.create(
-		{ attributes: { ...attributes } },
-		COMPLETION_CONFIG_DEFINITIONS,
-		ATTRIBUTE_DEFINITIONS
-	).getRight();
-}
-
-export { ATTRIBUTE_DEFINITIONS, builtInCombat, completionRule, compositionRule, DEFAULT_COMPLETION_ATTRIBUTES };
+export { ATTRIBUTE_DEFINITIONS, DEFAULT_COMPLETION_ATTRIBUTES, RulesFixture };

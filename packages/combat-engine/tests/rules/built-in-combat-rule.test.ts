@@ -7,23 +7,25 @@ import { describe, expect, it } from 'bun:test';
 
 import { ATTRIBUTE_DEFINITIONS } from './rules.fixtures';
 
-function primitives(
-	groupConstraints: CombatCompositionRulePrimitives['groupConstraints'],
-	overrides?: Partial<CombatCompositionRulePrimitives>
-): CombatCompositionRulePrimitives {
-	return CombatRuleMother.primitives({
-		groupConstraints: { ...groupConstraints },
-		...overrides,
-	});
-}
+class CompositionFixture {
+	static group(id: string, combatants: number): CombatantGroup {
+		return CombatantGroupMother.create({
+			combatants: Array.from({ length: combatants }, (_, index) =>
+				CombatantMother.primitives({ groupId: id, id: `${id}-combatant-${String(index)}` })
+			),
+			id,
+		});
+	}
 
-function group(id: string, combatants: number): CombatantGroup {
-	return CombatantGroupMother.create({
-		combatants: Array.from({ length: combatants }, (_, index) =>
-			CombatantMother.primitives({ groupId: id, id: `${id}-combatant-${String(index)}` })
-		),
-		id,
-	});
+	static primitives(
+		groupConstraints: CombatCompositionRulePrimitives['groupConstraints'],
+		overrides?: Partial<CombatCompositionRulePrimitives>
+	): CombatCompositionRulePrimitives {
+		return CombatRuleMother.primitives({
+			groupConstraints: { ...groupConstraints },
+			...overrides,
+		});
+	}
 }
 
 describe('OneVersusOneCombatRule', () => {
@@ -37,9 +39,10 @@ describe('OneVersusOneCombatRule', () => {
 	});
 
 	it('hydrates a rule from primitives', () => {
-		const result = OneVersusOneCombatRule.create(primitives(OneVersusOneCombatRule.CONSTRAINTS), [
-			...ATTRIBUTE_DEFINITIONS,
-		]);
+		const result = OneVersusOneCombatRule.create(
+			CompositionFixture.primitives(OneVersusOneCombatRule.CONSTRAINTS),
+			[...ATTRIBUTE_DEFINITIONS]
+		);
 
 		expect(result.isRight()).toBe(true);
 
@@ -50,7 +53,7 @@ describe('OneVersusOneCombatRule', () => {
 
 	it('rejects mismatched composition constraints', () => {
 		const result = OneVersusOneCombatRule.create(
-			primitives({
+			CompositionFixture.primitives({
 				...OneVersusOneCombatRule.CONSTRAINTS,
 				maxCombatantsPerGroup: 3,
 			}),
@@ -63,15 +66,28 @@ describe('OneVersusOneCombatRule', () => {
 	});
 
 	it('accepts exactly two groups with one combatant each', () => {
-		const rule = OneVersusOneCombatRule.create(primitives(OneVersusOneCombatRule.CONSTRAINTS), []).getRight();
+		const rule = OneVersusOneCombatRule.create(
+			CompositionFixture.primitives(OneVersusOneCombatRule.CONSTRAINTS),
+			[]
+		).getRight();
 
-		expect(rule.validateComposition([group('alpha', 1), group('beta', 1)]).isRight()).toBe(true);
+		expect(
+			rule
+				.validateComposition([CompositionFixture.group('alpha', 1), CompositionFixture.group('beta', 1)])
+				.isRight()
+		).toBe(true);
 	});
 
 	it('rejects a group with more than one combatant', () => {
-		const rule = OneVersusOneCombatRule.create(primitives(OneVersusOneCombatRule.CONSTRAINTS), []).getRight();
+		const rule = OneVersusOneCombatRule.create(
+			CompositionFixture.primitives(OneVersusOneCombatRule.CONSTRAINTS),
+			[]
+		).getRight();
 
-		const result = rule.validateComposition([group('alpha', 2), group('beta', 1)]);
+		const result = rule.validateComposition([
+			CompositionFixture.group('alpha', 2),
+			CompositionFixture.group('beta', 1),
+		]);
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.path).toBe('groups.0.combatants');
@@ -79,7 +95,7 @@ describe('OneVersusOneCombatRule', () => {
 	});
 
 	it('round-trips primitives', () => {
-		const source = primitives(OneVersusOneCombatRule.CONSTRAINTS);
+		const source = CompositionFixture.primitives(OneVersusOneCombatRule.CONSTRAINTS);
 
 		const result = OneVersusOneCombatRule.create(source, []);
 
@@ -98,7 +114,10 @@ describe('TwoVersusTwoCombatRule', () => {
 	});
 
 	it('hydrates a rule from primitives', () => {
-		const result = TwoVersusTwoCombatRule.create(primitives(TwoVersusTwoCombatRule.CONSTRAINTS), []);
+		const result = TwoVersusTwoCombatRule.create(
+			CompositionFixture.primitives(TwoVersusTwoCombatRule.CONSTRAINTS),
+			[]
+		);
 
 		expect(result.isRight()).toBe(true);
 		expect(result.getRight()).toBeInstanceOf(TwoVersusTwoCombatRule);
@@ -106,7 +125,7 @@ describe('TwoVersusTwoCombatRule', () => {
 
 	it('rejects mismatched composition constraints', () => {
 		const result = TwoVersusTwoCombatRule.create(
-			primitives({
+			CompositionFixture.primitives({
 				...TwoVersusTwoCombatRule.CONSTRAINTS,
 				minCombatantsPerGroup: 1,
 			}),
@@ -119,13 +138,20 @@ describe('TwoVersusTwoCombatRule', () => {
 	});
 
 	it('accepts exactly two groups with two combatants each', () => {
-		const rule = TwoVersusTwoCombatRule.create(primitives(TwoVersusTwoCombatRule.CONSTRAINTS), []).getRight();
+		const rule = TwoVersusTwoCombatRule.create(
+			CompositionFixture.primitives(TwoVersusTwoCombatRule.CONSTRAINTS),
+			[]
+		).getRight();
 
-		expect(rule.validateComposition([group('alpha', 2), group('beta', 2)]).isRight()).toBe(true);
+		expect(
+			rule
+				.validateComposition([CompositionFixture.group('alpha', 2), CompositionFixture.group('beta', 2)])
+				.isRight()
+		).toBe(true);
 	});
 
 	it('round-trips primitives', () => {
-		const source = primitives(TwoVersusTwoCombatRule.CONSTRAINTS);
+		const source = CompositionFixture.primitives(TwoVersusTwoCombatRule.CONSTRAINTS);
 
 		const result = TwoVersusTwoCombatRule.create(source, []);
 
