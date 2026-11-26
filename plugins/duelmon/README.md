@@ -85,6 +85,25 @@ plugin applies them to `useMove` declarations before dispatch. Phase 1 move
 declarations bind every content Move to `useMove`; generic actions such as
 `modifyAttribute` stay outside the turn-declaration contract.
 
+## Ordering declared actions
+
+`DuelmonSpeedOrder` defines the Phase 1 order of the combatants that declare an
+action. It reads `speed` from the battle state and sorts the combatants through
+the semantic views:
+
+```ts
+const order = DuelmonSpeedOrder.fromCombat(combat);
+const [first, second] = order.sort([opponent, player]);
+```
+
+Higher Speed goes first. Equal Speed falls back to the combatant position in the
+`Combat` (group order, then combatant order), so the result is deterministic and
+independent of the input order. Priority, stat stages, paralysis, and randomness
+are not applied. `compare` and `sort` throw when a combatant does not belong to
+the combat that defines the order. The turn service that consumes declarations
+is not part of this slice; see
+[Phase 1 speed order](../../docs/content/123-speed-order.md).
+
 ## Recording the start
 
 `DuelmonCombatHistory` records the combat in the basic history as ordered,
