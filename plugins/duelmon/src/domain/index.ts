@@ -70,3 +70,4 @@ export type { DuelmonTargetScope } from './support/duelmon-target';
 export { DuelmonTarget, ResolvedDuelmonTarget } from './support/duelmon-target';
 export { DuelmonSpeedOrder } from './turn/duelmon-speed-order';
 export { DuelmonTurnDeclaration } from './turn/duelmon-turn-declaration';
+export { DuelmonTurnDeclarations } from './turn/duelmon-turn-declarations';
