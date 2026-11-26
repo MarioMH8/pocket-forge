@@ -2,12 +2,7 @@ import type { Combat, CombatPrimitives } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import type { CombatEngine, CombatRule } from '@pocket-forge/combat-engine/domain';
 import { CombatEngine as CombatEngineEntity, CombatOutcome, CombatSetup } from '@pocket-forge/combat-engine/domain';
-import {
-	COMPLETION_CONFIG_DEFINITIONS,
-	COMPLETION_CONFIG_KEYS,
-	ThresholdCombatCompletionRule,
-} from '@pocket-forge/combat-engine/rules';
-import { DuelmonCombatStart, DuelmonCombatTurn, Gen1BattleStats } from '@pocket-forge/duelmon/domain';
+import { DuelmonCombatStart, DuelmonCombatTurn } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatMother, DuelmonCombatStartMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
@@ -101,19 +96,8 @@ function moveUsedPairs(events: readonly { payload: Record<string, unknown>; type
 		.map(event => `${String(event.payload['attackerId'])}:${String(event.payload['moveId'])}`);
 }
 
-function hpCompletionRule(): CombatRule {
-	return ThresholdCombatCompletionRule.create(
-		{
-			attributes: {
-				[COMPLETION_CONFIG_KEYS.attributeKey]: 'hp',
-				[COMPLETION_CONFIG_KEYS.comparison]: 'lte',
-				[COMPLETION_CONFIG_KEYS.threshold]: 0,
-				[COMPLETION_CONFIG_KEYS.winnerPolicy]: 'opposing-group',
-			},
-		},
-		[...COMPLETION_CONFIG_DEFINITIONS],
-		[...Gen1BattleStats.DEFINITIONS]
-	).getRight();
+function knockoutRules(): readonly CombatRule[] {
+	return [DuelmonCombatMother.compositionRule(), DuelmonCombatMother.hpCompletionRule()];
 }
 
 describe('Phase 1 turn resolution', () => {
@@ -196,10 +180,7 @@ describe('Phase 1 turn resolution', () => {
 	});
 
 	it('keeps the engine outcome and stops when an action completes the combat', () => {
-		const result = turn([DuelmonCombatMother.compositionRule(), hpCompletionRule()]).resolve(
-			combat({ opponentHp: 1 }),
-			declarations()
-		);
+		const result = turn(knockoutRules()).resolve(combat({ opponentHp: 1 }), declarations());
 
 		expect(result.isRight()).toBe(true);
 
@@ -210,5 +191,47 @@ describe('Phase 1 turn resolution', () => {
 		expect(resolution.events.map(event => event.type)).toEqual(['move-used', 'combat-completed']);
 		expect(resolution.events.map(event => event.sequence)).toEqual([1, 2]);
 		expect(moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
+	});
+
+	it('stops after the first action without resolving, emitting events for, or drawing randomness for the second', () => {
+		const combatState = combat({ opponentHp: 1 });
+		const first = engine(knockoutRules())
+			.resolve(combatState, input(PLAYER, PLAYER_MOVE, OPPONENT))
+			.getRight();
+		const result = turn(knockoutRules()).resolve(combatState, declarations());
+
+		expect(result.isRight()).toBe(true);
+
+		const resolution = result.getRight();
+
+		expect(resolution.combat.status).toBe('completed');
+		expect(resolution.combat.toPrimitives()).toEqual(first.combat.toPrimitives());
+		expect(resolution.combat.randomPocket.toPrimitives()).toEqual(first.combat.randomPocket.toPrimitives());
+		expect(resolution.combat.randomPocket.toPrimitives()).not.toEqual({ seed: 42, state: 42 });
+		expect(resolution.outcome).toEqual(CombatOutcome.victory('player'));
+		expect(resolution.outcome?.isVictory() ? resolution.outcome.winnerGroupId : undefined).toBe('player');
+		expect(resolution.events.map(event => event.payload)).toEqual(first.events.map(event => event.payload));
+		expect(resolution.events.map(event => event.type)).toEqual(['move-used', 'combat-completed']);
+		expect(resolution.events.map(event => event.sequence)).toEqual([1, 2]);
+		expect(moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
+		expect(resolution.events.some(event => event.payload['attackerId'] === OPPONENT)).toBe(false);
+	});
+
+	it('rejects a turn over a completed combat without resolving or drawing randomness', () => {
+		const completed = turn(knockoutRules())
+			.resolve(combat({ opponentHp: 1 }), declarations())
+			.getRight();
+		const before = completed.combat.toPrimitives();
+		const result = turn(knockoutRules()).resolve(completed.combat, declarations());
+
+		expect(result.isLeft()).toBe(true);
+
+		if (result.isRight()) {
+			return;
+		}
+
+		expect(result.getLeft()[0]?.reason).toBe('combat-not-active');
+		expect(completed.combat.toPrimitives()).toEqual(before);
+		expect(completed.combat.status).toBe('completed');
 	});
 });
