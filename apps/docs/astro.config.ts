@@ -1,29 +1,31 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 
-import generateGlossary from './scripts/generate-glossary';
-import generateTypedoc from './scripts/generate-typedoc';
+import GlossaryGenerator from './scripts/generate-glossary';
+import TypedocGenerator from './scripts/generate-typedoc';
 
-function generateDocumentation() {
-	return {
-		hooks: {
-			'astro:build:start': () => {
-				generateGlossary();
-				generateTypedoc();
+class DocumentationIntegration {
+	static generate() {
+		return {
+			hooks: {
+				'astro:build:start': () => {
+					GlossaryGenerator.generate();
+					TypedocGenerator.generate();
+				},
+				'astro:server:start': () => {
+					GlossaryGenerator.generate();
+					TypedocGenerator.generate();
+				},
 			},
-			'astro:server:start': () => {
-				generateGlossary();
-				generateTypedoc();
-			},
-		},
-		name: 'generate-documentation',
-	};
+			name: 'generate-documentation',
+		};
+	}
 }
 
 export default defineConfig({
 	base: '/pocket-forge/',
 	integrations: [
-		generateDocumentation(),
+		DocumentationIntegration.generate(),
 		starlight({
 			customCss: ['./src/styles/custom.css'],
 			description: 'Build your own RPG from map to battle to replay.',
