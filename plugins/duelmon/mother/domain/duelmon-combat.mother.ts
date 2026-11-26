@@ -92,6 +92,17 @@ interface UseMoveCombatOptions {
 	readonly targetActive?: boolean;
 }
 
+interface SpeedOrderCombatantOptions {
+	readonly attributes?: AttributeValues;
+	readonly speed?: number;
+}
+
+interface SpeedOrderCombatOptions {
+	readonly opponent?: SpeedOrderCombatantOptions;
+	readonly player?: SpeedOrderCombatantOptions;
+	readonly playerFirst?: boolean;
+}
+
 const USE_MOVE_ATTACKER_MOVES: readonly string[] = ['ember-burst', 'tackle', 'gamble', 'low-sweep'];
 
 /**
@@ -290,6 +301,59 @@ export default class DuelmonCombatMother {
 			status: 'active',
 			...overrides,
 		};
+	}
+
+	/**
+	 * Builds a one-versus-one combat with two active combatants for order tests.
+	 *
+	 * The player combatant is faster than the opponent by default. Extra
+	 * attributes override the battle state, so tests can add stat stages or a
+	 * status condition without changing the Speed value.
+	 *
+	 * @param options - Speeds, extra attributes, and group order.
+	 * @returns The combat snapshot.
+	 */
+	static speedOrderCombat(options: SpeedOrderCombatOptions = {}): Combat {
+		const player = CombatantGroupMother.primitives({
+			attributes: { activeCombatantIds: ['player-emberling'] },
+			combatants: [
+				this.combatant('player-emberling', 'player', 'emberling', {
+					attack: 57,
+					defense: 48,
+					hp: 99,
+					level: 50,
+					maxHp: 99,
+					special: 65,
+					speed: options.player?.speed ?? 70,
+					...options.player?.attributes,
+				}),
+			],
+			id: 'player',
+		});
+		const opponent = CombatantGroupMother.primitives({
+			attributes: { activeCombatantIds: ['opponent-aquafin'] },
+			combatants: [
+				this.combatant('opponent-aquafin', 'opponent', 'aquafin', {
+					attack: 53,
+					defense: 70,
+					hp: 104,
+					level: 50,
+					maxHp: 104,
+					special: 55,
+					speed: options.opponent?.speed ?? 48,
+					...options.opponent?.attributes,
+				}),
+			],
+			id: 'opponent',
+		});
+
+		return CombatEntity.fromPrimitives({
+			attributes: {},
+			groups: options.playerFirst === false ? [opponent, player] : [player, opponent],
+			id: 'combat-1',
+			randomPocket: { seed: 42, state: 42 },
+			status: 'active',
+		});
 	}
 
 	/**
