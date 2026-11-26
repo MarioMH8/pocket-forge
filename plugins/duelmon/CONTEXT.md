@@ -108,7 +108,7 @@ The ordered resolution of the actions declared for one turn: priority and effect
 _Avoid_: Game loop, round, battle manager
 
 **Duelmon Turn Declaration**:
-The parsed input of one declared turn action: one actor, one Move, and one target. Phase 1 declarations use the `combatant` target scope; validation restricts it to an active opposing combatant. A declaration is input, not state; it is never stored in `Combat` and has no pending or confirmed variant.
+The parsed input of one declared turn action: one actor, one Move, and one target. Phase 1 declarations use the `combatant` target scope; validation restricts it to an active combatant of the only opposing group. Validation lives in `DuelmonTurnDeclaration` and runs at the plugin boundary for `useMove` bindings. A declaration is input, not state; it is never stored in `Combat` and has no pending or confirmed variant.
 _Avoid_: Pending action, selected move state, action queue item
 
 **Switch Action**:
