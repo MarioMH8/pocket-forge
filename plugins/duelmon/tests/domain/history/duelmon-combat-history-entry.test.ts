@@ -32,6 +32,29 @@ const EXCLUDED_DETAILS = [
 
 const EXCLUDED_VALUES = ['48', '50', '57', '65', '70'];
 
+const ACTION = {
+	actorId: 'player-emberling',
+	moveId: 'ember-burst',
+	targetId: 'opponent-aquafin',
+};
+
+function combatAfterHit(): Combat {
+	const primitives = DuelmonCombatStartMother.primitives();
+	const opponent = primitives.groups.find(group => group.id === 'opponent')?.combatants[0];
+
+	if (!opponent) {
+		throw new Error('Start fixture is missing the opponent combatant');
+	}
+
+	opponent.attributes['hp'] = 84;
+
+	return Combat.fromPrimitives(primitives);
+}
+
+function actionEntry(): DuelmonCombatHistoryEntry {
+	return DuelmonCombatHistoryEntry.action(combatAfterHit(), ACTION);
+}
+
 function entry(): DuelmonCombatHistoryEntry {
 	return DuelmonCombatHistoryEntry.start(DuelmonCombatStartMother.combat());
 }
@@ -108,5 +131,77 @@ describe('DuelmonCombatHistoryEntry', () => {
 
 		expect(entry.combat).toEqual(combat.toPrimitives());
 		expect(entry.text).toBe(EXPECTED_TEXT);
+	});
+
+	it('records an action entry with its actor, Move, and target', () => {
+		const entry = actionEntry();
+
+		expect(entry.kind).toBe('action');
+		expect(entry.action).toEqual(ACTION);
+	});
+
+	it('keeps the successor snapshot produced by the action', () => {
+		const combat = combatAfterHit();
+
+		expect(DuelmonCombatHistoryEntry.action(combat, ACTION).combat).toEqual(combat.toPrimitives());
+	});
+
+	it('identifies the action in the readable text and reuses the report', () => {
+		const combat = combatAfterHit();
+		const entry = DuelmonCombatHistoryEntry.action(combat, ACTION);
+
+		expect(entry.text.startsWith('player-emberling used ember-burst on opponent-aquafin')).toBe(true);
+		expect(entry.text).toContain(DuelmonCombatReport.fromCombat(combat).toString());
+		expect(entry.text).toContain('opponent-aquafin (aquafin) [Water] HP 84/104');
+	});
+
+	it('keeps the action text consistent with its serialized snapshot', () => {
+		const entry = actionEntry();
+		const report = DuelmonCombatReport.fromCombat(Combat.fromPrimitives(entry.combat)).toString();
+
+		expect(entry.text).toBe(`player-emberling used ember-burst on opponent-aquafin\n\n${report}`);
+	});
+
+	it('round-trips action primitives', () => {
+		const primitives = actionEntry().toPrimitives();
+
+		expect(primitives.action).toEqual(ACTION);
+		expect(DuelmonCombatHistoryEntry.fromPrimitives(primitives).toPrimitives()).toEqual(primitives);
+	});
+
+	it('does not share its action identifiers or snapshot with the caller', () => {
+		const entry = actionEntry();
+		const returnedAction = entry.action as { actorId: string };
+
+		returnedAction.actorId = 'mutated';
+
+		expect(entry.action?.actorId).toBe(ACTION.actorId);
+
+		const primitives = entry.toPrimitives();
+		const hydrated = DuelmonCombatHistoryEntry.fromPrimitives(primitives);
+
+		(primitives.action as { actorId: string }).actorId = 'mutated-again';
+		(primitives.combat as { id: string }).id = 'mutated-combat';
+
+		expect(hydrated.action?.actorId).toBe(ACTION.actorId);
+		expect(hydrated.combat.id).toBe('combat-1');
+	});
+
+	it('rejects an action entry without action identifiers', () => {
+		const primitives = actionEntry().toPrimitives();
+
+		expect(() =>
+			DuelmonCombatHistoryEntry.fromPrimitives({
+				combat: primitives.combat,
+				kind: primitives.kind,
+				text: primitives.text,
+			})
+		).toThrow();
+	});
+
+	it('rejects a start entry with action identifiers', () => {
+		const primitives = entry().toPrimitives();
+
+		expect(() => DuelmonCombatHistoryEntry.fromPrimitives({ ...primitives, action: ACTION })).toThrow();
 	});
 });

@@ -38,6 +38,7 @@ export { DUELMON_COMBAT_EVENT_TYPES, DuelmonCombatEvents } from './event';
 export type { DuelmonCombatHistoryPrimitives } from './history/duelmon-combat-history';
 export { DuelmonCombatHistory } from './history/duelmon-combat-history';
 export type {
+	DuelmonCombatHistoryActionPrimitives,
 	DuelmonCombatHistoryEntryKind,
 	DuelmonCombatHistoryEntryPrimitives,
 } from './history/duelmon-combat-history-entry';
