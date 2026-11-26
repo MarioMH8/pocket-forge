@@ -86,6 +86,14 @@ interface PowerOverrides {
 	readonly group?: number;
 }
 
+interface UseMoveCombatOptions {
+	readonly attackerActive?: boolean;
+	readonly attackerMoves?: readonly string[];
+	readonly targetActive?: boolean;
+}
+
+const USE_MOVE_ATTACKER_MOVES: readonly string[] = ['ember-burst', 'tackle', 'gamble', 'low-sweep'];
+
 /**
  * Object Mother for Duelmon combats, actions, and the composed plugin.
  */
@@ -150,12 +158,19 @@ export default class DuelmonCombatMother {
 	 * @param groupId - Owning group identifier.
 	 * @param speciesId - Species identifier from the dataset fixture.
 	 * @param attributes - Battle attributes.
+	 * @param moveIds - Loadout move identifiers from the dataset fixture.
 	 * @returns Combatant primitives.
 	 */
-	static combatant(id: string, groupId: string, speciesId: string, attributes: AttributeValues): CombatantPrimitives {
+	static combatant(
+		id: string,
+		groupId: string,
+		speciesId: string,
+		attributes: AttributeValues,
+		moveIds: readonly string[] = []
+	): CombatantPrimitives {
 		return CombatantMother.primitives({
 			attributes,
-			creature: this.creature(speciesId),
+			creature: this.creature(speciesId, moveIds),
 			groupId,
 			id,
 		});
@@ -204,14 +219,25 @@ export default class DuelmonCombatMother {
 	 * Builds the creature snapshot referenced by a combatant.
 	 *
 	 * @param speciesId - Species identifier from the dataset fixture.
+	 * @param moveIds - Loadout move identifiers from the dataset fixture.
 	 * @returns Creature primitives.
 	 */
-	static creature(speciesId: string): CombatantPrimitives['creature'] {
+	static creature(speciesId: string, moveIds: readonly string[] = []): CombatantPrimitives['creature'] {
+		const catalog = this.catalog();
+
 		return {
 			abilities: [],
 			attributes: {},
 			id: `${speciesId}-creature`,
-			moves: [],
+			moves: moveIds.map(moveId => {
+				const move = catalog.findMove(moveId);
+
+				if (!move) {
+					throw new Error(`Missing fixture move "${moveId}"`);
+				}
+
+				return move.toPrimitives();
+			}),
 			species: { attributes: {}, id: speciesId },
 		};
 	}
@@ -289,29 +315,36 @@ export default class DuelmonCombatMother {
 	 * Builds the attacker and target combat used by `useMove` tests.
 	 *
 	 * @param overrides - Combat primitive fields to replace.
+	 * @param options - Attacker loadout and active subsets for both groups.
 	 * @returns The combat snapshot.
 	 */
-	static useMoveCombat(overrides: Partial<CombatPrimitives> = {}): Combat {
+	static useMoveCombat(overrides: Partial<CombatPrimitives> = {}, options: UseMoveCombatOptions = {}): Combat {
 		return CombatEntity.fromPrimitives({
 			attributes: {},
 			groups: [
 				CombatantGroupMother.primitives({
-					attributes: {},
+					attributes: { activeCombatantIds: options.attackerActive === false ? [] : ['combatant-a'] },
 					combatants: [
-						this.combatant('combatant-a', 'group-a', 'emberling', {
-							attack: 100,
-							defense: 80,
-							hp: 100,
-							level: 50,
-							maxHp: 100,
-							special: 120,
-							speed: 50,
-						}),
+						this.combatant(
+							'combatant-a',
+							'group-a',
+							'emberling',
+							{
+								attack: 100,
+								defense: 80,
+								hp: 100,
+								level: 50,
+								maxHp: 100,
+								special: 120,
+								speed: 50,
+							},
+							options.attackerMoves ?? USE_MOVE_ATTACKER_MOVES
+						),
 					],
 					id: 'group-a',
 				}),
 				CombatantGroupMother.primitives({
-					attributes: {},
+					attributes: { activeCombatantIds: options.targetActive === false ? [] : ['combatant-b'] },
 					combatants: [
 						this.combatant('combatant-b', 'group-b', 'sprout', {
 							attack: 90,

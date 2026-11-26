@@ -4,6 +4,7 @@ import type { CombatResolutionError } from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 import type { DuelmonType } from '@pocket-forge/duelmon-dataset';
 
+import { DuelmonCombat } from '../../combat/duelmon-combat';
 import { DuelmonMove } from '../../move/duelmon-move';
 import { DuelmonSpecies } from '../../species/duelmon-species';
 import type { DuelmonCombatInput, ResolvedDuelmonTarget } from '../../support';
@@ -71,13 +72,19 @@ class UseMoveResolution {
 	}
 
 	/**
-	 * Resolves the move, both combatants, species, types, and multipliers.
+	 * Validates the declaration against the combat and resolves the move, both
+	 * combatants, species, types, and multipliers.
+	 *
+	 * The actor must exist and be active in its group, the Move must exist in
+	 * the catalog and belong to the actor's creature, and the target must be an
+	 * active combatant of the opposing group.
 	 *
 	 * @param catalog - Duelmon catalog.
 	 * @param combat - Current combat snapshot.
 	 * @param input - Parsed Duelmon input.
 	 * @param resolvedTarget - Target already resolved to the `combatant` scope.
 	 * @returns The resolved inputs, or every resolution failure.
+	 * @throws {InvalidArgumentError} When a group lacks a valid active combatant subset.
 	 */
 	static create(
 		catalog: DuelmonCatalog,
@@ -101,12 +108,49 @@ class UseMoveResolution {
 			return DuelmonFailure.fail('invalid-input', `Unknown combatant actor "${input.actorId}"`, 'input.actorId');
 		}
 
+		const combatView = DuelmonCombat.fromCombat(combat);
+		const attackerGroup = combatView.group(attacker.groupId);
+
+		if (!attackerGroup?.activeCombatantIds.includes(attacker.id)) {
+			return DuelmonFailure.fail(
+				'rejected',
+				`Combatant "${attacker.id}" is not active in its group`,
+				'input.actorId'
+			);
+		}
+
+		if (target.groupId === attacker.groupId) {
+			return DuelmonFailure.fail(
+				'invalid-target',
+				`Target "${target.id}" belongs to the attacker's group`,
+				'input.target.id'
+			);
+		}
+
+		const targetGroup = combatView.group(target.groupId);
+
+		if (!targetGroup?.activeCombatantIds.includes(target.id)) {
+			return DuelmonFailure.fail(
+				'invalid-target',
+				`Target "${target.id}" is not an active combatant of the opposing group`,
+				'input.target.id'
+			);
+		}
+
 		const catalogMove = catalog.findMove(input.moveId);
 
 		if (!catalogMove) {
 			return DuelmonFailure.fail(
 				'invalid-input',
 				`Unknown Move "${input.moveId}" in the Duelmon catalog`,
+				'input.moveId'
+			);
+		}
+
+		if (attacker.creature.moves.every(creatureMove => creatureMove.id !== input.moveId)) {
+			return DuelmonFailure.fail(
+				'rejected',
+				`Combatant "${attacker.id}" does not know Move "${input.moveId}"`,
 				'input.moveId'
 			);
 		}

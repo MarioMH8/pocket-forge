@@ -9,6 +9,7 @@ import { describe, expect, it } from 'bun:test';
 const PLUGIN = DuelmonCombatMother.plugin();
 const ATTACKER_ID = 'combatant-a';
 const TARGET_ID = 'combatant-b';
+const ATTACKER_MOVES = ['ember-burst', 'tackle', 'gamble', 'low-sweep'];
 
 function stats(overrides: AttributeValues = {}): AttributeValues {
 	return {
@@ -33,12 +34,14 @@ function combatWith(
 		attributes: {},
 		groups: [
 			CombatantGroupMother.primitives({
-				attributes: {},
-				combatants: [DuelmonCombatMother.combatant(ATTACKER_ID, 'group-a', 'emberling', attackerStats)],
+				attributes: { activeCombatantIds: [ATTACKER_ID] },
+				combatants: [
+					DuelmonCombatMother.combatant(ATTACKER_ID, 'group-a', 'emberling', attackerStats, ATTACKER_MOVES),
+				],
 				id: 'group-a',
 			}),
 			CombatantGroupMother.primitives({
-				attributes: {},
+				attributes: { activeCombatantIds: [TARGET_ID] },
 				combatants: [DuelmonCombatMother.combatant(TARGET_ID, 'group-b', targetSpecies, targetStats)],
 				id: 'group-b',
 			}),
@@ -242,8 +245,8 @@ describe('UseMoveAction', () => {
 		expect(transition.events[0]?.type).toBe('move-used');
 	});
 
-	it('rejects a Status move', () => {
-		const combat = DuelmonCombatMother.useMoveCombat();
+	it('rejects a Status move the actor knows', () => {
+		const combat = DuelmonCombatMother.useMoveCombat({}, { attackerMoves: ['oath'] });
 		const before = combat.toPrimitives();
 		const result = PLUGIN.resolve({
 			actionBindings: DuelmonCombatMother.useMoveBindings(['oath']),
@@ -276,5 +279,135 @@ describe('UseMoveAction', () => {
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-target');
 		expect(result.getLeft()[0]?.path).toBe('input.target.scope');
+	});
+
+	describe('declaration validation', () => {
+		it('accepts a declaration from an active actor that knows the move', () => {
+			const combat = DuelmonCombatMother.useMoveCombat();
+			const result = PLUGIN.resolve({
+				actionBindings: DuelmonCombatMother.useMoveBindings(),
+				combat,
+				input: {
+					actorId: ATTACKER_ID,
+					moveId: 'ember-burst',
+					target: { id: TARGET_ID, scope: 'combatant' },
+				},
+			});
+
+			expect(result.isRight()).toBe(true);
+		});
+
+		it('rejects an unknown actor', () => {
+			const combat = DuelmonCombatMother.useMoveCombat();
+			const before = combat.toPrimitives();
+			const result = PLUGIN.resolve({
+				actionBindings: DuelmonCombatMother.useMoveBindings(),
+				combat,
+				input: {
+					actorId: 'missing-actor',
+					moveId: 'ember-burst',
+					target: { id: TARGET_ID, scope: 'combatant' },
+				},
+			});
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]?.reason).toBe('invalid-input');
+			expect(result.getLeft()[0]?.path).toBe('input.actorId');
+			expect(combat.toPrimitives()).toEqual(before);
+		});
+
+		it('rejects an actor that is not active in its group', () => {
+			const combat = DuelmonCombatMother.useMoveCombat({}, { attackerActive: false });
+			const before = combat.toPrimitives();
+			const result = PLUGIN.resolve({
+				actionBindings: DuelmonCombatMother.useMoveBindings(),
+				combat,
+				input: {
+					actorId: ATTACKER_ID,
+					moveId: 'ember-burst',
+					target: { id: TARGET_ID, scope: 'combatant' },
+				},
+			});
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]?.reason).toBe('rejected');
+			expect(result.getLeft()[0]?.path).toBe('input.actorId');
+			expect(combat.toPrimitives()).toEqual(before);
+		});
+
+		it('rejects a catalog move that the actor creature does not know', () => {
+			const combat = DuelmonCombatMother.useMoveCombat();
+			const before = combat.toPrimitives();
+			const result = PLUGIN.resolve({
+				actionBindings: DuelmonCombatMother.useMoveBindings(['aqua-burst']),
+				combat,
+				input: {
+					actorId: ATTACKER_ID,
+					moveId: 'aqua-burst',
+					target: { id: TARGET_ID, scope: 'combatant' },
+				},
+			});
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]?.reason).toBe('rejected');
+			expect(result.getLeft()[0]?.path).toBe('input.moveId');
+			expect(combat.toPrimitives()).toEqual(before);
+		});
+
+		it('rejects an unknown Status move before the category check', () => {
+			const combat = DuelmonCombatMother.useMoveCombat();
+			const result = PLUGIN.resolve({
+				actionBindings: DuelmonCombatMother.useMoveBindings(['oath']),
+				combat,
+				input: {
+					actorId: ATTACKER_ID,
+					moveId: 'oath',
+					target: { id: TARGET_ID, scope: 'combatant' },
+				},
+			});
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]?.reason).toBe('rejected');
+			expect(result.getLeft()[0]?.path).toBe('input.moveId');
+			expect(result.getLeft()[0]?.message).toContain('does not know');
+		});
+
+		it('rejects the actor itself as target', () => {
+			const combat = DuelmonCombatMother.useMoveCombat();
+			const before = combat.toPrimitives();
+			const result = PLUGIN.resolve({
+				actionBindings: DuelmonCombatMother.useMoveBindings(),
+				combat,
+				input: {
+					actorId: ATTACKER_ID,
+					moveId: 'ember-burst',
+					target: { id: ATTACKER_ID, scope: 'combatant' },
+				},
+			});
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]?.reason).toBe('invalid-target');
+			expect(result.getLeft()[0]?.path).toBe('input.target.id');
+			expect(combat.toPrimitives()).toEqual(before);
+		});
+
+		it('rejects an inactive target of the opposing group', () => {
+			const combat = DuelmonCombatMother.useMoveCombat({}, { targetActive: false });
+			const before = combat.toPrimitives();
+			const result = PLUGIN.resolve({
+				actionBindings: DuelmonCombatMother.useMoveBindings(),
+				combat,
+				input: {
+					actorId: ATTACKER_ID,
+					moveId: 'ember-burst',
+					target: { id: TARGET_ID, scope: 'combatant' },
+				},
+			});
+
+			expect(result.isLeft()).toBe(true);
+			expect(result.getLeft()[0]?.reason).toBe('invalid-target');
+			expect(result.getLeft()[0]?.path).toBe('input.target.id');
+			expect(combat.toPrimitives()).toEqual(before);
+		});
 	});
 });
