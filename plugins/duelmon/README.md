@@ -121,9 +121,33 @@ Higher Speed goes first. Equal Speed falls back to the combatant position in the
 `Combat` (group order, then combatant order), so the result is deterministic and
 independent of the input order. Priority, stat stages, paralysis, and randomness
 are not applied. `compare` and `sort` throw when a combatant does not belong to
-the combat that defines the order. The turn service that consumes declarations
-is not part of this slice; see
+the combat that defines the order. See
 [Phase 1 speed order](../../docs/content/123-speed-order.md).
+
+## Resolving the turn
+
+`DuelmonCombatTurn` receives the two declarations, orders them by Speed, and
+resolves each declared action through the Combat Engine:
+
+```ts
+const turn = new DuelmonCombatTurn(catalog, engine);
+const resolution = turn.resolve(combat, [
+  { actorId: 'player-emberling', moveId: 'ember-burst', target: { id: 'opponent-aquafin', scope: 'combatant' } },
+  { actorId: 'opponent-aquafin', moveId: 'aqua-burst', target: { id: 'player-emberling', scope: 'combatant' } },
+]);
+```
+
+The fastest combatant acts first and the slower one acts afterwards when it is
+still standing (`hp > 0`). Each action runs against the successor `Combat` of
+the previous one, so the battle state is updated after every action. The service
+returns one `CombatResolution`: the final combat, the events of every action
+merged in turn order and renumbered from one, and the engine outcome when an
+action completes the combat. Only the declared Move of each side is resolved.
+
+An invalid declaration or a failed action returns `Either.left` without a
+partial resolution, and the caller keeps the original `Combat` and
+`RandomPocket`. Phase 1 does not apply priority or random tie-breaks; see
+[Phase 1 turn resolution](../../docs/content/125-resolve-order.md).
 
 ## Recording the start
 
@@ -194,13 +218,13 @@ The per-type truncation matters: Ice against Water/Flying starts from a base of
 
 This slice covers a single damaging hit per action. It does not implement:
 
-- PP tracking or the combat turn service that consumes declarations.
+- PP tracking, priority, random tie-breaks, and switching.
 - Status conditions, volatile statuses, or stat stages.
 - Critical hits and their ratio.
 - Secondary effects, drain, recoil, or multi-hit moves.
 - Fixed-damage moves and OHKO moves; they are resolved with the normal formula,
   so a 0-power damaging move still deals the formula's minimum damage.
-- Accuracy modifiers, turn order, and switching.
+- Accuracy modifiers, turn order priority, and switching.
 
 ## Dataset
 
@@ -212,4 +236,4 @@ The plugin only consumes the generated dataset through `DuelmonCatalog.fromDatas
 
 ## Roadmap
 
-The next slices — typed record attributes, Gen 1 status and stat-stage coverage, and the combat turn service — are recorded in [docs/grill/0003-combat-plugin-roadmap.md](../../docs/grill/0003-combat-plugin-roadmap.md).
+The next slices — typed record attributes, Gen 1 status and stat-stage coverage, and the remaining turn completion and history slices — are recorded in [docs/grill/0003-combat-plugin-roadmap.md](../../docs/grill/0003-combat-plugin-roadmap.md).
