@@ -13,55 +13,57 @@ import { describe, expect, it } from 'bun:test';
 const PLAYER = 'player-emberling';
 const OPPONENT = 'opponent-aquafin';
 
-function combatWithHp(playerHp: number, opponentHp: number): Combat {
-	const primitives: CombatPrimitives = DuelmonCombatStartMother.primitives();
-	const player = primitives.groups.find(group => group.id === 'player')?.combatants[0];
-	const opponent = primitives.groups.find(group => group.id === 'opponent')?.combatants[0];
+class HistoryFixture {
+	static combatWithHp(playerHp: number, opponentHp: number): Combat {
+		const primitives: CombatPrimitives = DuelmonCombatStartMother.primitives();
+		const player = primitives.groups.find(group => group.id === 'player')?.combatants[0];
+		const opponent = primitives.groups.find(group => group.id === 'opponent')?.combatants[0];
 
-	if (!player || !opponent) {
-		throw new Error('Start fixture is missing a combatant');
+		if (!player || !opponent) {
+			throw new Error('Start fixture is missing a combatant');
+		}
+
+		player.attributes['hp'] = playerHp;
+		opponent.attributes['hp'] = opponentHp;
+
+		return CombatEntity.fromPrimitives(primitives);
 	}
 
-	player.attributes['hp'] = playerHp;
-	opponent.attributes['hp'] = opponentHp;
+	static history(): DuelmonCombatHistory {
+		return DuelmonCombatHistory.start(DuelmonCombatStartMother.combat());
+	}
 
-	return CombatEntity.fromPrimitives(primitives);
-}
+	static turnResult(): DuelmonCombatTurnResult {
+		const first = this.combatWithHp(99, 84);
+		const second = this.combatWithHp(94, 84);
 
-function turnResult(): DuelmonCombatTurnResult {
-	const first = combatWithHp(99, 84);
-	const second = combatWithHp(94, 84);
-
-	return DuelmonCombatTurnResult.create(CombatResolution.create(second, []), [
-		DuelmonCombatTurnAction.create(PLAYER, 'ember-burst', OPPONENT, first, 70, false),
-		DuelmonCombatTurnAction.create(OPPONENT, 'aqua-burst', PLAYER, second, 48, false),
-	]);
-}
-
-function history(): DuelmonCombatHistory {
-	return DuelmonCombatHistory.start(DuelmonCombatStartMother.combat());
+		return DuelmonCombatTurnResult.create(CombatResolution.create(second, []), [
+			DuelmonCombatTurnAction.create(PLAYER, 'ember-burst', OPPONENT, first, 70, false),
+			DuelmonCombatTurnAction.create(OPPONENT, 'aqua-burst', PLAYER, second, 48, false),
+		]);
+	}
 }
 
 describe('DuelmonCombatHistory', () => {
 	it('records the start as its first entry', () => {
-		const entries = history().entries();
+		const entries = HistoryFixture.history().entries();
 
 		expect(entries).toHaveLength(1);
 		expect(entries[0]?.kind).toBe('start');
 	});
 
 	it('exposes a frozen entry list', () => {
-		expect(Object.isFrozen(history().entries())).toBe(true);
+		expect(Object.isFrozen(HistoryFixture.history().entries())).toBe(true);
 	});
 
 	it('serializes and hydrates the same entries', () => {
-		const primitives = history().toPrimitives();
+		const primitives = HistoryFixture.history().toPrimitives();
 
 		expect(DuelmonCombatHistory.fromPrimitives(primitives).toPrimitives()).toEqual(primitives);
 	});
 
 	it('keeps every persisted entry in order', () => {
-		const primitives = history().toPrimitives();
+		const primitives = HistoryFixture.history().toPrimitives();
 		const first = primitives.entries[0];
 
 		if (!first) {
@@ -76,7 +78,7 @@ describe('DuelmonCombatHistory', () => {
 	});
 
 	it('is deterministic for the same combat', () => {
-		expect(history().toPrimitives()).toEqual(history().toPrimitives());
+		expect(HistoryFixture.history().toPrimitives()).toEqual(HistoryFixture.history().toPrimitives());
 	});
 
 	it('records the start from the same combat the start contract returns', () => {
@@ -93,8 +95,8 @@ describe('DuelmonCombatHistory', () => {
 	});
 
 	it('appends one action entry per resolved action in the turn order', () => {
-		const result = turnResult();
-		const recorded = history().recordTurn(result);
+		const result = HistoryFixture.turnResult();
+		const recorded = HistoryFixture.history().recordTurn(result);
 
 		expect(recorded.entries().map(entry => entry.kind)).toEqual(['start', 'action', 'action']);
 		expect(
@@ -136,9 +138,9 @@ describe('DuelmonCombatHistory', () => {
 	});
 
 	it('does not mutate the previous history', () => {
-		const previous = history();
+		const previous = HistoryFixture.history();
 		const before = previous.toPrimitives();
-		const recorded = previous.recordTurn(turnResult());
+		const recorded = previous.recordTurn(HistoryFixture.turnResult());
 
 		expect(recorded).not.toBe(previous);
 		expect(previous.entries()).toHaveLength(1);
@@ -147,22 +149,25 @@ describe('DuelmonCombatHistory', () => {
 	});
 
 	it('adds no entry for a turn without resolved actions', () => {
-		const previous = history();
-		const empty = DuelmonCombatTurnResult.create(CombatResolution.create(combatWithHp(99, 104), []), []);
+		const previous = HistoryFixture.history();
+		const empty = DuelmonCombatTurnResult.create(
+			CombatResolution.create(HistoryFixture.combatWithHp(99, 104), []),
+			[]
+		);
 
 		expect(previous.recordTurn(empty).toPrimitives()).toEqual(previous.toPrimitives());
 	});
 
 	it('round-trips recorded action entries through primitives', () => {
-		const primitives = history().recordTurn(turnResult()).toPrimitives();
+		const primitives = HistoryFixture.history().recordTurn(HistoryFixture.turnResult()).toPrimitives();
 
 		expect(primitives.entries.map(entry => entry.kind)).toEqual(['start', 'action', 'action']);
 		expect(DuelmonCombatHistory.fromPrimitives(primitives).toPrimitives()).toEqual(primitives);
 	});
 
 	it('is deterministic for the same start and turn', () => {
-		expect(history().recordTurn(turnResult()).toPrimitives()).toEqual(
-			history().recordTurn(turnResult()).toPrimitives()
+		expect(HistoryFixture.history().recordTurn(HistoryFixture.turnResult()).toPrimitives()).toEqual(
+			HistoryFixture.history().recordTurn(HistoryFixture.turnResult()).toPrimitives()
 		);
 	});
 });

@@ -28,123 +28,132 @@ interface CombatOverrides {
 	readonly playerSpeed?: number;
 }
 
-function engine(rules: readonly CombatRule[] = RULES): CombatEngine {
-	return new CombatEngineEntity(
-		CombatSetup.create({
-			actionBindings: BINDINGS,
-			actions: PLUGIN,
-			rules,
-		})
-	);
-}
+class TurnResolutionFixture {
+	static combat(overrides: CombatOverrides = {}): Combat {
+		const primitives: CombatPrimitives = this.startCombat().toPrimitives();
+		const player = primitives.groups.find(group => group.id === 'player');
+		const opponent = primitives.groups.find(group => group.id === 'opponent');
+		const playerCombatant = player?.combatants[0];
+		const opponentCombatant = opponent?.combatants[0];
 
-function turn(rules: readonly CombatRule[] = RULES): DuelmonCombatTurn {
-	return new DuelmonCombatTurn(CATALOG, engine(rules));
-}
+		if (!playerCombatant || !opponentCombatant) {
+			throw new Error('Started combat is missing a combatant');
+		}
 
-function startCombat(): Combat {
-	const result = DuelmonCombatStart.fromContent(
-		DuelmonCombatStartMother.request(),
-		CATALOG,
-		DuelmonCombatStartMother.DEFINITIONS
-	);
+		if (overrides.playerSpeed !== undefined) {
+			playerCombatant.attributes['speed'] = overrides.playerSpeed;
+		}
 
-	expect(result.isRight()).toBe(true);
+		if (overrides.opponentSpeed !== undefined) {
+			opponentCombatant.attributes['speed'] = overrides.opponentSpeed;
+		}
 
-	return result.getRight();
-}
+		if (overrides.opponentHp !== undefined) {
+			opponentCombatant.attributes['hp'] = overrides.opponentHp;
+		}
 
-function combat(overrides: CombatOverrides = {}): Combat {
-	const primitives: CombatPrimitives = startCombat().toPrimitives();
-	const player = primitives.groups.find(group => group.id === 'player');
-	const opponent = primitives.groups.find(group => group.id === 'opponent');
-	const playerCombatant = player?.combatants[0];
-	const opponentCombatant = opponent?.combatants[0];
+		if (overrides.playerHp !== undefined) {
+			playerCombatant.attributes['hp'] = overrides.playerHp;
+		}
 
-	if (!playerCombatant || !opponentCombatant) {
-		throw new Error('Started combat is missing a combatant');
+		if (overrides.playerFirst === false) {
+			primitives.groups.reverse();
+		}
+
+		return CombatEntity.fromPrimitives(primitives);
 	}
 
-	if (overrides.playerSpeed !== undefined) {
-		playerCombatant.attributes['speed'] = overrides.playerSpeed;
+	static declarations() {
+		return [this.input(PLAYER, PLAYER_MOVE, OPPONENT), this.input(OPPONENT, OPPONENT_MOVE, PLAYER)];
 	}
 
-	if (overrides.opponentSpeed !== undefined) {
-		opponentCombatant.attributes['speed'] = overrides.opponentSpeed;
-	}
-
-	if (overrides.opponentHp !== undefined) {
-		opponentCombatant.attributes['hp'] = overrides.opponentHp;
-	}
-
-	if (overrides.playerHp !== undefined) {
-		playerCombatant.attributes['hp'] = overrides.playerHp;
-	}
-
-	if (overrides.playerFirst === false) {
-		primitives.groups.reverse();
-	}
-
-	return CombatEntity.fromPrimitives(primitives);
-}
-
-function input(actorId: string, moveId: string, targetId: string) {
-	return {
-		actorId,
-		moveId,
-		target: { id: targetId, scope: 'combatant' as const },
-	};
-}
-
-function declarations() {
-	return [input(PLAYER, PLAYER_MOVE, OPPONENT), input(OPPONENT, OPPONENT_MOVE, PLAYER)];
-}
-
-function moveUsedPairs(events: readonly { payload: Record<string, unknown>; type: string }[]): readonly string[] {
-	return events
-		.filter(event => event.type === 'move-used')
-		.map(event => `${String(event.payload['attackerId'])}:${String(event.payload['moveId'])}`);
-}
-
-function knockoutRules(): readonly CombatRule[] {
-	return [DuelmonCombatMother.compositionRule(), DuelmonCombatMother.hpCompletionRule()];
-}
-
-function drawRules(): readonly CombatRule[] {
-	return [
-		DuelmonCombatMother.compositionRule(),
-		ThresholdCombatCompletionRule.create(
-			{
-				attributes: {
-					[COMPLETION_CONFIG_KEYS.attributeKey]: 'hp',
-					[COMPLETION_CONFIG_KEYS.comparison]: 'lte',
-					[COMPLETION_CONFIG_KEYS.threshold]: 50,
-					[COMPLETION_CONFIG_KEYS.winnerPolicy]: 'threshold-group',
+	static drawRules(): readonly CombatRule[] {
+		return [
+			DuelmonCombatMother.compositionRule(),
+			ThresholdCombatCompletionRule.create(
+				{
+					attributes: {
+						[COMPLETION_CONFIG_KEYS.attributeKey]: 'hp',
+						[COMPLETION_CONFIG_KEYS.comparison]: 'lte',
+						[COMPLETION_CONFIG_KEYS.threshold]: 50,
+						[COMPLETION_CONFIG_KEYS.winnerPolicy]: 'threshold-group',
+					},
 				},
-			},
-			[...COMPLETION_CONFIG_DEFINITIONS],
-			[...Gen1BattleStats.DEFINITIONS]
-		).getRight(),
-	];
+				[...COMPLETION_CONFIG_DEFINITIONS],
+				[...Gen1BattleStats.DEFINITIONS]
+			).getRight(),
+		];
+	}
+
+	static engine(rules: readonly CombatRule[] = RULES): CombatEngine {
+		return new CombatEngineEntity(
+			CombatSetup.create({
+				actionBindings: BINDINGS,
+				actions: PLUGIN,
+				rules,
+			})
+		);
+	}
+
+	static input(actorId: string, moveId: string, targetId: string) {
+		return {
+			actorId,
+			moveId,
+			target: { id: targetId, scope: 'combatant' as const },
+		};
+	}
+
+	static knockoutRules(): readonly CombatRule[] {
+		return [DuelmonCombatMother.compositionRule(), DuelmonCombatMother.hpCompletionRule()];
+	}
+
+	static moveUsedPairs(events: readonly { payload: Record<string, unknown>; type: string }[]): readonly string[] {
+		return events
+			.filter(event => event.type === 'move-used')
+			.map(event => `${String(event.payload['attackerId'])}:${String(event.payload['moveId'])}`);
+	}
+
+	static startCombat(): Combat {
+		const result = DuelmonCombatStart.fromContent(
+			DuelmonCombatStartMother.request(),
+			CATALOG,
+			DuelmonCombatStartMother.DEFINITIONS
+		);
+
+		expect(result.isRight()).toBe(true);
+
+		return result.getRight();
+	}
+
+	static turn(rules: readonly CombatRule[] = RULES): DuelmonCombatTurn {
+		return new DuelmonCombatTurn(CATALOG, this.engine(rules));
+	}
 }
 
 describe('Phase 1 turn resolution', () => {
 	it('resolves the faster combatant first and the slower one afterwards', () => {
-		const result = turn().resolve(startCombat(), declarations());
+		const result = TurnResolutionFixture.turn().resolve(
+			TurnResolutionFixture.startCombat(),
+			TurnResolutionFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
-		expect(moveUsedPairs(result.getRight().resolution.events)).toEqual([
+		expect(TurnResolutionFixture.moveUsedPairs(result.getRight().resolution.events)).toEqual([
 			`${PLAYER}:${PLAYER_MOVE}`,
 			`${OPPONENT}:${OPPONENT_MOVE}`,
 		]);
 	});
 
 	it('updates the battle state after each action', () => {
-		const combatState = startCombat();
-		const engineInstance = engine();
-		const first = engineInstance.resolve(combatState, input(PLAYER, PLAYER_MOVE, OPPONENT)).getRight();
-		const second = engineInstance.resolve(first.combat, input(OPPONENT, OPPONENT_MOVE, PLAYER)).getRight();
-		const result = turn().resolve(combatState, declarations());
+		const combatState = TurnResolutionFixture.startCombat();
+		const engineInstance = TurnResolutionFixture.engine();
+		const first = engineInstance
+			.resolve(combatState, TurnResolutionFixture.input(PLAYER, PLAYER_MOVE, OPPONENT))
+			.getRight();
+		const second = engineInstance
+			.resolve(first.combat, TurnResolutionFixture.input(OPPONENT, OPPONENT_MOVE, PLAYER))
+			.getRight();
+		const result = TurnResolutionFixture.turn().resolve(combatState, TurnResolutionFixture.declarations());
 
 		expect(result.isRight()).toBe(true);
 
@@ -158,49 +167,63 @@ describe('Phase 1 turn resolution', () => {
 	});
 
 	it('resolves exactly the Move declared by each side', () => {
-		const result = turn().resolve(startCombat(), declarations());
+		const result = TurnResolutionFixture.turn().resolve(
+			TurnResolutionFixture.startCombat(),
+			TurnResolutionFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
-		expect(moveUsedPairs(result.getRight().resolution.events)).toEqual([
+		expect(TurnResolutionFixture.moveUsedPairs(result.getRight().resolution.events)).toEqual([
 			`${PLAYER}:${PLAYER_MOVE}`,
 			`${OPPONENT}:${OPPONENT_MOVE}`,
 		]);
 	});
 
 	it('does not resolve actions outside the declarations', () => {
-		const result = turn().resolve(startCombat(), declarations());
+		const result = TurnResolutionFixture.turn().resolve(
+			TurnResolutionFixture.startCombat(),
+			TurnResolutionFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
 
 		const declared = new Set([`${OPPONENT}:${OPPONENT_MOVE}`, `${PLAYER}:${PLAYER_MOVE}`]);
 
-		for (const pair of moveUsedPairs(result.getRight().resolution.events)) {
+		for (const pair of TurnResolutionFixture.moveUsedPairs(result.getRight().resolution.events)) {
 			expect(declared.has(pair)).toBe(true);
 		}
 	});
 
 	it('applies the fixed tie order when both combatants have the same Speed', () => {
-		const inCombatOrder = turn().resolve(combat({ opponentSpeed: 70 }), declarations());
+		const inCombatOrder = TurnResolutionFixture.turn().resolve(
+			TurnResolutionFixture.combat({ opponentSpeed: 70 }),
+			TurnResolutionFixture.declarations()
+		);
 
 		expect(inCombatOrder.isRight()).toBe(true);
-		expect(moveUsedPairs(inCombatOrder.getRight().resolution.events)).toEqual([
+		expect(TurnResolutionFixture.moveUsedPairs(inCombatOrder.getRight().resolution.events)).toEqual([
 			`${PLAYER}:${PLAYER_MOVE}`,
 			`${OPPONENT}:${OPPONENT_MOVE}`,
 		]);
 
-		const reversedGroups = turn().resolve(combat({ opponentSpeed: 70, playerFirst: false }), declarations());
+		const reversedGroups = TurnResolutionFixture.turn().resolve(
+			TurnResolutionFixture.combat({ opponentSpeed: 70, playerFirst: false }),
+			TurnResolutionFixture.declarations()
+		);
 
 		expect(reversedGroups.isRight()).toBe(true);
-		expect(moveUsedPairs(reversedGroups.getRight().resolution.events)).toEqual([
+		expect(TurnResolutionFixture.moveUsedPairs(reversedGroups.getRight().resolution.events)).toEqual([
 			`${OPPONENT}:${OPPONENT_MOVE}`,
 			`${PLAYER}:${PLAYER_MOVE}`,
 		]);
 	});
 
 	it('does not resolve anything or consume randomness when a declaration is invalid', () => {
-		const combatState = startCombat();
+		const combatState = TurnResolutionFixture.startCombat();
 		const before = combatState.toPrimitives();
-		const result = turn().resolve(combatState, [input(PLAYER, PLAYER_MOVE, OPPONENT)]);
+		const result = TurnResolutionFixture.turn().resolve(combatState, [
+			TurnResolutionFixture.input(PLAYER, PLAYER_MOVE, OPPONENT),
+		]);
 
 		expect(result.isLeft()).toBe(true);
 		expect(combatState.toPrimitives()).toEqual(before);
@@ -208,7 +231,10 @@ describe('Phase 1 turn resolution', () => {
 	});
 
 	it('keeps the engine outcome and stops when an action completes the combat', () => {
-		const result = turn(knockoutRules()).resolve(combat({ opponentHp: 1 }), declarations());
+		const result = TurnResolutionFixture.turn(TurnResolutionFixture.knockoutRules()).resolve(
+			TurnResolutionFixture.combat({ opponentHp: 1 }),
+			TurnResolutionFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
 
@@ -218,11 +244,14 @@ describe('Phase 1 turn resolution', () => {
 		expect(resolution.outcome).toEqual(CombatOutcome.victory('player'));
 		expect(resolution.events.map(event => event.type)).toEqual(['move-used', 'combat-completed']);
 		expect(resolution.events.map(event => event.sequence)).toEqual([1, 2]);
-		expect(moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
+		expect(TurnResolutionFixture.moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
 	});
 
 	it('keeps a draw outcome without a winner and stops the turn', () => {
-		const result = turn(drawRules()).resolve(combat({ opponentHp: 40, playerHp: 40 }), declarations());
+		const result = TurnResolutionFixture.turn(TurnResolutionFixture.drawRules()).resolve(
+			TurnResolutionFixture.combat({ opponentHp: 40, playerHp: 40 }),
+			TurnResolutionFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
 
@@ -238,16 +267,19 @@ describe('Phase 1 turn resolution', () => {
 		expect(resolution.outcome?.isDraw()).toBe(true);
 		expect(resolution.outcome?.isVictory()).toBe(false);
 		expect(resolution.events.map(event => event.type)).toEqual(['move-used', 'combat-completed']);
-		expect(moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
+		expect(TurnResolutionFixture.moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
 		expect(resolution.events.some(event => event.payload['attackerId'] === OPPONENT)).toBe(false);
 	});
 
 	it('stops after the first action without resolving, emitting events for, or drawing randomness for the second', () => {
-		const combatState = combat({ opponentHp: 1 });
-		const first = engine(knockoutRules())
-			.resolve(combatState, input(PLAYER, PLAYER_MOVE, OPPONENT))
+		const combatState = TurnResolutionFixture.combat({ opponentHp: 1 });
+		const first = TurnResolutionFixture.engine(TurnResolutionFixture.knockoutRules())
+			.resolve(combatState, TurnResolutionFixture.input(PLAYER, PLAYER_MOVE, OPPONENT))
 			.getRight();
-		const result = turn(knockoutRules()).resolve(combatState, declarations());
+		const result = TurnResolutionFixture.turn(TurnResolutionFixture.knockoutRules()).resolve(
+			combatState,
+			TurnResolutionFixture.declarations()
+		);
 
 		expect(result.isRight()).toBe(true);
 
@@ -262,16 +294,19 @@ describe('Phase 1 turn resolution', () => {
 		expect(resolution.events.map(event => event.payload)).toEqual(first.events.map(event => event.payload));
 		expect(resolution.events.map(event => event.type)).toEqual(['move-used', 'combat-completed']);
 		expect(resolution.events.map(event => event.sequence)).toEqual([1, 2]);
-		expect(moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
+		expect(TurnResolutionFixture.moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
 		expect(resolution.events.some(event => event.payload['attackerId'] === OPPONENT)).toBe(false);
 	});
 
 	it('rejects a turn over a completed combat without resolving or drawing randomness', () => {
-		const completed = turn(knockoutRules())
-			.resolve(combat({ opponentHp: 1 }), declarations())
+		const completed = TurnResolutionFixture.turn(TurnResolutionFixture.knockoutRules())
+			.resolve(TurnResolutionFixture.combat({ opponentHp: 1 }), TurnResolutionFixture.declarations())
 			.getRight().resolution;
 		const before = completed.combat.toPrimitives();
-		const result = turn(knockoutRules()).resolve(completed.combat, declarations());
+		const result = TurnResolutionFixture.turn(TurnResolutionFixture.knockoutRules()).resolve(
+			completed.combat,
+			TurnResolutionFixture.declarations()
+		);
 
 		expect(result.isLeft()).toBe(true);
 
