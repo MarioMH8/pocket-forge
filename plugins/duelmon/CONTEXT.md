@@ -115,6 +115,10 @@ _Avoid_: Initiative, priority order, random tie-break
 The parsed input of one declared turn action: one actor, one Move, and one target. Phase 1 declarations use the `combatant` target scope; validation restricts it to an active combatant of the only opposing group. Validation lives in `DuelmonTurnDeclaration` and runs at the plugin boundary for `useMove` bindings. A declaration is input, not state; it is never stored in `Combat` and has no pending or confirmed variant.
 _Avoid_: Pending action, selected move state, action queue item
 
+**Duelmon Turn Declarations**:
+The two validated declarations of one Phase 1 turn, one per combat group. The set parses each raw declaration through the single-declaration contract, requires a strict one-versus-one combat, rejects missing, extra, or duplicated declarations, and exposes the result in combat order without resolving anything. Speed ordering and resolution belong to the Duelmon Combat Turn service.
+_Avoid_: Action queue, pending turn state, declaration list DTO
+
 **Switch Action**:
 The Duelmon action that changes the active subset of a Combatant Group. It is not bound to a Move and is resolved from the plugin's discriminated input.
 _Avoid_: Swap, replacement

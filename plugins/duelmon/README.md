@@ -85,6 +85,27 @@ plugin applies them to `useMove` declarations before dispatch. Phase 1 move
 declarations bind every content Move to `useMove`; generic actions such as
 `modifyAttribute` stay outside the turn-declaration contract.
 
+## Receiving the turn declarations
+
+`DuelmonTurnDeclarations.receive(catalog, combat, declarations)` validates the
+two declarations of a Phase 1 turn together:
+
+```ts
+const declarations = DuelmonTurnDeclarations.receive(catalog, combat, [
+  { actorId: 'player-emberling', moveId: 'ember-burst', target: { id: 'opponent-aquafin', scope: 'combatant' } },
+  { actorId: 'opponent-aquafin', moveId: 'aqua-burst', target: { id: 'player-emberling', scope: 'combatant' } },
+]);
+```
+
+It parses each entry with `DuelmonCombatInput.parse` and validates it with
+`DuelmonTurnDeclaration.validate`, then requires exactly one declaration per
+group in a strict one-versus-one combat. Missing, duplicated, or out-of-Phase-1
+declarations are rejected with aggregated failures; nothing is resolved, no
+events are emitted, and the `Combat` stays unchanged. The set exposes its
+declarations in combat order and looks them up by group or actor. Speed ordering
+and resolution belong to the turn service (#125). See
+[Phase 1 turn declarations](../../docs/content/124-turn-declarations.md).
+
 ## Ordering declared actions
 
 `DuelmonSpeedOrder` defines the Phase 1 order of the combatants that declare an
