@@ -2,7 +2,12 @@ import type { Combat, CombatPrimitives } from '@pocket-forge/combat/domain';
 import { Combat as CombatEntity } from '@pocket-forge/combat/domain';
 import type { CombatEngine, CombatRule } from '@pocket-forge/combat-engine/domain';
 import { CombatEngine as CombatEngineEntity, CombatOutcome, CombatSetup } from '@pocket-forge/combat-engine/domain';
-import { DuelmonCombatStart, DuelmonCombatTurn } from '@pocket-forge/duelmon/domain';
+import {
+	COMPLETION_CONFIG_DEFINITIONS,
+	COMPLETION_CONFIG_KEYS,
+	ThresholdCombatCompletionRule,
+} from '@pocket-forge/combat-engine/rules';
+import { DuelmonCombatStart, DuelmonCombatTurn, Gen1BattleStats } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatMother, DuelmonCombatStartMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
@@ -19,6 +24,7 @@ interface CombatOverrides {
 	readonly opponentHp?: number;
 	readonly opponentSpeed?: number;
 	readonly playerFirst?: boolean;
+	readonly playerHp?: number;
 	readonly playerSpeed?: number;
 }
 
@@ -71,6 +77,10 @@ function combat(overrides: CombatOverrides = {}): Combat {
 		opponentCombatant.attributes['hp'] = overrides.opponentHp;
 	}
 
+	if (overrides.playerHp !== undefined) {
+		playerCombatant.attributes['hp'] = overrides.playerHp;
+	}
+
 	if (overrides.playerFirst === false) {
 		primitives.groups.reverse();
 	}
@@ -98,6 +108,24 @@ function moveUsedPairs(events: readonly { payload: Record<string, unknown>; type
 
 function knockoutRules(): readonly CombatRule[] {
 	return [DuelmonCombatMother.compositionRule(), DuelmonCombatMother.hpCompletionRule()];
+}
+
+function drawRules(): readonly CombatRule[] {
+	return [
+		DuelmonCombatMother.compositionRule(),
+		ThresholdCombatCompletionRule.create(
+			{
+				attributes: {
+					[COMPLETION_CONFIG_KEYS.attributeKey]: 'hp',
+					[COMPLETION_CONFIG_KEYS.comparison]: 'lte',
+					[COMPLETION_CONFIG_KEYS.threshold]: 50,
+					[COMPLETION_CONFIG_KEYS.winnerPolicy]: 'threshold-group',
+				},
+			},
+			[...COMPLETION_CONFIG_DEFINITIONS],
+			[...Gen1BattleStats.DEFINITIONS]
+		).getRight(),
+	];
 }
 
 describe('Phase 1 turn resolution', () => {
@@ -191,6 +219,27 @@ describe('Phase 1 turn resolution', () => {
 		expect(resolution.events.map(event => event.type)).toEqual(['move-used', 'combat-completed']);
 		expect(resolution.events.map(event => event.sequence)).toEqual([1, 2]);
 		expect(moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
+	});
+
+	it('keeps a draw outcome without a winner and stops the turn', () => {
+		const result = turn(drawRules()).resolve(combat({ opponentHp: 40, playerHp: 40 }), declarations());
+
+		expect(result.isRight()).toBe(true);
+
+		if (result.isLeft()) {
+			return;
+		}
+
+		const { actions, resolution } = result.getRight();
+
+		expect(actions.map(action => action.actorId)).toEqual([PLAYER]);
+		expect(resolution.combat.status).toBe('completed');
+		expect(resolution.outcome).toEqual(CombatOutcome.draw());
+		expect(resolution.outcome?.isDraw()).toBe(true);
+		expect(resolution.outcome?.isVictory()).toBe(false);
+		expect(resolution.events.map(event => event.type)).toEqual(['move-used', 'combat-completed']);
+		expect(moveUsedPairs(resolution.events)).toEqual([`${PLAYER}:${PLAYER_MOVE}`]);
+		expect(resolution.events.some(event => event.payload['attackerId'] === OPPONENT)).toBe(false);
 	});
 
 	it('stops after the first action without resolving, emitting events for, or drawing randomness for the second', () => {

@@ -82,8 +82,10 @@ Actor activity, Move ownership, and target validity are not checked by the
 parser; they belong to declaration validation against the combat before the
 turn resolves. `DuelmonTurnDeclaration.validate` owns those rules and the
 plugin applies them to `useMove` declarations before dispatch. Phase 1 move
-declarations bind every content Move to `useMove`; generic actions such as
-`modifyAttribute` stay outside the turn-declaration contract.
+support is a different boundary: `DuelmonTurnDeclarations.receive` applies
+`Phase1MoveConstraints`, while the parser, the declaration, and the plugin stay
+generic. Phase 1 move declarations bind every content Move to `useMove`; generic
+actions such as `modifyAttribute` stay outside the turn-declaration contract.
 
 ## Receiving the turn declarations
 
@@ -98,12 +100,18 @@ const declarations = DuelmonTurnDeclarations.receive(catalog, combat, [
 ```
 
 It parses each entry with `DuelmonCombatInput.parse` and validates it with
-`DuelmonTurnDeclaration.validate`, then requires exactly one declaration per
-group in a strict one-versus-one combat. Missing, duplicated, or out-of-Phase-1
-declarations are rejected with aggregated failures; nothing is resolved, no
-events are emitted, and the `Combat` stays unchanged. The set exposes its
-declarations in combat order and looks them up by group or actor. Speed ordering
-and resolution belong to the turn service (#125). See
+`DuelmonTurnDeclaration.validate`, applies the Phase 1 move-support policy
+(`Phase1MoveConstraints`) at the turn boundary, and then requires exactly one
+declaration per group in a strict one-versus-one combat. Missing, duplicated,
+unsupported, or out-of-Phase-1 declarations are rejected with aggregated
+failures; nothing is resolved, no events are emitted, and the `Combat` stays
+unchanged. The policy is a turn-content rule, not a generic action rule:
+`DuelmonTurnDeclaration.validate` and the plugin keep applying their own
+contracts; for callers that do not go through a Phase 1 turn, the engine still
+resolves bound actions and `useMove` keeps reporting its own category, accuracy,
+or effect failures. The set exposes its declarations in combat order and looks
+them up by group or actor. Speed ordering and resolution belong to the turn
+service (#125). See
 [Phase 1 turn declarations](../../docs/content/124-turn-declarations.md).
 
 ## Ordering declared actions
@@ -144,8 +152,10 @@ the previous one, so the battle state is updated after every action. The service
 returns a `DuelmonCombatTurnResult`: one `CombatResolution` with the final
 combat, the events of every action merged in turn order and renumbered from one,
 and the engine outcome when an action completes the combat; plus `actions`, the
-resolved actor, Move, target, and successor snapshot of each action, in the
-order they actually ran. Only the declared Move of each side is resolved.
+resolved actor, Move, target, Speed, tie-break flag, and successor snapshot of
+each action, in the order they actually ran. `speed` is read from the state used
+to order the turn, and `tieBreak` is `true` when the fixed combat order decided
+an equal-Speed tie. Only the declared Move of each side is resolved.
 
 The turn stops at the action that completes the battle. The service keeps the
 engine outcome and `winnerGroupId`, returns the completed successor, and never
@@ -179,8 +189,16 @@ console.log(entry?.text);
 
 `DuelmonCombatHistory.recordTurn(result)` appends one `action` entry per action
 the turn actually resolved, in the real resolution order. Each entry keeps the
-actor, Move, and target identifiers, the successor `Combat` snapshot of the
-action, and readable text that reuses `DuelmonCombatReport` for that snapshot:
+actor, Move, target, Speed, and tie-break flag, the successor `Combat` snapshot
+of the action, and readable text that reuses `DuelmonCombatReport` for that
+snapshot. The first line explains the order with both Speeds, or with the fixed
+combat order when the tie-break decided the action:
+
+```text
+player-emberling acted first with ember-burst on opponent-aquafin (Speed 70 > 48)
+opponent-aquafin acted second with aqua-burst on player-emberling (Speed 48 < 70)
+player-emberling acted first with ember-burst on opponent-aquafin (Speed 70 = 70, fixed combat order)
+```
 
 ```ts
 const recorded = DuelmonCombatHistory.start(combat).recordTurn(result.getRight());
@@ -194,9 +212,9 @@ See [Recording the turn order in the history](../../docs/content/127-order-histo
 
 Each entry exposes `kind` (`start` or `action`), the serialized `combat`
 primitives, the readable `text`, and `action` for an action entry, which
-identifies the actor, Move, and target. The history hydrates back through
-`DuelmonCombatHistory.fromPrimitives`, keeps its entries in record order, and
-never keeps a manual copy of the battle state.
+identifies the actor, Move, target, Speed, and tie-break flag. The history
+hydrates back through `DuelmonCombatHistory.fromPrimitives`, keeps its entries in
+record order, and never keeps a manual copy of the battle state.
 
 The end-to-end product scenarios for different Speed, equal Speed, a knockout in
 the first action, invalid declarations, and the recorded order live in

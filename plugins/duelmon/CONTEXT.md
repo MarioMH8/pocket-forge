@@ -36,7 +36,7 @@ A read-only semantic projection of a neutral Combatant Group. It exposes its com
 _Avoid_: Team view, side DTO
 
 **Duelmon Combat Report**:
-A human-readable text projection of a Duelmon Combat View for the minimal Phase 1 screen and the basic history. It renders only the initial state Phase 1 exposes and keeps no manual copy of the combat.
+A human-readable text projection of a Duelmon Combat View for the minimal Phase 1 screen and the basic history. It renders only the state Phase 1 exposes, read from the combat snapshot it receives: the initial state and every action successor produce the same kind of report. Keeps no manual copy of the combat.
 _Avoid_: Log formatter, screen model
 
 **Duelmon Combat History**:
@@ -44,7 +44,7 @@ Ordered, serializable record of what happened in a Duelmon combat. Each entry ke
 _Avoid_: Combat log file, event store
 
 **Duelmon Combat History Entry**:
-One immutable item of the Duelmon Combat History. A start entry carries `kind: 'start'`, the serialized `Combat` primitives, and the readable report text; an action entry carries `kind: 'action'`, the actor, Move, and target identifiers, and the snapshot and report of the action's successor Combat. The invariant is that the action identifiers are present exactly when the kind is `action`.
+One immutable item of the Duelmon Combat History. A start entry carries `kind: 'start'`, the serialized `Combat` primitives, and the readable report text; an action entry carries `kind: 'action'`, the actor, Move, target, actor Speed, and tie-break flag, and the snapshot and report of the action's successor Combat. Its text also explains the order with both Speeds or the fixed tie. The invariant is that the action fields are present exactly when the kind is `action`.
 _Avoid_: Log line, message
 
 **Duelmon Combat Start**:
@@ -112,7 +112,7 @@ The value returned by a successful Duelmon Combat Turn: the single Combat Resolu
 _Avoid_: Turn report, resolution wrapper
 
 **Duelmon Combat Turn Action**:
-One action a Duelmon Combat Turn actually resolved, carrying the actor, Move, and target identifiers and the Combat snapshot produced by that action. The action order is the canonical order the history records.
+One action a Duelmon Combat Turn actually resolved, carrying the actor, Move, and target identifiers, the actor Speed read from the state used to order the turn, whether the fixed order decided an equal-Speed tie, and the Combat snapshot produced by that action. The action order is the canonical order the history records.
 _Avoid_: Action log line, event projection
 
 **Phase 1 Speed Order**:
@@ -124,7 +124,7 @@ The parsed input of one declared turn action: one actor, one Move, and one targe
 _Avoid_: Pending action, selected move state, action queue item
 
 **Duelmon Turn Declarations**:
-The two validated declarations of one Phase 1 turn, one per combat group. The set parses each raw declaration through the single-declaration contract, requires a strict one-versus-one combat, rejects missing, extra, or duplicated declarations, and exposes the result in combat order without resolving anything. Speed ordering and resolution belong to the Duelmon Combat Turn service.
+The two validated declarations of one Phase 1 turn, one per combat group. The set parses each raw declaration through the single-declaration contract, applies the Phase 1 Move Support policy at the turn boundary, requires a strict one-versus-one combat, rejects missing, extra, or duplicated declarations, and exposes the result in combat order without resolving anything. Speed ordering and resolution belong to the Duelmon Combat Turn service.
 _Avoid_: Action queue, pending turn state, declaration list DTO
 
 **Switch Action**:

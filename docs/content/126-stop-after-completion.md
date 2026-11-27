@@ -17,9 +17,10 @@ declaration contract (#124), or the basic turn resolution (#125).
 
 ## Contract
 
-`DuelmonCombatTurn.resolve(combat, declarations)` keeps the #125 signature
-`Either<CombatEngineFailure[], CombatResolution>` and adds two explicit
-boundaries.
+`DuelmonCombatTurn.resolve(combat, declarations)` keeps the
+`Either<CombatEngineFailure[], DuelmonCombatTurnResult>` signature and adds two
+explicit boundaries. The `resolution` field of the result keeps the single
+`CombatResolution` the turn produces.
 
 ### 1. No turn starts after the end
 
@@ -83,7 +84,7 @@ function resolveDeclaredActions(ordered: readonly DuelmonTurnDeclaration[], engi
   resolution. The real engine cannot produce either state; the guards keep the
   turn contract explicit if a future engine change breaks it.
 
-The final value is still one `CombatResolution.create(finalCombat, events,
+The `resolution` field is still one `CombatResolution.create(finalCombat, events,
 outcome)`. Because the turn stops at the completing action, `finalCombat` is the
 exact completed successor returned by the engine, and `outcome` is the exact
 `CombatOutcome` the engine reached, including `winnerGroupId` for a victory.
@@ -117,11 +118,11 @@ other declaration resolve.
 
 ## History boundary (#127)
 
-The turn returns only the events of the actions it actually resolved. #127 will
-build the action history entries from those events and their resolved actions.
-An omitted declaration never reaches the engine, so it cannot produce an event
-and therefore cannot produce a history entry. This document does not add history
-entries; it records the invariant #127 consumes.
+The turn returns only the events of the actions it actually resolved.
+`DuelmonCombatHistory.recordTurn` builds the action history entries from those
+resolved actions. An omitted declaration never reaches the engine, so it cannot
+produce an event, an action, or a history entry. This document does not add
+history entries; it records the invariant the history consumes.
 
 ## Tests
 

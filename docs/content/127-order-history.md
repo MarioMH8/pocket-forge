@@ -31,7 +31,9 @@ interface DuelmonCombatTurnAction {
   readonly actorId: string;
   readonly combat: Combat;
   readonly moveId: string;
+  readonly speed: number;
   readonly targetId: string;
+  readonly tieBreak: boolean;
 }
 ```
 
@@ -39,7 +41,9 @@ interface DuelmonCombatTurnAction {
   merged events renumbered in turn order, and the reached outcome.
 - `actions` lists exactly the actions the service resolved, in the real
   resolution order. Each action carries the declared actor, Move, and target,
-  and the successor `Combat` snapshot the engine returned for it.
+  the successor `Combat` snapshot the engine returned for it, the actor Speed
+  read from the state used to order the turn, and whether the fixed combat order
+  decided an equal-Speed tie.
 - A skipped declaration, or one the turn never reached because an earlier action
   completed the battle, does not appear in `actions`. The list is filled inside
   the same loop that calls the engine, so it is never inferred from the events.
@@ -55,7 +59,13 @@ an optional action identity:
 
 ```ts
 interface DuelmonCombatHistoryEntryPrimitives {
-  readonly action?: { readonly actorId: string; readonly moveId: string; readonly targetId: string };
+  readonly action?: {
+    readonly actorId: string;
+    readonly moveId: string;
+    readonly speed: number;
+    readonly targetId: string;
+    readonly tieBreak: boolean;
+  };
   readonly combat: CombatPrimitives;
   readonly kind: 'action' | 'start';
   readonly text: string;
@@ -64,10 +74,10 @@ interface DuelmonCombatHistoryEntryPrimitives {
 
 | Field | Meaning |
 | --- | --- |
-| `action` | Actor, Move, and target identifiers; present exactly when `kind` is `action`. |
+| `action` | Actor, Move, target, actor Speed, and tie-break flag; present exactly when `kind` is `action`. |
 | `combat` | Canonical `Combat.toPrimitives()` snapshot of the recorded moment. |
 | `kind` | `start` for the initial state, `action` for one resolved action. |
-| `text` | Readable text for the same snapshot, plus the action line for an action entry. |
+| `text` | Readable text for the same snapshot, plus the order explanation for an action entry. |
 
 The invariant is `kind === 'action'` if and only if `action` is present. A start
 entry keeps the field absent, so primitives written by #88 still hydrate
@@ -89,11 +99,11 @@ Each action entry is built from the action it records:
 - its snapshot is `action.combat.toPrimitives()`, the successor `Combat` of that
   action;
 - its text is `DuelmonCombatReport.fromCombat(action.combat).toString()`,
-  preceded by one readable line that identifies the actor, the Move, and the
-  target.
+  preceded by one readable line that identifies the actor, the Move, the target,
+  and why the action ran in that position.
 
 ```text
-player-emberling used ember-burst on opponent-aquafin
+player-emberling acted first with ember-burst on opponent-aquafin (Speed 70 > 48)
 
 Combat "combat-1"
 
@@ -102,9 +112,20 @@ Group "player" (active: player-emberling)
 ...
 ```
 
-The report and the snapshot come from the same `Combat`, so the text cannot
-contradict the state the entry persists. No summary is written by hand: the
-action line only names the action, while the report keeps rendering the state.
+The order line names both Speeds, so a reader can explain the order without
+consulting the implementation. On an equal-Speed tie it states the fixed combat
+order that decided it:
+
+```text
+player-emberling acted first with ember-burst on opponent-aquafin (Speed 70 = 70, fixed combat order)
+opponent-aquafin acted second with aqua-burst on player-emberling (Speed 70 = 70, fixed combat order)
+```
+
+Phase 1 actions do not modify Speed, so the successor snapshot keeps the same
+Speed values the turn used to order the actions. The report and the snapshot
+come from the same `Combat`, so the text cannot contradict the state the entry
+persists. No summary is written by hand: the order line only explains the
+position, while the report keeps rendering the state.
 
 `recordTurn` is immutable: it never changes the receiver and returns a new
 history. A turn without resolved actions appends nothing. Exactly one entry is
@@ -133,8 +154,9 @@ no entry.
    engine, not the declaration order and not an order derived from events.
 2. **One entry per resolved action.** No action is recorded twice and no
    declaration that did not run is recorded.
-3. **Identity in structure and text.** Every action entry carries `actorId`,
-   `moveId`, and `targetId`, and its first line names the same three values.
+3. **Identity and order in structure and text.** Every action entry carries
+   `actorId`, `moveId`, `targetId`, `speed`, and `tieBreak`, and its first line
+   names the same actor, Move, and target together with the Speed relation.
 4. **Snapshot and text agree.** The entry text reuses `DuelmonCombatReport` over
    the entry snapshot, so a reader and a consumer see the same state.
 5. **Compatibility.** Start primitives stay valid without `action`; hydration
@@ -163,10 +185,10 @@ The behaviour is covered by:
 | The history shows the order of the actions | `records the real action order after the start`; `appends one action entry per resolved action in the turn order` | Pass |
 | The order matches the real resolution | `records the real action order after the start` (events and `turn.actions`); `records the successor snapshot of each action` | Pass |
 | Each entry identifies creature and Move | `records an action entry with its actor, Move, and target`; `records the real action order after the start` | Pass |
-| Target is identified too | `records an action entry with its actor, Move, and target`; `identifies the action in the readable text and reuses the report` | Pass |
+| Target is identified too | `records an action entry with its actor, Move, and target`; `identifies the action and explains its order in the readable text` | Pass |
 | No duplicated entries | `does not duplicate an action`; `records exactly the completing action when the first action ends the battle` | Pass |
 | No action that did not happen | `records exactly the completing action when the first action ends the battle`; `adds no entry for a turn without resolved actions` | Pass |
-| The history is readable without implementation knowledge | `identifies the action in the readable text and reuses the report`; `keeps the action text consistent with its serialized snapshot` | Pass |
+| The history is readable without implementation knowledge | `identifies the action and explains its order in the readable text`; `explains an equal-Speed tie with the fixed combat order`; `keeps the action text consistent with its serialized snapshot` | Pass |
 | The previous history is not mutated | `does not mutate the previous history`; `does not mutate the previous history and round-trips the recorded one` | Pass |
 | Determinism and reproducibility | `is deterministic for the same start and turn`; `is reproducible from the same starting point` | Pass |
 | Primitives round-trip | `round-trips action primitives`; `round-trips recorded action entries through primitives` | Pass |

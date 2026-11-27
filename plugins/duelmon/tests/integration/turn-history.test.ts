@@ -164,7 +164,8 @@ describe('Turn history', () => {
 			throw new Error('Missing first action entry');
 		}
 
-		expect(entry.text.startsWith(`${PLAYER} used ${PLAYER_MOVE} on ${OPPONENT}`)).toBe(true);
+		expect(entry.text.startsWith('player-emberling acted first with ember-burst on opponent-aquafin')).toBe(true);
+		expect(entry.text).toContain('(Speed 70 > 48)');
 		expect(entry.text).toContain(
 			DuelmonCombatReport.fromCombat(CombatEntity.fromPrimitives(entry.combat)).toString()
 		);
@@ -211,6 +212,39 @@ describe('Turn history', () => {
 			);
 
 		expect(new Set(actions).size).toBe(actions.length);
+	});
+
+	it('appends a second turn without duplicating or losing the previous entries', () => {
+		const combatState = startCombat();
+		const firstTurn = turn().resolve(combatState, declarations());
+
+		expect(firstTurn.isRight()).toBe(true);
+
+		if (firstTurn.isLeft()) {
+			return;
+		}
+
+		const firstHistory = DuelmonCombatHistory.start(combatState).recordTurn(firstTurn.getRight());
+		const secondTurn = turn().resolve(firstTurn.getRight().resolution.combat, declarations());
+
+		expect(secondTurn.isRight()).toBe(true);
+
+		if (secondTurn.isLeft()) {
+			return;
+		}
+
+		const secondHistory = firstHistory.recordTurn(secondTurn.getRight());
+
+		expect(firstHistory.entries()).toHaveLength(3);
+		expect(secondHistory.entries().map(entry => entry.action?.actorId ?? entry.kind)).toEqual([
+			'start',
+			PLAYER,
+			OPPONENT,
+			PLAYER,
+			OPPONENT,
+		]);
+		expect(secondHistory.toPrimitives().entries.slice(0, 3)).toEqual([...firstHistory.toPrimitives().entries]);
+		expect(secondHistory.entries().at(-1)?.combat).toEqual(secondTurn.getRight().resolution.combat.toPrimitives());
 	});
 
 	it('does not mutate the previous history and round-trips the recorded one', () => {

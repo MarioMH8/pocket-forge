@@ -74,7 +74,7 @@ for both the comparison and the tie rule.
 ## Why Phase 1
 
 The roadmap ([Q15](../grill/0003-combat-plugin-roadmap.md)) reserves priority
-and random tie-breaks for Phase 2: the future turn service orders by priority
+and random tie-breaks for Phase 2: the Phase 2 turn service orders by priority
 and effective Speed, and draws from `RandomPocket` for ties. Phase 1 needs a
 stable, replayable baseline before that layer exists. Reading the raw battle
 Speed and falling back to a documented composition position gives #124 and #125
@@ -90,8 +90,8 @@ const [first, second] = order.sort([opponent, player]);
 ```
 
 - `DuelmonSpeedOrder.fromCombat(combat)` captures the combatant positions once.
-  The future turn service (#125) builds it once per turn and reuses it for the
-  two declarations.
+  `DuelmonCombatTurn` builds it once per turn and reuses it for the two
+  declarations.
 - `compare(left, right)` returns a negative number when `left` goes first, a
   positive number when `right` goes first, and zero for the same combatant.
 - `sort(combatants)` returns a new frozen array with the fastest combatant

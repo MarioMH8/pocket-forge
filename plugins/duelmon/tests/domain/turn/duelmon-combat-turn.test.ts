@@ -230,6 +230,34 @@ function declaration(actorId: string, moveId: string, targetId: string) {
 	};
 }
 
+function combatWithKnownMoves(combatantId: string, moveIds: readonly string[]): Combat {
+	const primitives: CombatPrimitives = DuelmonCombatStartMother.primitives();
+	const moves = moveIds.map(moveId => {
+		const move = CATALOG.findMove(moveId);
+
+		if (!move) {
+			throw new Error(`Fixture is missing the move "${moveId}"`);
+		}
+
+		return move.toPrimitives();
+	});
+
+	return CombatEntity.fromPrimitives({
+		...primitives,
+		groups: primitives.groups.map(group => ({
+			...group,
+			combatants: group.combatants.map(combatant =>
+				combatant.id === combatantId
+					? {
+							...combatant,
+							creature: { ...combatant.creature, moves: [...combatant.creature.moves, ...moves] },
+						}
+					: combatant
+			),
+		})),
+	});
+}
+
 function declarations() {
 	return [declaration(PLAYER, PLAYER_MOVE, OPPONENT), declaration(OPPONENT, OPPONENT_MOVE, PLAYER)];
 }
@@ -535,6 +563,58 @@ describe('DuelmonCombatTurn', () => {
 
 		expect(reversedResult.isRight()).toBe(true);
 		expect(reversed.calls.map(call => call.actorId)).toEqual([OPPONENT, PLAYER]);
+	});
+
+	it('exposes the Speed read from the ordered state and whether a tie was broken', () => {
+		const different = turnWith(new StubResolver()).resolve(combat(), declarations());
+		const tied = turnWith(new StubResolver()).resolve(combat({ opponentSpeed: 70 }), declarations());
+
+		expect(different.isRight()).toBe(true);
+		expect(tied.isRight()).toBe(true);
+
+		if (different.isLeft() || tied.isLeft()) {
+			return;
+		}
+
+		expect(different.getRight().actions.map(action => [action.actorId, action.speed, action.tieBreak])).toEqual([
+			[PLAYER, 70, false],
+			[OPPONENT, 48, false],
+		]);
+		expect(tied.getRight().actions.map(action => [action.actorId, action.speed, action.tieBreak])).toEqual([
+			[PLAYER, 70, true],
+			[OPPONENT, 70, true],
+		]);
+	});
+
+	it('rejects a Status or non-zero priority Move at the turn boundary', () => {
+		for (const [moveId, message] of [
+			['oath', 'Move "oath" is a Status move, which is outside Phase 1'],
+			['quick-jab', 'Move "quick-jab" has non-zero priority, which is outside Phase 1'],
+		] as const) {
+			const resolver = new StubResolver();
+			const result = turnWith(resolver, [PLAYER_MOVE, OPPONENT_MOVE, moveId]).resolve(
+				combatWithKnownMoves(PLAYER, [moveId]),
+				[declaration(PLAYER, moveId, OPPONENT), declaration(OPPONENT, OPPONENT_MOVE, PLAYER)]
+			);
+
+			expect(result.isLeft()).toBe(true);
+
+			if (result.isRight()) {
+				continue;
+			}
+
+			expect(
+				result
+					.getLeft()
+					.some(
+						error =>
+							error.reason === 'rejected' &&
+							error.path === 'declarations.0.input.moveId' &&
+							error.message === message
+					)
+			).toBe(true);
+			expect(resolver.calls).toHaveLength(0);
+		}
 	});
 
 	it('does not resolve anything or consume randomness when a declaration is invalid', () => {

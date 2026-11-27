@@ -33,8 +33,8 @@ function turnResult(): DuelmonCombatTurnResult {
 	const second = combatWithHp(94, 84);
 
 	return DuelmonCombatTurnResult.create(CombatResolution.create(second, []), [
-		DuelmonCombatTurnAction.create(PLAYER, 'ember-burst', OPPONENT, first),
-		DuelmonCombatTurnAction.create(OPPONENT, 'aqua-burst', PLAYER, second),
+		DuelmonCombatTurnAction.create(PLAYER, 'ember-burst', OPPONENT, first, 70, false),
+		DuelmonCombatTurnAction.create(OPPONENT, 'aqua-burst', PLAYER, second, 48, false),
 	]);
 }
 
@@ -115,6 +115,18 @@ describe('DuelmonCombatHistory', () => {
 				.slice(1)
 				.map(entry => entry.action?.targetId)
 		).toEqual([OPPONENT, PLAYER]);
+		expect(
+			recorded
+				.entries()
+				.slice(1)
+				.map(entry => entry.action?.speed)
+		).toEqual([70, 48]);
+		expect(
+			recorded
+				.entries()
+				.slice(1)
+				.map(entry => entry.action?.tieBreak)
+		).toEqual([false, false]);
 		expect(
 			recorded
 				.entries()

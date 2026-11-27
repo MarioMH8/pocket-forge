@@ -179,8 +179,9 @@ describe('Phase 1 turn declaration product scenarios', () => {
 		const combat = startCombat();
 		const before = combat.toPrimitives();
 		/*
-		 * Phase 1 has no declaration set or turn service: each declaration is validated independently
-		 * against the same unchanged combat and neither transition is applied.
+		 * The plugin validates each declaration independently against the same unchanged combat. The
+		 * turn set and turn service are separate contracts; this test only proves the plugin boundary
+		 * applies no transition.
 		 */
 		const player = declare(combat, declaration(PLAYER, PLAYER_MOVE, OPPONENT));
 		const opponent = declare(combat, declaration(OPPONENT, OPPONENT_MOVE, PLAYER));

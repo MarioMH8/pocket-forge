@@ -31,22 +31,25 @@ const resolution = turn.resolve(combat, [
 ```
 
 `resolve(combat, declarations)` returns
-`Either<CombatEngineFailure[], CombatResolution>`. A right result carries a single
-`CombatResolution` with the final `Combat`, the merged events of the turn, and the
-engine outcome when one of the actions completed the combat.
+`Either<CombatEngineFailure[], DuelmonCombatTurnResult>`. A right result carries
+the `DuelmonCombatTurnResult`: a single `resolution` with the final `Combat`, the
+merged events of the turn, and the engine outcome when one of the actions
+completed the combat; plus `actions`, the actor, Move, target, Speed, tie-break
+flag, and successor snapshot of each action in the order it actually ran.
 
 The steps are:
 
 1. `DuelmonTurnDeclarations.receive(catalog, combat, declarations)` parses and
-   validates both declarations. A rejected set returns its failures and resolves
-   nothing.
+   validates both declarations, including the Phase 1 move-support policy. A
+   rejected set returns its failures and resolves nothing.
 2. The declarations are ordered with `DuelmonSpeedOrder.fromCombat(combat)`,
    wrapping each `Combatant` snapshot into a `DuelmonCombatant` view.
 3. Each declaration is resolved in sequence through
    `engine.resolve(combatVigente, input)`, using the `resolution.combat` of the
    previous action as the next current state.
 4. The events of every action are merged in turn order and renumbered from one.
-5. The service returns one `CombatResolution.create(combatFinal, events, outcome)`.
+5. The service returns one `CombatResolution.create(combatFinal, events, outcome)`
+   wrapped with the resolved `actions` in a `DuelmonCombatTurnResult`.
 
 ## Order
 

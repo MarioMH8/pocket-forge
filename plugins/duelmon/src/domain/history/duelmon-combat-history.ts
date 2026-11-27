@@ -74,7 +74,9 @@ class DuelmonCombatHistory {
 			DuelmonCombatHistoryEntry.action(action.combat, {
 				actorId: action.actorId,
 				moveId: action.moveId,
+				speed: action.speed,
 				targetId: action.targetId,
+				tieBreak: action.tieBreak,
 			})
 		);
 
