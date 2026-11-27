@@ -60,13 +60,13 @@
 		"@faker-js/faker": "10.6.0",
 		"@hexadrop/either": "2.0.1",
 		"@hexadrop/error": "2.0.0",
-		"@pocket-forge/attribute": "0.0.0",
-		"@pocket-forge/combat": "0.0.0",
-		"@pocket-forge/combat-engine": "0.0.0",
+		"@pocket-forge/attribute": "0.1.0",
+		"@pocket-forge/combat": "0.1.0",
+		"@pocket-forge/combat-engine": "0.1.0",
 		"@pocket-forge/duelmon-dataset": "0.0.0",
-		"@pocket-forge/move": "0.0.0",
-		"@pocket-forge/rng": "0.0.0",
-		"@pocket-forge/species": "0.0.0",
+		"@pocket-forge/move": "0.1.0",
+		"@pocket-forge/rng": "0.0.1",
+		"@pocket-forge/species": "0.1.0",
 		"tsdown": "0.23.7"
 	}
 }
