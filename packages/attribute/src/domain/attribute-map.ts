@@ -1,0 +1,167 @@
+import InvalidArgumentError from '@hexadrop/error/invalid-argument';
+
+import type { AttributeRecord, AttributeValue, AttributeValues } from './attribute-definition';
+import AttributeDefinition from './attribute-definition';
+
+/**
+ * A typed, immutable container for validated attribute values.
+ *
+ * AttributeMap bridges the gap between the plain {@link AttributeValues}
+ * records used for persistence and strongly-typed attribute access in
+ * domain entities. It validates values at construction time against
+ * {@link AttributeDefinition}s and exposes them through the typed
+ * {@link value} property.
+ *
+ * @typeParam T - A record of attribute keys to their {@link AttributeValue} types.
+ *                Defaults to `AttributeValues` for untyped hydration.
+ *
+ * @example
+ * ```ts
+ * const hpDef = AttributeDefinition.create({
+ *   key: 'hp', type: 'number', defaultValue: 10,
+ *   constraints: { min: 1, max: 255 },
+ * });
+ *
+ * // Typed creation — T is inferred as { hp: number }
+ * const map = AttributeMap.create({ hp: 45 }, [hpDef], 'Creature');
+ * console.log(map.value.hp); // 45 (typed as number)
+ *
+ * // Hydration from persistence — untyped
+ * const hydrated = AttributeMap.fromPrimitives({ hp: 45 });
+ * console.log(hydrated.value.hp); // 45 (typed as AttributeValue)
+ * ```
+ */
+export default class AttributeMap<T extends Record<keyof T, AttributeValue> = AttributeValues> {
+	/**
+	 * The validated attribute values, keyed by attribute name.
+	 */
+	readonly value: T;
+
+	private constructor(value: T) {
+		this.value = value;
+	}
+
+	/**
+	 * Creates a validated AttributeMap from a typed values object.
+	 *
+	 * Every definition contributes an entry to the map: if a key is present
+	 * in `values` its value is used; otherwise the definition's
+	 * `defaultValue` is applied. All entries are validated against their
+	 * corresponding definition. Record values also receive their nested field
+	 * defaults, and the input object is never mutated.
+	 *
+	 * @param values - A typed record of attribute values. Keys not listed
+	 *                 here receive their definition's default.
+	 * @param definitions - The attribute definitions that govern the values.
+	 * @param entityName - Name of the entity being built (used in error messages).
+	 * @returns A fully validated AttributeMap with the inferred type.
+	 * @throws {InvalidArgumentError} When any value lacks a definition
+	 *         or fails validation.
+	 */
+	static create<T extends Record<keyof T, AttributeValue>>(
+		values: T,
+		definitions: AttributeDefinition[],
+		entityName: string
+	): AttributeMap<T> {
+		const definitionMap = new Map(definitions.map(d => [d.key, d]));
+
+		// Validate extra keys in values that have no definition
+		for (const key of Object.keys(values)) {
+			if (!definitionMap.has(key)) {
+				throw new InvalidArgumentError(`No definition found for attribute "${key}"`, entityName);
+			}
+		}
+
+		/*
+		 * Build merged record: values take precedence, missing required keys get defaults,
+		 * missing optional keys are skipped entirely.
+		 */
+		const merged = {} as Record<string, AttributeValue>;
+		for (const definition of definitions) {
+			const raw = (values as Record<string, AttributeValue>)[definition.key];
+			if (raw === undefined && !definition.required) {
+				continue;
+			}
+			const value = raw ?? definition.defaultValue;
+			if (value === undefined) {
+				throw new InvalidArgumentError(
+					`Attribute "${definition.key}" is required but no value or default was provided`,
+					entityName
+				);
+			}
+			const error = definition.validateValue(value);
+			if (error) {
+				throw new InvalidArgumentError(
+					`Invalid value for attribute "${definition.key}": ${error.message}`,
+					entityName
+				);
+			}
+			merged[definition.key] = this.resolveDefaults(value, definition);
+		}
+
+		return new AttributeMap(merged as unknown as T);
+	}
+
+	/**
+	 * Hydrates an AttributeMap from a plain record without re-validating.
+	 *
+	 * Use this when reconstructing from a persistence layer where data
+	 * was already validated at write time. The returned map is untyped
+	 * since no type information is available at hydration time.
+	 *
+	 * @param attributes - A plain record of attribute values keyed by attribute name.
+	 * @returns A rehydrated, untyped AttributeMap.
+	 */
+	static fromPrimitives(attributes: AttributeValues): AttributeMap {
+		return new AttributeMap(attributes);
+	}
+
+	private static resolveDefaults(value: AttributeValue, definition: AttributeDefinition): AttributeValue {
+		if (definition.type === 'record' && AttributeDefinition.isRecordValue(value)) {
+			return this.resolveRecordDefaults(value, definition);
+		}
+
+		const itemDefinition = definition.constraints.itemDefinition;
+		if (!itemDefinition || definition.type !== 'array' || !Array.isArray(value)) {
+			return value;
+		}
+
+		const records: AttributeRecord[] = [];
+		for (const item of value) {
+			if (!AttributeDefinition.isRecordValue(item)) {
+				return value;
+			}
+			records.push(item);
+		}
+
+		return records.map(item => this.resolveRecordDefaults(item, itemDefinition));
+	}
+
+	private static resolveRecordDefaults(value: AttributeRecord, definition: AttributeDefinition): AttributeRecord {
+		const resolved: Record<string, AttributeValue> = {};
+		const fields = definition.constraints.fields ?? [];
+
+		for (const field of fields) {
+			const fieldValue = value[field.key];
+
+			if (fieldValue === undefined) {
+				if (field.defaultValue !== undefined) {
+					resolved[field.key] = this.resolveDefaults(field.defaultValue, field);
+				}
+				continue;
+			}
+
+			resolved[field.key] = this.resolveDefaults(fieldValue, field);
+		}
+
+		return resolved;
+	}
+
+	/**
+	 * Serializes this AttributeMap into a plain {@link AttributeValues} record
+	 * suitable for persistence or transport.
+	 */
+	toPrimitives(): AttributeValues {
+		return { ...this.value };
+	}
+}

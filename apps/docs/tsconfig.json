@@ -1,0 +1,4 @@
+{
+	"extends": "@hexadrop/tsconfig",
+	"include": ["src", "scripts", "astro.config.ts"]
+}

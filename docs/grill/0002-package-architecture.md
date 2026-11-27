@@ -2,6 +2,8 @@
 
 This record preserves the hexadrop-based package architecture decisions from the second design interview. It builds on the product direction settled in [0001-pocket-forge-discovery](./0001-pocket-forge-discovery.md).
 
+> **Update 2026-11-21:** The Battle aggregate decisions in Q7, Q9, Q10, and Q11 are superseded by [0003-combat-plugin-roadmap](./0003-combat-plugin-roadmap.md). Combat is the combat state root; there is no separate Battle aggregate. Turn orchestration lives in concrete action services outside the state package, and a `CombatRepository` is deferred.
+
 ## Quick path
 
 1. Start with the accepted decisions table to understand the architecture.
@@ -10,25 +12,25 @@ This record preserves the hexadrop-based package architecture decisions from the
 
 ## Accepted direction
 
-| Area | Decision |
-|---|---|
-| Foundation | `@hexadrop/command`, `@hexadrop/query`, `@hexadrop/aggregate-root`, `@hexadrop/event`, `@hexadrop/either`, `@hexadrop/ioc`, `@hexadrop/value-object` |
-| CQRS | Commands return `Either<E, void>`; Queries return data. Both defined in `application/`. |
-| Aggregate Roots | `GameSession` (contains Player, Party, Roster, Inventory) and `Battle` (autonomous, ephemeral). Only these two in v1. |
-| Entity model | Entities extend `@hexadrop/aggregate-root`, accumulate domain events internally, exposed via `pullEvents()`. |
-| Event bus | `@hexadrop/event` EventBus, registered as a service in the IoC container. No Pocket Forge wrapper needed. |
-| IoC container | `@hexadrop/ioc` container. Each domain package exports `./container` with `register(container, options)`. |
-| DI React hooks | Pocket Forge package provides `useCommand(CommandClass)` and `useQuery(QueryClass)`. |
+| Area                 | Decision                                                                                                                                                                                                                         |
+|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Foundation           | `@hexadrop/command`, `@hexadrop/query`, `@hexadrop/aggregate-root`, `@hexadrop/event`, `@hexadrop/either`, `@hexadrop/ioc`, `@hexadrop/value-object`                                                                             |
+| CQRS                 | Commands return `Either<E, void>`; Queries return data. Both defined in `application/`.                                                                                                                                          |
+| Aggregate Roots      | `GameSession` (contains Player, Party, Roster, Inventory). `Combat` is the combat state root; there is no separate Battle aggregate. Only `GameSession` is an aggregate root in v1.                                                                                                            |
+| Entity model         | Entities extend `@hexadrop/aggregate-root`, accumulate domain events internally, exposed via `pullEvents()`.                                                                                                                     |
+| Event bus            | `@hexadrop/event` EventBus, registered as a service in the IoC container. No Pocket Forge wrapper needed.                                                                                                                        |
+| IoC container        | `@hexadrop/ioc` container. Each domain package exports `./container` with `register(container, options)`.                                                                                                                        |
+| DI React hooks       | Pocket Forge package provides `useCommand(CommandClass)` and `useQuery(QueryClass)`.                                                                                                                                             |
 | Cache / invalidation | Pocket Forge package provides `useReactQuery(QueryClass)` and `useReactCommand(CommandClass)`. Keys defined on the use case class; cache invalidated after command execution. Optimistic updates via optional method on Command. |
-| Layer dependency | domain → nothing. application → domain. infrastructure → domain + application. presentation → application + domain. presentation never imports infrastructure. |
-| Entrypoints | `./domain`, `./application`, `./infrastructure`, `./presentation`, `./presentation/game`, `./presentation/editor`, `./container`, `./manifest.json`. Each with explicit `index.ts` barrel. |
-| Exports map | `types` and `development` conditions per entrypoint. Explicit re-exports only. |
-| Manifest | Open schema included only in packages that need it. Contains `editor` (panels, tools, eventNodes, schemaContributions), `game` (uiComponents, assetPaths), `locales`, `migrations`. |
-| Schemas | Co-located in domain packages; `manifest.json` declares `schemaContributions`. |
-| Repositories | IndexedDB, filesystem (Tauri/Capacitor), in-memory for tests. Only ARs have repositories. |
-| Persistence | GameSession and Battle saved as independent snapshots. GameSession composed at load time from its repository. |
-| Encounter → Battle | The Encounter use case orchestrates the transition: pause exploration, create Battle, apply results when Battle ends. |
-| Tests | Colocated with source. Cross-layer integration tests at `tests/` per package. |
+| Layer dependency     | domain → nothing. application → domain. infrastructure → domain + application. presentation → application + domain. presentation never imports infrastructure.                                                                   |
+| Entrypoints          | `./domain`, `./application`, `./infrastructure`, `./presentation`, `./presentation/game`, `./presentation/editor`, `./container`, `./manifest.json`. Each with explicit `index.ts` barrel.                                       |
+| Exports map          | `types` and `development` conditions per entrypoint. Explicit re-exports only.                                                                                                                                                   |
+| Manifest             | Open schema included only in packages that need it. Contains `editor` (panels, tools, eventNodes, schemaContributions), `game` (uiComponents, assetPaths), `locales`, `migrations`.                                              |
+| Schemas              | Co-located in domain packages; `manifest.json` declares `schemaContributions`.                                                                                                                                                   |
+| Repositories         | IndexedDB, filesystem (Tauri/Capacitor), in-memory for tests. Aggregate Roots have repositories; a future `CombatRepository` is the deliberate exception for the Combat state root.                                                                                                                                        |
+| Persistence          | GameSession saved as a snapshot and composed at load time from its repository. Combat is serializable; a `CombatRepository` is deferred.                                                                                                                    |
+| Encounter → Combat   | The Encounter use case orchestrates the transition: pause exploration, create Combat, apply results when Combat ends.                                                                                                            |
+| Tests                | Colocated with source. Cross-layer integration tests at `tests/` per package.                                                                                                                                                    |
 
 ## Decision log
 
@@ -76,38 +78,40 @@ This record preserves the hexadrop-based package architecture decisions from the
 
 **Context:** This replaced an earlier decision to make each of those entities an independent AR. The centralized AR simplifies snapshots, save history, and deterministic replay.
 
-#### Q7 — Battle as aggregate root
-**Question:** Is Battle also an AggregateRoot?
+#### Q7 — Combat as the combat state root
+**Question:** Is Combat the combat state root?
 
-**Answer:** Yes. Battle is an independent AR from v1.
+**Answer:** Yes. Combat is the immutable, serializable combat state root. There is no separate Battle aggregate.
 
-**Context:** Battle has its own lifecycle, PRNG seed, events, and combat state. It is not a child entity of GameSession. Both GameSession and Battle are the only two ARs in v1.
+**Context:** Combat has its own lifecycle (active/completed), PRNG state, battle attributes, and combat state. It is not a child entity of GameSession. Turn orchestration, switching, and persistence live outside the state package: the turn loop belongs to concrete action services, and a `CombatRepository` is deferred. The earlier Battle aggregate answer is superseded by [0003-combat-plugin-roadmap](./0003-combat-plugin-roadmap.md).
 
 #### Q8 — Entity event accumulation
 **Question:** How do entities accumulate domain events?
 
 **Answer:** Entities extend `@hexadrop/aggregate-root`. Both static factory methods (`create()`) and instance mutation methods record events internally. The command handler calls `pullEvents()` to drain and emit them.
 
-#### Q9 — GameSession → Battle relationship
-**Question:** Are GameSession and Battle coupled?
+#### Q9 — GameSession → Combat relationship
+**Question:** Are GameSession and Combat coupled?
 
-**Answer:** No. They are independent ARs with no direct reference. The Encounter use case orchestrates the transition: pauses exploration, creates a Battle, and when Battle completes, applies results to GameSession.
+**Answer:** No. They are independent with no direct reference. The Encounter use case orchestrates the transition: pauses exploration, creates a Combat, and when Combat completes, applies results to GameSession.
+
+**Context:** Combat is the serializable state root for an encounter; GameSession owns the persistent roster and progression. The Encounter use case is the boundary between them.
 
 ### Persistence
 
 #### Q10 — Repository model
 **Question:** Which entities have repositories?
 
-**Answer:** Only Aggregate Roots have repositories. GameSession and Battle each have their own repository with IndexedDB, filesystem (Tauri/Capacitor), and in-memory implementations.
+**Answer:** Only Aggregate Roots have repositories in v1. GameSession has its own repository with IndexedDB, filesystem (Tauri/Capacitor), and in-memory implementations. Combat is serializable, but a `CombatRepository` is deferred.
 
-**Context:** GameSession contains all its child entities (Player, Party, etc.) and is persisted as one unit. Battle is also persisted independently as a snapshot. GameSession is loaded and composed from its repository at session start.
+**Context:** GameSession contains all its child entities (Player, Party, etc.) and is persisted as one unit. Combat is the combat state root, not an aggregate root in v1; its primitives can be persisted when an application use case needs an active-combat snapshot. The intended future shape is a `CombatRepository` — the deliberate exception to the Aggregate-Root repository rule — not a Battle aggregate.
 
 #### Q11 — Save snapshots
-**Question:** Are both GameSession and Battle snapshotted?
+**Question:** Are both GameSession and Combat snapshotted?
 
-**Answer:** Yes, both are persisted as independent snapshots.
+**Answer:** GameSession is snapshotted. Combat exposes primitives and can be snapshotted when a `CombatRepository` exists; persistence of an active combat is deferred.
 
-**Context:** A player can save during a battle; Battle state must be restorable. Battle snapshots are ephemeral (destroyed when battle ends), but persistable while active.
+**Context:** A player can save during an encounter; Combat state must be restorable when the application persists it. Combat snapshots are ephemeral (destroyed when combat ends), but the state model is already serializable.
 
 ### Package conventions
 
@@ -171,7 +175,7 @@ container/    → domain + application + infrastructure
 ## Review checklist
 
 - [x] Hexadrop provides the foundational abstractions (Command, Query, AggregateRoot, Event, Either, IoC, ValueObject).
-- [x] GameSession and Battle are the only two Aggregate Roots in v1.
+- [x] GameSession is the only Aggregate Root in v1; Combat is the combat state root.
 - [x] CQRS with Commands returning `Either<E, void>` and Queries returning data.
 - [x] React integration via `useReactQuery` and `useReactCommand` in a dedicated Pocket Forge package.
 - [x] Hexagonal layers per domain package with strict dependency rules.

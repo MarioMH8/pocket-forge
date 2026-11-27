@@ -1,0 +1,45 @@
+import { AttributeDefinitionMother } from '@pocket-forge/attribute/mother/domain';
+import { Move } from '@pocket-forge/move/domain';
+import { MoveMother } from '@pocket-forge/move/mother/domain';
+import { describe, expect, it } from 'bun:test';
+
+describe('Move', () => {
+	describe('create', () => {
+		it('creates a move with valid attributes', () => {
+			const definition = AttributeDefinitionMother.create();
+			const move = Move.create('move-1', {}, [definition]);
+
+			expect(move.id).toBe('move-1');
+		});
+
+		it('throws when id is empty', () => {
+			const definition = AttributeDefinitionMother.create();
+			expect(() => Move.create('', {}, [definition])).toThrow();
+		});
+	});
+
+	describe('fromPrimitives / toPrimitives', () => {
+		it('round-trips', () => {
+			const primitives = MoveMother.primitives();
+			const move = Move.fromPrimitives(primitives);
+
+			expect(move.toPrimitives()).toEqual(primitives);
+		});
+	});
+
+	describe('attributes', () => {
+		it('returns the attribute value when set', () => {
+			const move = MoveMother.create({
+				attributes: { power: 80 },
+			});
+
+			expect(move.attributes.value['power']).toBe(80);
+		});
+
+		it('returns undefined for missing attribute', () => {
+			const move = MoveMother.create();
+
+			expect(move.attributes.value['nonexistent']).toBeUndefined();
+		});
+	});
+});

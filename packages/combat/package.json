@@ -1,0 +1,62 @@
+{
+	"name": "@pocket-forge/combat",
+	"version": "0.1.0",
+	"description": "Immutable, neutral combat state for Pocket Forge. Owns participant composition, reproducibility state, and an active/completed lifecycle.",
+	"keywords": [
+		"pocket-forge",
+		"rpg",
+		"game-development",
+		"combat",
+		"battle"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/MarioMH8/pocket-forge.git",
+		"directory": "packages/combat"
+	},
+	"homepage": "https://github.com/MarioMH8/pocket-forge",
+	"bugs": {
+		"url": "https://github.com/MarioMH8/pocket-forge/issues"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"type": "module",
+	"sideEffects": false,
+	"files": [
+		"dist"
+	],
+	"exports": {
+		"./domain": {
+			"development": "./src/domain/index.ts",
+			"types": "./dist/domain/index.d.mts",
+			"default": "./dist/domain/index.mjs"
+		},
+		"./mother/domain": {
+			"development": "./mother/domain/index.ts"
+		}
+	},
+	"scripts": {
+		"build": "tsdown",
+		"prepublishOnly": "tsdown"
+	},
+	"peerDependencies": {
+		"@hexadrop/either": "^2.0.0",
+		"@hexadrop/error": "^2.0.0",
+		"@hexadrop/types": "^2.0.0",
+		"@pocket-forge/attribute": "workspace:*",
+		"@pocket-forge/creature": "workspace:*",
+		"@pocket-forge/rng": "workspace:*"
+	},
+	"devDependencies": {
+		"@faker-js/faker": "10.6.0",
+		"@hexadrop/either": "2.0.1",
+		"@hexadrop/error": "2.0.0",
+		"@hexadrop/types": "2.0.0",
+		"@pocket-forge/attribute": "0.1.0",
+		"@pocket-forge/creature": "0.1.0",
+		"@pocket-forge/rng": "0.0.1",
+		"tsdown": "0.23.7"
+	}
+}

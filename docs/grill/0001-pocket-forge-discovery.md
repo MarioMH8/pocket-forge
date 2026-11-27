@@ -10,19 +10,19 @@ This record preserves every question and outcome from the initial Pocket Forge d
 
 ## Accepted direction
 
-| Area | Decision |
-|---|---|
-| Audience | Mixed teams: TypeScript developers and visual-content designers. |
-| Initial product | A single-player 2D vertical slice, not multiplayer. |
-| Platforms | One web/PWA runtime, packaged through Tauri and Capacitor adapters. |
-| Game model | A specialized but configurable creature-collection RPG model using original, neutral terminology. |
-| Content | Canonical, versioned JSON validated by JSON Schema; trusted compiled TypeScript extensions. |
-| Simulation | Immutable serializable state, deterministic commands/events, explicit PRNG seed, and fixed ticks. |
-| Presentation | React for UI; Phaser for the 2D scene. |
-| Editor | A Tauri visual editor that supports the full vertical-slice workflow. |
-| Tooling | Bun workspaces and tests, tsdown ESM packages, Changesets, and a managed Vite-based bundler. |
-| License | Apache-2.0. |
-| Package design | Explicitly deferred. |
+| Area            | Decision                                                                                          |
+|-----------------|---------------------------------------------------------------------------------------------------|
+| Audience        | Mixed teams: TypeScript developers and visual-content designers.                                  |
+| Initial product | A single-player 2D vertical slice, not multiplayer.                                               |
+| Platforms       | One web/PWA runtime, packaged through Tauri and Capacitor adapters.                               |
+| Game model      | A specialized but configurable creature-collection RPG model using original, neutral terminology. |
+| Content         | Canonical, versioned JSON validated by JSON Schema; trusted compiled TypeScript extensions.       |
+| Simulation      | Immutable serializable state, deterministic commands/events, explicit PRNG seed, and fixed ticks. |
+| Presentation    | React for UI; Phaser for the 2D scene.                                                            |
+| Editor          | A Tauri visual editor that supports the full vertical-slice workflow.                             |
+| Tooling         | Bun workspaces and tests, tsdown ESM packages, Changesets, and a managed Vite-based bundler.      |
+| License         | Apache-2.0.                                                                                       |
+| Package design  | Explicitly deferred.                                                                              |
 
 ## Decision log
 

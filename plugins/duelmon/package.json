@@ -1,0 +1,72 @@
+{
+	"name": "@pocket-forge/duelmon",
+	"version": "0.0.0",
+	"description": "Duelmon Combat action plugin and authored action binding set for Pocket Forge.",
+	"keywords": [
+		"pocket-forge",
+		"rpg",
+		"game-development",
+		"combat",
+		"plugin",
+		"duelmon",
+		"pokemon"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/MarioMH8/pocket-forge.git",
+		"directory": "plugins/duelmon"
+	},
+	"homepage": "https://github.com/MarioMH8/pocket-forge",
+	"bugs": {
+		"url": "https://github.com/MarioMH8/pocket-forge/issues"
+	},
+	"license": "MIT",
+	"private": true,
+	"type": "module",
+	"sideEffects": false,
+	"files": [
+		"dist"
+	],
+	"exports": {
+		"./domain": {
+			"development": "./src/domain/index.ts",
+			"types": "./dist/domain/index.d.mts",
+			"default": "./dist/domain/index.mjs"
+		},
+		"./catalog": {
+			"development": "./src/catalog/index.ts",
+			"types": "./dist/catalog/index.d.mts",
+			"default": "./dist/catalog/index.mjs"
+		},
+		"./mother/domain": {
+			"development": "./mother/domain/index.ts"
+		}
+	},
+	"scripts": {
+		"build": "tsdown"
+	},
+	"peerDependencies": {
+		"@hexadrop/either": "^2.0.0",
+		"@hexadrop/error": "^2.0.0",
+		"@pocket-forge/attribute": "workspace:*",
+		"@pocket-forge/combat": "workspace:*",
+		"@pocket-forge/combat-engine": "workspace:*",
+		"@pocket-forge/duelmon-dataset": "workspace:*",
+		"@pocket-forge/move": "workspace:*",
+		"@pocket-forge/rng": "workspace:*",
+		"@pocket-forge/species": "workspace:*"
+	},
+	"devDependencies": {
+		"@faker-js/faker": "10.6.0",
+		"@hexadrop/either": "2.0.1",
+		"@hexadrop/error": "2.0.0",
+		"@pocket-forge/attribute": "0.1.0",
+		"@pocket-forge/combat": "0.1.0",
+		"@pocket-forge/combat-engine": "0.1.0",
+		"@pocket-forge/duelmon-dataset": "0.0.0",
+		"@pocket-forge/move": "0.1.0",
+		"@pocket-forge/rng": "0.0.1",
+		"@pocket-forge/species": "0.1.0",
+		"tsdown": "0.23.7"
+	}
+}

@@ -1,3 +1,0 @@
-# Model GameSession as the single aggregate root for session state
-
-`GameSession` is the sole aggregate root for persistent exploration state, containing `Player`, `Party`, `Roster`, and `Inventory` as child entities rather than independent aggregate roots each with their own repository. This centralizes snapshot persistence, save history, and deterministic replay behind a single save point. The only other aggregate root in v1 is `Battle`, which is autonomous and ephemeral — created for each combat encounter and destroyed when it ends. Child entities still accumulate domain events, but those events are collected and emitted through `GameSession.pullEvents()` so that every state transition has a single, ordered event stream per session.
