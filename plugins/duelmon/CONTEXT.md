@@ -107,6 +107,10 @@ _Avoid_: Stat modifier, buff
 The ordered resolution of the actions declared for one turn: priority and effective Speed determine order, the Combat Engine resolves each action, and the turn returns one Combat Resolution with events renumbered in turn order.
 _Avoid_: Game loop, round, battle manager
 
+**Phase 1 Speed Order**:
+The deterministic order Phase 1 applies to the combatants that declare an action: higher battle Speed first, and equal Speed broken by the combatant position in the Combat (group order, then combatant order). It reads `speed` from the battle state and never applies priority, stat stages, paralysis, or randomness.
+_Avoid_: Initiative, priority order, random tie-break
+
 **Duelmon Turn Declaration**:
 The parsed input of one declared turn action: one actor, one Move, and one target. Phase 1 declarations use the `combatant` target scope; validation restricts it to an active combatant of the only opposing group. Validation lives in `DuelmonTurnDeclaration` and runs at the plugin boundary for `useMove` bindings. A declaration is input, not state; it is never stored in `Combat` and has no pending or confirmed variant.
 _Avoid_: Pending action, selected move state, action queue item
