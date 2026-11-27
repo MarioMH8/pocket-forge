@@ -198,6 +198,10 @@ identifies the actor, Move, and target. The history hydrates back through
 `DuelmonCombatHistory.fromPrimitives`, keeps its entries in record order, and
 never keeps a manual copy of the battle state.
 
+The end-to-end product scenarios for different Speed, equal Speed, a knockout in
+the first action, invalid declarations, and the recorded order live in
+[Turn order product tests](../../docs/content/128-turn-order-product-tests.md).
+
 ## Use Move action
 
 `useMove` resolves a single-target damaging move for one combatant against
