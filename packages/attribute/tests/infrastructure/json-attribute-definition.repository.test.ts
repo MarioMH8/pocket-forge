@@ -9,14 +9,16 @@ import { afterEach, describe, expect, it } from 'bun:test';
 
 const directories: string[] = [];
 
-async function writeDefinitions(entries: unknown): Promise<string> {
-	const directory = await mkdtemp(path.join(tmpdir(), 'pocket-forge-attribute-'));
-	directories.push(directory);
+class DefinitionsFixture {
+	static async write(entries: unknown): Promise<string> {
+		const directory = await mkdtemp(path.join(tmpdir(), 'pocket-forge-attribute-'));
+		directories.push(directory);
 
-	const filePath = path.join(directory, 'attributes.json');
-	await Bun.write(filePath, JSON.stringify(entries));
+		const filePath = path.join(directory, 'attributes.json');
+		await Bun.write(filePath, JSON.stringify(entries));
 
-	return filePath;
+		return filePath;
+	}
 }
 
 const recordDefinitions: AttributeDefinitionPrimitives[] = [
@@ -63,7 +65,7 @@ afterEach(async () => {
 
 describe('JsonAttributeDefinitionRepository', () => {
 	it('loads flat definitions', async () => {
-		const filePath = await writeDefinitions([
+		const filePath = await DefinitionsFixture.write([
 			{ constraints: { max: 255, min: 1 }, defaultValue: 10, key: 'power', required: true, type: 'number' },
 		]);
 
@@ -75,7 +77,7 @@ describe('JsonAttributeDefinitionRepository', () => {
 	});
 
 	it('loads record definitions and arrays of records', async () => {
-		const filePath = await writeDefinitions(recordDefinitions);
+		const filePath = await DefinitionsFixture.write(recordDefinitions);
 
 		const definitions = await new JsonAttributeDefinitionRepository(filePath).search();
 
@@ -88,7 +90,7 @@ describe('JsonAttributeDefinitionRepository', () => {
 	});
 
 	it('rejects record definitions whose fields are not an array', async () => {
-		const filePath = await writeDefinitions([
+		const filePath = await DefinitionsFixture.write([
 			{ constraints: { fields: 'status' }, key: 'secondary', type: 'record' },
 		]);
 
@@ -97,7 +99,7 @@ describe('JsonAttributeDefinitionRepository', () => {
 	});
 
 	it('rejects definitions with an unknown type', async () => {
-		const filePath = await writeDefinitions([{ constraints: {}, key: 'secondary', type: 'table' }]);
+		const filePath = await DefinitionsFixture.write([{ constraints: {}, key: 'secondary', type: 'table' }]);
 
 		// eslint-disable-next-line typescript/await-thenable -- bun:test rejects is thenable
 		await expect(new JsonAttributeDefinitionRepository(filePath).search()).rejects.toThrow();

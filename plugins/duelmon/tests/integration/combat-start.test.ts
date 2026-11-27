@@ -18,81 +18,83 @@ type MutableRequest = DeepMutable<DuelmonCombatStartRequest>;
 
 const PHASE_1_ATTRIBUTE_KEYS = ['attack', 'defense', 'hp', 'level', 'maxHp', 'special', 'speed'];
 
-function valid(): MutableRequest {
-	return structuredClone(DuelmonCombatStartMother.request()) as MutableRequest;
-}
+class CombatStartFixture {
+	static combatant(request: MutableRequest, groupIndex: number, combatantIndex = 0) {
+		const value = this.group(request, groupIndex).combatants[combatantIndex];
 
-function start(request: DuelmonCombatStartRequest = DuelmonCombatStartMother.request()) {
-	return DuelmonCombatStart.fromContent(
-		request,
-		DuelmonCombatStartMother.catalog(),
-		DuelmonCombatStartMother.DEFINITIONS
-	);
-}
+		if (!value) {
+			throw new Error(`Missing combatant at index ${String(combatantIndex)}`);
+		}
 
-function startCombat() {
-	const result = start();
-
-	expect(result.isRight()).toBe(true);
-
-	return result.getRight();
-}
-
-function started() {
-	return DuelmonCombat.fromCombat(startCombat());
-}
-
-function group(request: MutableRequest, index: number) {
-	const value = request.groups[index];
-
-	if (!value) {
-		throw new Error(`Missing group at index ${String(index)}`);
+		return value;
 	}
 
-	return value;
-}
+	static group(request: MutableRequest, index: number) {
+		const value = request.groups[index];
 
-function combatant(request: MutableRequest, groupIndex: number, combatantIndex = 0) {
-	const value = group(request, groupIndex).combatants[combatantIndex];
+		if (!value) {
+			throw new Error(`Missing group at index ${String(index)}`);
+		}
 
-	if (!value) {
-		throw new Error(`Missing combatant at index ${String(combatantIndex)}`);
+		return value;
 	}
 
-	return value;
-}
+	static requireActiveCombatant(combatantGroup: DuelmonCombatantGroup) {
+		const [value] = combatantGroup.activeCombatants();
 
-function requireGroup(combat: DuelmonCombat, id: string): DuelmonCombatantGroup {
-	const value = combat.group(id);
+		if (!value) {
+			throw new Error(`Group "${combatantGroup.id}" has no active combatant`);
+		}
 
-	if (!value) {
-		throw new Error(`Missing combat group "${id}"`);
+		return value;
 	}
 
-	return value;
-}
+	static requireGroup(combat: DuelmonCombat, id: string): DuelmonCombatantGroup {
+		const value = combat.group(id);
 
-function requireActiveCombatant(combatantGroup: DuelmonCombatantGroup) {
-	const [value] = combatantGroup.activeCombatants();
+		if (!value) {
+			throw new Error(`Missing combat group "${id}"`);
+		}
 
-	if (!value) {
-		throw new Error(`Group "${combatantGroup.id}" has no active combatant`);
+		return value;
 	}
 
-	return value;
+	static start(request: DuelmonCombatStartRequest = DuelmonCombatStartMother.request()) {
+		return DuelmonCombatStart.fromContent(
+			request,
+			DuelmonCombatStartMother.catalog(),
+			DuelmonCombatStartMother.DEFINITIONS
+		);
+	}
+
+	static startCombat() {
+		const result = this.start();
+
+		expect(result.isRight()).toBe(true);
+
+		return result.getRight();
+	}
+
+	static started() {
+		return DuelmonCombat.fromCombat(this.startCombat());
+	}
+
+	static valid(): MutableRequest {
+		return structuredClone(DuelmonCombatStartMother.request()) as MutableRequest;
+	}
 }
 
 describe('Phase 1 combat start product scenarios', () => {
 	it('starts a valid one-on-one combat with two minimum-set creatures', () => {
-		const combat = started();
+		const combat = CombatStartFixture.started();
 
 		expect(combat.id).toBe('combat-1');
 		expect(combat.groups().map(combatGroup => combatGroup.id)).toEqual(['player', 'opponent']);
 
-		const player = requireGroup(combat, 'player');
-		const opponent = requireGroup(combat, 'opponent');
-		const playerCombatant = requireActiveCombatant(player);
-		const opponentCombatant = requireActiveCombatant(opponent);
+		const player = CombatStartFixture.requireGroup(combat, 'player');
+		const opponent = CombatStartFixture.requireGroup(combat, 'opponent');
+		const playerCombatant = CombatStartFixture.requireActiveCombatant(player);
+		const opponentCombatant = CombatStartFixture.requireActiveCombatant(opponent);
 
 		expect(player.activeCombatantIds).toEqual(['player-emberling']);
 		expect(opponent.activeCombatantIds).toEqual(['opponent-aquafin']);
@@ -111,7 +113,7 @@ describe('Phase 1 combat start product scenarios', () => {
 	});
 
 	it('renders the started state as readable text', () => {
-		const text = DuelmonCombatReport.fromCombat(startCombat()).toString();
+		const text = DuelmonCombatReport.fromCombat(CombatStartFixture.startCombat()).toString();
 
 		expect(text).toContain('player-emberling (emberling) [Fire] HP 99/99');
 		expect(text).toContain('opponent-aquafin (aquafin) [Water] HP 104/104');
@@ -121,11 +123,11 @@ describe('Phase 1 combat start product scenarios', () => {
 	});
 
 	it('rejects incomplete content with a clear message and no combat', () => {
-		const request = valid();
+		const request = CombatStartFixture.valid();
 
-		combatant(request, 0).moveIds = ['ember-burst', 'missing'];
+		CombatStartFixture.combatant(request, 0).moveIds = ['ember-burst', 'missing'];
 
-		const result = start(request);
+		const result = CombatStartFixture.start(request);
 
 		expect(result.isLeft()).toBe(true);
 
@@ -137,11 +139,11 @@ describe('Phase 1 combat start product scenarios', () => {
 	});
 
 	it('rejects a loadout without moves', () => {
-		const request = valid();
+		const request = CombatStartFixture.valid();
 
-		combatant(request, 0).moveIds = [];
+		CombatStartFixture.combatant(request, 0).moveIds = [];
 
-		const result = start(request);
+		const result = CombatStartFixture.start(request);
 
 		expect(result.isLeft()).toBe(true);
 
@@ -158,11 +160,11 @@ describe('Phase 1 combat start product scenarios', () => {
 			['flare', 'secondary effect'],
 			['quick-jab', 'priority'],
 		] as const) {
-			const request = valid();
+			const request = CombatStartFixture.valid();
 
-			combatant(request, 0).moveIds = [moveId];
+			CombatStartFixture.combatant(request, 0).moveIds = [moveId];
 
-			const result = start(request);
+			const result = CombatStartFixture.start(request);
 
 			expect(result.isLeft()).toBe(true);
 
@@ -177,7 +179,7 @@ describe('Phase 1 combat start product scenarios', () => {
 	});
 
 	it('exposes only the Phase 1 state surface', () => {
-		const combat = started();
+		const combat = CombatStartFixture.started();
 		const combatants = combat.groups().flatMap(combatGroup => combatGroup.combatants());
 
 		expect(combatants).toHaveLength(2);
@@ -206,7 +208,7 @@ describe('Phase 1 combat start product scenarios', () => {
 	});
 
 	it('does not expose information outside Phase 1 in the readable text', () => {
-		const combat = startCombat();
+		const combat = CombatStartFixture.startCombat();
 		const text = DuelmonCombatReport.fromCombat(combat).toString();
 		const historyText = DuelmonCombatHistory.start(combat).entries()[0]?.text;
 
@@ -217,7 +219,7 @@ describe('Phase 1 combat start product scenarios', () => {
 	});
 
 	it('records the start in the history from the same combat', () => {
-		const combat = startCombat();
+		const combat = CombatStartFixture.startCombat();
 		const history = DuelmonCombatHistory.start(combat);
 		const entries = history.entries();
 

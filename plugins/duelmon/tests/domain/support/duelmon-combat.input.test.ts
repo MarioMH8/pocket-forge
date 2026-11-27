@@ -8,13 +8,15 @@ const DECLARATION = {
 	target: { id: 'opponent-aquafin', scope: 'combatant' },
 } as const;
 
-function parse(value: unknown) {
-	return DuelmonCombatInput.parse(value);
+class CombatInputFixture {
+	static parse(value: unknown) {
+		return DuelmonCombatInput.parse(value);
+	}
 }
 
 describe('DuelmonCombatInput', () => {
 	it('parses one actor, one move, and one Phase 1 target', () => {
-		const result = parse(DECLARATION);
+		const result = CombatInputFixture.parse(DECLARATION);
 
 		expect(result.isRight()).toBe(true);
 
@@ -27,7 +29,7 @@ describe('DuelmonCombatInput', () => {
 	});
 
 	it('exposes only the declaration fields', () => {
-		const result = parse({
+		const result = CombatInputFixture.parse({
 			...DECLARATION,
 			flee: true,
 			item: 'potion',
@@ -45,7 +47,7 @@ describe('DuelmonCombatInput', () => {
 	});
 
 	it('rejects a declaration without a move instead of choosing a default', () => {
-		const result = parse({ actorId: DECLARATION.actorId, target: DECLARATION.target });
+		const result = CombatInputFixture.parse({ actorId: DECLARATION.actorId, target: DECLARATION.target });
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-input');
@@ -53,7 +55,7 @@ describe('DuelmonCombatInput', () => {
 	});
 
 	it('rejects a declaration that carries only a move list', () => {
-		const result = parse({
+		const result = CombatInputFixture.parse({
 			actorId: DECLARATION.actorId,
 			moveIds: ['ember-burst', 'tackle'],
 			target: DECLARATION.target,
@@ -65,7 +67,7 @@ describe('DuelmonCombatInput', () => {
 	});
 
 	it('rejects an empty move id', () => {
-		const result = parse({ ...DECLARATION, moveId: ' ' });
+		const result = CombatInputFixture.parse({ ...DECLARATION, moveId: ' ' });
 
 		expect(result.isLeft()).toBe(true);
 		expect(result.getLeft()[0]?.reason).toBe('invalid-input');
@@ -73,8 +75,8 @@ describe('DuelmonCombatInput', () => {
 	});
 
 	it('rejects a declaration without an actor or target', () => {
-		const withoutActor = parse({ moveId: DECLARATION.moveId, target: DECLARATION.target });
-		const withoutTarget = parse({ actorId: DECLARATION.actorId, moveId: DECLARATION.moveId });
+		const withoutActor = CombatInputFixture.parse({ moveId: DECLARATION.moveId, target: DECLARATION.target });
+		const withoutTarget = CombatInputFixture.parse({ actorId: DECLARATION.actorId, moveId: DECLARATION.moveId });
 
 		expect(withoutActor.getLeft()[0]?.path).toBe('input.actorId');
 		expect(withoutTarget.getLeft()[0]?.path).toBe('input.target');
@@ -85,7 +87,7 @@ describe('DuelmonCombatInput', () => {
 		const before = combat.toPrimitives();
 		const value = { ...DECLARATION, target: { ...DECLARATION.target } };
 
-		expect(parse(value).isRight()).toBe(true);
+		expect(CombatInputFixture.parse(value).isRight()).toBe(true);
 		expect(value).toEqual(DECLARATION);
 		expect(combat.toPrimitives()).toEqual(before);
 	});
@@ -94,7 +96,7 @@ describe('DuelmonCombatInput', () => {
 		const combat = DuelmonCombatStartMother.combat();
 		const before = combat.toPrimitives();
 
-		expect(parse(DECLARATION).isRight()).toBe(true);
+		expect(CombatInputFixture.parse(DECLARATION).isRight()).toBe(true);
 		expect('pending' in before).toBe(false);
 		expect('confirmed' in before).toBe(false);
 		expect(combat.toPrimitives()).toEqual(before);

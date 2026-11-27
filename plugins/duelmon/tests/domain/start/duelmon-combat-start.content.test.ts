@@ -16,64 +16,86 @@ type DeepMutable<T> = T extends readonly (infer U)[]
 
 type MutableRequest = DeepMutable<DuelmonCombatStartRequest>;
 
-function valid(): MutableRequest {
-	return structuredClone(DuelmonCombatStartMother.request()) as MutableRequest;
-}
+class CombatStartContentFixture {
+	static combatant(request: MutableRequest, groupIndex: number, combatantIndex = 0) {
+		const value = this.group(request, groupIndex).combatants[combatantIndex];
 
-function group(request: MutableRequest, index: number) {
-	const value = request.groups[index];
+		if (!value) {
+			throw new Error(`Missing combatant at index ${String(combatantIndex)}`);
+		}
 
-	if (!value) {
-		throw new Error(`Missing group at index ${String(index)}`);
+		return value;
 	}
 
-	return value;
-}
+	static errorsOf(request: DuelmonCombatStartRequest): StartError[] {
+		const result = this.start(request);
 
-function combatant(request: MutableRequest, groupIndex: number, combatantIndex = 0) {
-	const value = group(request, groupIndex).combatants[combatantIndex];
+		expect(result.isLeft()).toBe(true);
 
-	if (!value) {
-		throw new Error(`Missing combatant at index ${String(combatantIndex)}`);
+		return result.getLeft();
 	}
 
-	return value;
-}
+	static expectError(errors: StartError[], expected: { path?: string; reason: string }): void {
+		const matches = errors.filter(
+			error => error.reason === expected.reason && (expected.path === undefined || error.path === expected.path)
+		);
 
-function start(request: DuelmonCombatStartRequest) {
-	return DuelmonCombatStart.fromContent(
-		request,
-		DuelmonCombatStartMother.catalog(),
-		DuelmonCombatStartMother.DEFINITIONS
-	);
-}
+		expect(matches.length).toBeGreaterThan(0);
+	}
 
-function errorsOf(request: DuelmonCombatStartRequest): StartError[] {
-	const result = start(request);
+	static group(request: MutableRequest, index: number) {
+		const value = request.groups[index];
 
-	expect(result.isLeft()).toBe(true);
+		if (!value) {
+			throw new Error(`Missing group at index ${String(index)}`);
+		}
 
-	return result.getLeft();
-}
+		return value;
+	}
 
-function expectError(errors: StartError[], expected: { path?: string; reason: string }): void {
-	const matches = errors.filter(
-		error => error.reason === expected.reason && (expected.path === undefined || error.path === expected.path)
-	);
+	static moveView(id: string): DuelmonMove {
+		const move = DuelmonCombatStartMother.catalog().findMove(id);
 
-	expect(matches.length).toBeGreaterThan(0);
+		if (!move) {
+			throw new Error(`Missing fixture move "${id}"`);
+		}
+
+		return DuelmonMove.fromMove(move);
+	}
+
+	static speciesView(id: string): DuelmonSpecies {
+		const species = DuelmonCombatStartMother.catalog().findSpecies(id);
+
+		if (!species) {
+			throw new Error(`Missing fixture species "${id}"`);
+		}
+
+		return DuelmonSpecies.fromSpecies(species);
+	}
+
+	static start(request: DuelmonCombatStartRequest) {
+		return DuelmonCombatStart.fromContent(
+			request,
+			DuelmonCombatStartMother.catalog(),
+			DuelmonCombatStartMother.DEFINITIONS
+		);
+	}
+
+	static valid(): MutableRequest {
+		return structuredClone(DuelmonCombatStartMother.request()) as MutableRequest;
+	}
 }
 
 describe('DuelmonCombatStart.fromContent', () => {
 	it('builds the initial state from valid content', () => {
-		const result = start(DuelmonCombatStartMother.request());
+		const result = CombatStartContentFixture.start(DuelmonCombatStartMother.request());
 
 		expect(result.isRight()).toBe(true);
 		expect(result.getRight().toPrimitives()).toEqual(DuelmonCombatStartMother.primitives());
 	});
 
 	it('assigns the Phase 1 level to every combatant', () => {
-		const combat = start(DuelmonCombatStartMother.request()).getRight();
+		const combat = CombatStartContentFixture.start(DuelmonCombatStartMother.request()).getRight();
 
 		expect(combat.groups.map(groupEntry => groupEntry.combatants[0]?.attributes.toPrimitives()['level'])).toEqual([
 			50, 50,
@@ -81,15 +103,17 @@ describe('DuelmonCombatStart.fromContent', () => {
 	});
 
 	it('produces the same state twice and survives a round trip', () => {
-		const first = start(DuelmonCombatStartMother.request()).getRight().toPrimitives();
-		const second = start(DuelmonCombatStartMother.request()).getRight().toPrimitives();
+		const first = CombatStartContentFixture.start(DuelmonCombatStartMother.request()).getRight().toPrimitives();
+		const second = CombatStartContentFixture.start(DuelmonCombatStartMother.request()).getRight().toPrimitives();
 
 		expect(second).toEqual(first);
 		expect(Combat.fromPrimitives(first).toPrimitives()).toEqual(first);
 	});
 
 	it('only carries Phase 1 battle attributes', () => {
-		const primitives = start(DuelmonCombatStartMother.request()).getRight().toPrimitives();
+		const primitives = CombatStartContentFixture.start(DuelmonCombatStartMother.request())
+			.getRight()
+			.toPrimitives();
 
 		expect(Object.keys(primitives.attributes)).toEqual([]);
 
@@ -107,7 +131,7 @@ describe('DuelmonCombatStart.fromContent', () => {
 	});
 
 	it('uses the request seed for the random state', () => {
-		const primitives = start(DuelmonCombatStartMother.request({ seed: 7 }))
+		const primitives = CombatStartContentFixture.start(DuelmonCombatStartMother.request({ seed: 7 }))
 			.getRight()
 			.toPrimitives();
 
@@ -115,22 +139,22 @@ describe('DuelmonCombatStart.fromContent', () => {
 	});
 
 	it('rejects unknown species', () => {
-		const request = valid();
+		const request = CombatStartContentFixture.valid();
 
-		combatant(request, 0).speciesId = 'missing';
+		CombatStartContentFixture.combatant(request, 0).speciesId = 'missing';
 
-		expectError(errorsOf(request), {
+		CombatStartContentFixture.expectError(CombatStartContentFixture.errorsOf(request), {
 			path: 'groups.0.combatants.0.creature.species.id',
 			reason: 'unknown-species',
 		});
 	});
 
 	it('rejects unknown moves', () => {
-		const request = valid();
+		const request = CombatStartContentFixture.valid();
 
-		combatant(request, 0).moveIds = ['tackle', 'missing'];
+		CombatStartContentFixture.combatant(request, 0).moveIds = ['tackle', 'missing'];
 
-		expectError(errorsOf(request), {
+		CombatStartContentFixture.expectError(CombatStartContentFixture.errorsOf(request), {
 			path: 'groups.0.combatants.0.creature.moves.1',
 			reason: 'unknown-move',
 		});
@@ -138,11 +162,11 @@ describe('DuelmonCombatStart.fromContent', () => {
 
 	it('rejects moves outside the Phase 1 slice', () => {
 		for (const moveId of ['oath', 'quick-jab', 'flare']) {
-			const request = valid();
+			const request = CombatStartContentFixture.valid();
 
-			combatant(request, 0).moveIds = [moveId];
+			CombatStartContentFixture.combatant(request, 0).moveIds = [moveId];
 
-			expectError(errorsOf(request), {
+			CombatStartContentFixture.expectError(CombatStartContentFixture.errorsOf(request), {
 				path: 'groups.0.combatants.0.creature.moves.0',
 				reason: 'unsupported-move',
 			});
@@ -165,9 +189,9 @@ describe('DuelmonCombatStart.fromContent', () => {
 		const catalog = DuelmonCatalog.fromDataset(
 			DuelmonDatasetMother.create({ moves: [...DuelmonDatasetMother.moves(), charge] })
 		).getRight();
-		const request = valid();
+		const request = CombatStartContentFixture.valid();
 
-		combatant(request, 0).moveIds = ['solar-beam'];
+		CombatStartContentFixture.combatant(request, 0).moveIds = ['solar-beam'];
 
 		const result = DuelmonCombatStart.fromContent(request, catalog, DuelmonCombatStartMother.DEFINITIONS);
 
@@ -181,60 +205,66 @@ describe('DuelmonCombatStart.fromContent', () => {
 	});
 
 	it('rejects a missing loadout', () => {
-		const request = valid();
+		const request = CombatStartContentFixture.valid();
 
-		combatant(request, 0).moveIds = [];
+		CombatStartContentFixture.combatant(request, 0).moveIds = [];
 
-		expectError(errorsOf(request), {
+		CombatStartContentFixture.expectError(CombatStartContentFixture.errorsOf(request), {
 			path: 'groups.0.combatants.0.creature.moves',
 			reason: 'missing-moves',
 		});
 	});
 
 	it('rejects a malformed request', () => {
-		const request = valid();
+		const request = CombatStartContentFixture.valid();
 
 		request.seed = 1.5;
-		expectError(errorsOf(request), { path: 'seed', reason: 'invalid-request' });
+		CombatStartContentFixture.expectError(CombatStartContentFixture.errorsOf(request), {
+			path: 'seed',
+			reason: 'invalid-request',
+		});
 
-		combatant(request, 0).speciesId = '';
-		expectError(errorsOf(request), {
+		CombatStartContentFixture.combatant(request, 0).speciesId = '';
+		CombatStartContentFixture.expectError(CombatStartContentFixture.errorsOf(request), {
 			path: 'groups.0.combatants.0.speciesId',
 			reason: 'invalid-request',
 		});
 	});
 
 	it('aggregates every content failure', () => {
-		const request = valid();
+		const request = CombatStartContentFixture.valid();
 
-		combatant(request, 0).speciesId = 'missing-species';
-		combatant(request, 1).moveIds = ['tackle', 'missing-move'];
+		CombatStartContentFixture.combatant(request, 0).speciesId = 'missing-species';
+		CombatStartContentFixture.combatant(request, 1).moveIds = ['tackle', 'missing-move'];
 
-		expect(errorsOf(request).length).toBeGreaterThanOrEqual(2);
+		expect(CombatStartContentFixture.errorsOf(request).length).toBeGreaterThanOrEqual(2);
 	});
 
 	it('rejects a request without exactly two groups', () => {
-		const request = valid();
+		const request = CombatStartContentFixture.valid();
 
 		request.groups.splice(1);
 
-		expectError(errorsOf(request), { path: 'groups', reason: 'invalid-group-count' });
+		CombatStartContentFixture.expectError(CombatStartContentFixture.errorsOf(request), {
+			path: 'groups',
+			reason: 'invalid-group-count',
+		});
 	});
 
 	it('rejects a request with more than one active combatant', () => {
-		const request = valid();
+		const request = CombatStartContentFixture.valid();
 
-		group(request, 0).activeCombatantIds.push('other');
+		CombatStartContentFixture.group(request, 0).activeCombatantIds.push('other');
 
-		expectError(errorsOf(request), {
+		CombatStartContentFixture.expectError(CombatStartContentFixture.errorsOf(request), {
 			path: 'groups.0.attributes.activeCombatantIds',
 			reason: 'invalid-active-combatant',
 		});
 	});
 
 	it('aggregates structural request errors with content errors', () => {
-		const request = valid();
-		const extraGroup = structuredClone(group(request, 1));
+		const request = CombatStartContentFixture.valid();
+		const extraGroup = structuredClone(CombatStartContentFixture.group(request, 1));
 
 		extraGroup.id = 'extra';
 		extraGroup.activeCombatantIds = ['extra-combatant'];
@@ -247,12 +277,12 @@ describe('DuelmonCombatStart.fromContent', () => {
 
 		extraCombatant.id = 'extra-combatant';
 		request.groups.push(extraGroup);
-		combatant(request, 0).moveIds = ['ember-burst', 'missing'];
+		CombatStartContentFixture.combatant(request, 0).moveIds = ['ember-burst', 'missing'];
 
-		const errors = errorsOf(request);
+		const errors = CombatStartContentFixture.errorsOf(request);
 
-		expectError(errors, { path: 'groups', reason: 'invalid-group-count' });
-		expectError(errors, {
+		CombatStartContentFixture.expectError(errors, { path: 'groups', reason: 'invalid-group-count' });
+		CombatStartContentFixture.expectError(errors, {
 			path: 'groups.0.combatants.0.creature.moves.1',
 			reason: 'unknown-move',
 		});
@@ -269,35 +299,15 @@ describe('Phase 1 minimum content set', () => {
 		sprout: ['leaf-lash', 'tackle'],
 	} as const;
 
-	function speciesView(id: string): DuelmonSpecies {
-		const species = catalog.findSpecies(id);
-
-		if (!species) {
-			throw new Error(`Missing fixture species "${id}"`);
-		}
-
-		return DuelmonSpecies.fromSpecies(species);
-	}
-
-	function moveView(id: string): DuelmonMove {
-		const move = catalog.findMove(id);
-
-		if (!move) {
-			throw new Error(`Missing fixture move "${id}"`);
-		}
-
-		return DuelmonMove.fromMove(move);
-	}
-
 	it('provides three creatures with distinct types', () => {
-		const types = SPECIES_IDS.flatMap(id => speciesView(id).types);
+		const types = SPECIES_IDS.flatMap(id => CombatStartContentFixture.speciesView(id).types);
 
 		expect(SPECIES_IDS).toHaveLength(3);
 		expect(new Set(types).size).toBeGreaterThanOrEqual(2);
 	});
 
 	it('provides four to six simple moves with physical and special categories', () => {
-		const moves = MOVE_IDS.map(id => moveView(id));
+		const moves = MOVE_IDS.map(id => CombatStartContentFixture.moveView(id));
 
 		expect(moves.length).toBeGreaterThanOrEqual(4);
 		expect(moves.length).toBeLessThanOrEqual(6);

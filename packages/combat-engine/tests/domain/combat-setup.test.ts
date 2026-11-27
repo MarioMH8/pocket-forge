@@ -1,12 +1,12 @@
 import { CombatSetup } from '@pocket-forge/combat-engine/domain';
 import { describe, expect, it } from 'bun:test';
 
-import { actionBindings, FakeActionResolver, FakeCompletionRule, FakeCompositionRule } from './engine.fakes';
+import { EngineFakes, FakeActionResolver, FakeCompletionRule, FakeCompositionRule } from './engine.fakes';
 
 describe('CombatEngineSetup', () => {
 	it('creates a setup from its collaborators and exposes them unchanged', () => {
 		const actions = new FakeActionResolver();
-		const bindings = actionBindings();
+		const bindings = EngineFakes.actionBindings();
 		const composition = new FakeCompositionRule();
 		const completion = new FakeCompletionRule();
 

@@ -2,18 +2,36 @@ import process from 'node:process';
 
 import { Command } from 'commander';
 
-import extractCommand from './extract';
+import ExtractCommand from './extract';
 
-function createCli(): Command {
-	return new Command()
-		.name('duelmon-dataset')
-		.description('Pokémon Showdown Gen 1 dataset tooling for Duelmon.')
-		.addCommand(extractCommand())
-		.showHelpAfterError();
+/**
+ * Root command line interface for the dataset tooling.
+ */
+class DuelmonDatasetCli {
+	/**
+	 * Builds the root command and registers its subcommands.
+	 *
+	 * @returns The configured root command.
+	 */
+	static create(): Command {
+		return new Command()
+			.name('duelmon-dataset')
+			.description('Pokémon Showdown Gen 1 dataset tooling for Duelmon.')
+			.addCommand(ExtractCommand.create())
+			.showHelpAfterError();
+	}
+
+	/**
+	 * Runs the command line interface.
+	 *
+	 * @param argv - Process arguments.
+	 * @returns A promise that settles when parsing finishes.
+	 */
+	static async run(argv: readonly string[] = process.argv): Promise<void> {
+		await this.create().parseAsync([...argv]);
+	}
 }
 
-async function runCli(argv: readonly string[] = process.argv): Promise<void> {
-	await createCli().parseAsync([...argv]);
-}
+export { DuelmonDatasetCli };
 
-export default runCli;
+export default DuelmonDatasetCli;

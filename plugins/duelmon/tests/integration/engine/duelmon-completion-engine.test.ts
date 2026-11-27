@@ -6,11 +6,13 @@ import { ModifyAttributeConfig } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
-function combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
-	return combat.groups
-		.flatMap(group => group.combatants)
-		.find(combatant => combatant.id === combatantId)
-		?.attributes.toPrimitives()['power'];
+class CombatEngineFixture {
+	static combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
+		return combat.groups
+			.flatMap(group => group.combatants)
+			.find(combatant => combatant.id === combatantId)
+			?.attributes.toPrimitives()['power'];
+	}
 }
 
 describe('Duelmon completion through CombatEngine', () => {
@@ -40,7 +42,7 @@ describe('Duelmon completion through CombatEngine', () => {
 		const resolution = result.getRight();
 		expect(resolution.combat.status).toBe('completed');
 		expect(resolution.outcome).toEqual(CombatOutcome.victory('group-a'));
-		expect(combatantPower(resolution.combat, 'combatant-a')).toBe(5);
+		expect(CombatEngineFixture.combatantPower(resolution.combat, 'combatant-a')).toBe(5);
 		expect(resolution.events.map(event => event.type)).toEqual(['attribute-modified', 'combat-completed']);
 		expect(resolution.events.map(event => event.sequence)).toEqual([1, 2]);
 		expect(resolution.events[1]?.payload).toEqual({

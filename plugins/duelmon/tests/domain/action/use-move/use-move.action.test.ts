@@ -11,53 +11,61 @@ const ATTACKER_ID = 'combatant-a';
 const TARGET_ID = 'combatant-b';
 const ATTACKER_MOVES = ['ember-burst', 'tackle', 'gamble', 'low-sweep'];
 
-function stats(overrides: AttributeValues = {}): AttributeValues {
-	return {
-		attack: 100,
-		defense: 80,
-		hp: 100,
-		level: 50,
-		maxHp: 100,
-		special: 120,
-		speed: 50,
-		...overrides,
-	};
-}
+class UseMoveFixture {
+	static combatWith(
+		attackerStats: AttributeValues,
+		targetSpecies: string,
+		targetStats: AttributeValues,
+		overrides: Partial<CombatPrimitives> = {}
+	): Combat {
+		return CombatEntity.fromPrimitives({
+			attributes: {},
+			groups: [
+				CombatantGroupMother.primitives({
+					attributes: { activeCombatantIds: [ATTACKER_ID] },
+					combatants: [
+						DuelmonCombatMother.combatant(
+							ATTACKER_ID,
+							'group-a',
+							'emberling',
+							attackerStats,
+							ATTACKER_MOVES
+						),
+					],
+					id: 'group-a',
+				}),
+				CombatantGroupMother.primitives({
+					attributes: { activeCombatantIds: [TARGET_ID] },
+					combatants: [DuelmonCombatMother.combatant(TARGET_ID, 'group-b', targetSpecies, targetStats)],
+					id: 'group-b',
+				}),
+			],
+			id: 'combat-1',
+			randomPocket: { seed: 42, state: 42 },
+			status: 'active',
+			...overrides,
+		});
+	}
 
-function combatWith(
-	attackerStats: AttributeValues,
-	targetSpecies: string,
-	targetStats: AttributeValues,
-	overrides: Partial<CombatPrimitives> = {}
-): Combat {
-	return CombatEntity.fromPrimitives({
-		attributes: {},
-		groups: [
-			CombatantGroupMother.primitives({
-				attributes: { activeCombatantIds: [ATTACKER_ID] },
-				combatants: [
-					DuelmonCombatMother.combatant(ATTACKER_ID, 'group-a', 'emberling', attackerStats, ATTACKER_MOVES),
-				],
-				id: 'group-a',
-			}),
-			CombatantGroupMother.primitives({
-				attributes: { activeCombatantIds: [TARGET_ID] },
-				combatants: [DuelmonCombatMother.combatant(TARGET_ID, 'group-b', targetSpecies, targetStats)],
-				id: 'group-b',
-			}),
-		],
-		id: 'combat-1',
-		randomPocket: { seed: 42, state: 42 },
-		status: 'active',
-		...overrides,
-	});
-}
+	static combatantHp(combat: Combat, combatantId: string): AttributeValue | undefined {
+		return combat.groups
+			.flatMap(group => group.combatants)
+			.find(combatant => combatant.id === combatantId)
+			?.attributes.toPrimitives()['hp'];
+	}
 
-function combatantHp(combat: Combat, combatantId: string): AttributeValue | undefined {
-	return combat.groups
-		.flatMap(group => group.combatants)
-		.find(combatant => combatant.id === combatantId)
-		?.attributes.toPrimitives()['hp'];
+	static stats(overrides: AttributeValues = {}): AttributeValues {
+		return {
+			attack: 100,
+			defense: 80,
+			hp: 100,
+			level: 50,
+			maxHp: 100,
+			special: 120,
+			speed: 50,
+			...overrides,
+		};
+	}
 }
 
 describe('UseMoveAction', () => {
@@ -80,7 +88,7 @@ describe('UseMoveAction', () => {
 
 		const transition = result.getRight();
 
-		expect(combatantHp(transition.combat, TARGET_ID)).toBe(31);
+		expect(UseMoveFixture.combatantHp(transition.combat, TARGET_ID)).toBe(31);
 		expect(transition.events).toEqual([
 			{
 				payload: {
@@ -117,13 +125,17 @@ describe('UseMoveAction', () => {
 
 		const transition = result.getRight();
 
-		expect(combatantHp(transition.combat, TARGET_ID)).toBe(84);
+		expect(UseMoveFixture.combatantHp(transition.combat, TARGET_ID)).toBe(84);
 		expect(transition.events[0]?.payload).toMatchObject({ damage: 16, effectiveness: 1 });
 		expect(transition.combat.randomPocket.toPrimitives()).toEqual(expectedRandomPocket.toPrimitives());
 	});
 
 	it('saturates target HP at zero', () => {
-		const combat = combatWith(stats({ level: 100 }), 'sprout', stats({ hp: 10 }));
+		const combat = UseMoveFixture.combatWith(
+			UseMoveFixture.stats({ level: 100 }),
+			'sprout',
+			UseMoveFixture.stats({ hp: 10 })
+		);
 		const result = PLUGIN.resolve({
 			actionBindings: DuelmonCombatMother.useMoveBindings(),
 			combat,
@@ -135,7 +147,7 @@ describe('UseMoveAction', () => {
 		});
 
 		expect(result.isRight()).toBe(true);
-		expect(combatantHp(result.getRight().combat, TARGET_ID)).toBe(0);
+		expect(UseMoveFixture.combatantHp(result.getRight().combat, TARGET_ID)).toBe(0);
 	});
 
 	it('emits a miss event and leaves HP unchanged when accuracy fails', () => {
@@ -157,7 +169,7 @@ describe('UseMoveAction', () => {
 
 		const transition = result.getRight();
 
-		expect(combatantHp(transition.combat, TARGET_ID)).toBe(100);
+		expect(UseMoveFixture.combatantHp(transition.combat, TARGET_ID)).toBe(100);
 		expect(transition.events).toEqual([
 			{
 				payload: {
@@ -175,7 +187,11 @@ describe('UseMoveAction', () => {
 	});
 
 	it('deals no damage to an immune target without consuming randomness', () => {
-		const combat = combatWith(stats(), 'wisp', stats({ attack: 90, defense: 100, hp: 100, special: 90 }));
+		const combat = UseMoveFixture.combatWith(
+			UseMoveFixture.stats(),
+			'wisp',
+			UseMoveFixture.stats({ attack: 90, defense: 100, hp: 100, special: 90 })
+		);
 		const result = PLUGIN.resolve({
 			actionBindings: DuelmonCombatMother.useMoveBindings(['tackle']),
 			combat,
@@ -190,7 +206,7 @@ describe('UseMoveAction', () => {
 
 		const transition = result.getRight();
 
-		expect(combatantHp(transition.combat, TARGET_ID)).toBe(100);
+		expect(UseMoveFixture.combatantHp(transition.combat, TARGET_ID)).toBe(100);
 		expect(transition.events).toEqual([
 			{
 				payload: {
@@ -241,7 +257,7 @@ describe('UseMoveAction', () => {
 
 		const transition = result.getRight();
 
-		expect(combatantHp(transition.combat, TARGET_ID)).toBe(99);
+		expect(UseMoveFixture.combatantHp(transition.combat, TARGET_ID)).toBe(99);
 		expect(transition.events[0]?.type).toBe('move-used');
 	});
 

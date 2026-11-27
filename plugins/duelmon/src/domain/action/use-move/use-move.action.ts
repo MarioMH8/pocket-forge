@@ -23,13 +23,6 @@ import { UseMoveResolution } from './use-move.resolution';
 
 const HP_KEY = 'hp';
 
-function combatAfter(combat: Combat, randomPocket: RandomPocket): Combat {
-	return CombatEntity.fromPrimitives({
-		...combat.toPrimitives(),
-		randomPocket: randomPocket.toPrimitives(),
-	});
-}
-
 /**
  * Resolves the generation-agnostic `useMove` action.
  *
@@ -64,6 +57,20 @@ class UseMoveAction implements DuelmonAction {
 			configDefinitions: [],
 			id: this.id,
 		};
+	}
+
+	/**
+	 * Rehydrates a combat with the advanced random state.
+	 *
+	 * @param combat - Current combat snapshot.
+	 * @param randomPocket - Advanced random state.
+	 * @returns The combat with the new random state.
+	 */
+	private static combatAfter(combat: Combat, randomPocket: RandomPocket): Combat {
+		return CombatEntity.fromPrimitives({
+			...combat.toPrimitives(),
+			randomPocket: randomPocket.toPrimitives(),
+		});
 	}
 
 	/**
@@ -161,7 +168,7 @@ class UseMoveAction implements DuelmonAction {
 
 		if (!result.hit) {
 			return Either.right(
-				CombatTransition.create(combatAfter(context.combat, result.randomPocket), [
+				CombatTransition.create(UseMoveAction.combatAfter(context.combat, result.randomPocket), [
 					DuelmonCombatEvents.moveMissed(
 						{
 							actionId: this.id,

@@ -73,14 +73,16 @@ class FakeActionCatalog implements CombatActionCatalog {
 	}
 }
 
-function actionBindings(overrides?: Partial<CombatActionBindingSetPrimitives>): CombatActionBindingSet {
-	return CombatActionBindingSet.create(
-		{
-			bindings: [{ actionId: 'tackle', config: {}, moveId: 'move-1' }],
-			...overrides,
-		},
-		new FakeActionCatalog()
-	).getRight();
+class EngineFakes {
+	static actionBindings(overrides?: Partial<CombatActionBindingSetPrimitives>): CombatActionBindingSet {
+		return CombatActionBindingSet.create(
+			{
+				bindings: [{ actionId: 'tackle', config: {}, moveId: 'move-1' }],
+				...overrides,
+			},
+			new FakeActionCatalog()
+		).getRight();
+	}
 }
 
 type ResolveBehavior = (context: CombatActionContext) => Either<CombatResolutionError[], CombatTransition>;
@@ -103,4 +105,4 @@ class FakeActionResolver implements CombatActionResolver {
 	}
 }
 
-export { actionBindings, FakeActionResolver, FakeCompletionRule, FakeCompositionRule };
+export { EngineFakes, FakeActionResolver, FakeCompletionRule, FakeCompositionRule };

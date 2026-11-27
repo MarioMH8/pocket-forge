@@ -8,21 +8,23 @@ const PLAYER = 'player-emberling';
 const OPPONENT = 'opponent-aquafin';
 const SECOND_PLAYER_MOVE = 'tackle';
 
-function startCombat(): Combat {
-	const result = DuelmonCombatStart.fromContent(
-		DuelmonCombatStartMother.request(),
-		DuelmonCombatStartMother.catalog(),
-		DuelmonCombatStartMother.DEFINITIONS
-	);
+class CombatStartFixture {
+	static startCombat(): Combat {
+		const result = DuelmonCombatStart.fromContent(
+			DuelmonCombatStartMother.request(),
+			DuelmonCombatStartMother.catalog(),
+			DuelmonCombatStartMother.DEFINITIONS
+		);
 
-	expect(result.isRight()).toBe(true);
+		expect(result.isRight()).toBe(true);
 
-	return result.getRight();
+		return result.getRight();
+	}
 }
 
 describe('Phase 1 turn declaration boundary', () => {
 	it('accepts the second known Move of the active combatant without changing the combat', () => {
-		const combat = startCombat();
+		const combat = CombatStartFixture.startCombat();
 		const before = combat.toPrimitives();
 		const result = PLUGIN.resolve({
 			actionBindings: DuelmonCombatMother.useMoveBindings([SECOND_PLAYER_MOVE]),

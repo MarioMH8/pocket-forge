@@ -60,13 +60,15 @@ class TestActionResolver implements CombatActionResolver {
 
 const RESOLVER = new TestActionResolver();
 
-function actionBindings(overrides?: Partial<CombatActionBindingSetPrimitives>): CombatActionBindingSet {
-	const primitives: CombatActionBindingSetPrimitives = {
-		bindings: [{ actionId: 'tackle', config: {}, moveId: 'move-1' }],
-		...overrides,
-	};
+class ResolverFixture {
+	static actionBindings(overrides?: Partial<CombatActionBindingSetPrimitives>): CombatActionBindingSet {
+		const primitives: CombatActionBindingSetPrimitives = {
+			bindings: [{ actionId: 'tackle', config: {}, moveId: 'move-1' }],
+			...overrides,
+		};
 
-	return CombatActionBindingSet.create(primitives, RESOLVER.actions).getRight();
+		return CombatActionBindingSet.create(primitives, RESOLVER.actions).getRight();
+	}
 }
 
 describe('CombatActionResolver', () => {
@@ -74,7 +76,11 @@ describe('CombatActionResolver', () => {
 		it('returns a transition with ordered serializable events', () => {
 			const combat = CombatMother.create();
 
-			const result = RESOLVER.resolve({ actionBindings: actionBindings(), combat, input: 'resolve' });
+			const result = RESOLVER.resolve({
+				actionBindings: ResolverFixture.actionBindings(),
+				combat,
+				input: 'resolve',
+			});
 
 			expect(result.isRight()).toBe(true);
 
@@ -87,7 +93,7 @@ describe('CombatActionResolver', () => {
 
 		it('replays deterministically from the same combat snapshot', () => {
 			const combat = CombatMother.create();
-			const context = { actionBindings: actionBindings(), combat, input: 'resolve' };
+			const context = { actionBindings: ResolverFixture.actionBindings(), combat, input: 'resolve' };
 
 			const first = RESOLVER.resolve(context).getRight();
 			const second = RESOLVER.resolve(context).getRight();
@@ -101,7 +107,11 @@ describe('CombatActionResolver', () => {
 			const combat = CombatMother.create();
 			const before = combat.toPrimitives();
 
-			const result = RESOLVER.resolve({ actionBindings: actionBindings(), combat, input: 'unsupported' });
+			const result = RESOLVER.resolve({
+				actionBindings: ResolverFixture.actionBindings(),
+				combat,
+				input: 'unsupported',
+			});
 
 			expect(result.isLeft()).toBe(true);
 			expect(result.getLeft()[0]?.reason).toBe('invalid-input');
@@ -113,7 +123,7 @@ describe('CombatActionResolver', () => {
 			const before = combat.toPrimitives();
 
 			const result = RESOLVER.resolve({
-				actionBindings: actionBindings({ bindings: [] }),
+				actionBindings: ResolverFixture.actionBindings({ bindings: [] }),
 				combat,
 				input: 'resolve',
 			});

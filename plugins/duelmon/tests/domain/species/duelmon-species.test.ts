@@ -3,23 +3,25 @@ import { DuelmonSpecies } from '@pocket-forge/duelmon/domain';
 import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
-function catalog(): DuelmonCatalog {
-	return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create()).getRight();
-}
-
-function catalogSpecies(id: string): DuelmonSpecies {
-	const found = catalog().findSpecies(id);
-
-	if (!found) {
-		throw new Error(`Missing fixture species "${id}"`);
+class SpeciesFixture {
+	static catalog(): DuelmonCatalog {
+		return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create()).getRight();
 	}
 
-	return DuelmonSpecies.fromSpecies(found);
+	static catalogSpecies(id: string): DuelmonSpecies {
+		const found = this.catalog().findSpecies(id);
+
+		if (!found) {
+			throw new Error(`Missing fixture species "${id}"`);
+		}
+
+		return DuelmonSpecies.fromSpecies(found);
+	}
 }
 
 describe('DuelmonSpecies', () => {
 	it('exposes types and base stats as typed getters', () => {
-		const species = catalogSpecies('emberling');
+		const species = SpeciesFixture.catalogSpecies('emberling');
 
 		expect(species.types).toEqual(['Fire']);
 		expect(species.baseHp).toBe(39);
@@ -30,7 +32,7 @@ describe('DuelmonSpecies', () => {
 	});
 
 	it('exposes the base stats in the shape the Gen 1 formula consumes', () => {
-		expect(catalogSpecies('aquafin').baseStats()).toEqual({
+		expect(SpeciesFixture.catalogSpecies('aquafin').baseStats()).toEqual({
 			baseAtk: 48,
 			baseDef: 65,
 			baseHp: 44,
@@ -40,7 +42,7 @@ describe('DuelmonSpecies', () => {
 	});
 
 	it('round-trips the wrapped snapshot', () => {
-		const species = catalogSpecies('emberling');
+		const species = SpeciesFixture.catalogSpecies('emberling');
 
 		expect(DuelmonSpecies.fromPrimitives(species.toPrimitives()).toPrimitives()).toEqual(species.toPrimitives());
 	});

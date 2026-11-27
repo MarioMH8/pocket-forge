@@ -3,8 +3,29 @@ import type { DuelmonMove } from '@pocket-forge/duelmon-dataset';
 import { DuelmonDatasetMother } from '@pocket-forge/duelmon-dataset/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
-function catalog(): DuelmonCatalog {
-	return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create()).getRight();
+class CatalogFixture {
+	static catalog(): DuelmonCatalog {
+		return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create()).getRight();
+	}
+
+	static catalogWith(moves: readonly DuelmonMove[]): DuelmonCatalog {
+		return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create({ moves })).getRight();
+	}
+
+	static move(overrides: Partial<DuelmonMove> & Pick<DuelmonMove, 'id'>): DuelmonMove {
+		return {
+			accuracy: true,
+			category: 'Physical',
+			flags: {},
+			name: overrides.id,
+			power: 40,
+			pp: 35,
+			priority: 0,
+			target: 'normal',
+			type: 'Normal',
+			...overrides,
+		};
+	}
 }
 
 describe('DuelmonCatalog.fromDataset', () => {
@@ -39,43 +60,24 @@ describe('DuelmonCatalog.fromDataset', () => {
 	});
 
 	it('maps numeric accuracy to a hit check', () => {
-		expect(catalog().findMove('ember-spark')?.attributes.value).toMatchObject({
+		expect(CatalogFixture.catalog().findMove('ember-spark')?.attributes.value).toMatchObject({
 			accuracy: 90,
 			alwaysHits: false,
 		});
 	});
 
 	it('returns undefined for unknown identifiers', () => {
-		const current = catalog();
+		const current = CatalogFixture.catalog();
 
 		expect(current.findMove('missing')).toBeUndefined();
 		expect(current.findSpecies('missing')).toBeUndefined();
 	});
 
 	describe('move effects', () => {
-		function move(overrides: Partial<DuelmonMove> & Pick<DuelmonMove, 'id'>): DuelmonMove {
-			return {
-				accuracy: true,
-				category: 'Physical',
-				flags: {},
-				name: overrides.id,
-				power: 40,
-				pp: 35,
-				priority: 0,
-				target: 'normal',
-				type: 'Normal',
-				...overrides,
-			};
-		}
-
-		function catalogWith(moves: readonly DuelmonMove[]): DuelmonCatalog {
-			return DuelmonCatalog.fromDataset(DuelmonDatasetMother.create({ moves })).getRight();
-		}
-
 		it('maps Showdown flags to typed records', () => {
-			const current = catalogWith([
-				move({ flags: { charge: 1, contact: 1 }, id: 'flagged-move' }),
-				move({ flags: {}, id: 'unflagged-move' }),
+			const current = CatalogFixture.catalogWith([
+				CatalogFixture.move({ flags: { charge: 1, contact: 1 }, id: 'flagged-move' }),
+				CatalogFixture.move({ flags: {}, id: 'unflagged-move' }),
 			]);
 
 			expect(current.findMove('flagged-move')?.attributes.toPrimitives()).toMatchObject({
@@ -88,10 +90,10 @@ describe('DuelmonCatalog.fromDataset', () => {
 		});
 
 		it('maps primary status, volatile status, and stat stages', () => {
-			const current = catalogWith([
-				move({ id: 'status-move', status: 'brn' }),
-				move({ id: 'volatile-move', volatileStatus: 'confusion' }),
-				move({ boosts: { atk: 2 }, id: 'boost-move', target: 'self' }),
+			const current = CatalogFixture.catalogWith([
+				CatalogFixture.move({ id: 'status-move', status: 'brn' }),
+				CatalogFixture.move({ id: 'volatile-move', volatileStatus: 'confusion' }),
+				CatalogFixture.move({ boosts: { atk: 2 }, id: 'boost-move', target: 'self' }),
 			]);
 
 			expect(current.findMove('status-move')?.attributes.toPrimitives()).toMatchObject({ status: 'brn' });
@@ -104,8 +106,8 @@ describe('DuelmonCatalog.fromDataset', () => {
 		});
 
 		it('maps secondary effects with nested boosts', () => {
-			const current = catalogWith([
-				move({
+			const current = CatalogFixture.catalogWith([
+				CatalogFixture.move({
 					id: 'secondary-move',
 					secondary: {
 						boosts: { def: -1 },
@@ -129,12 +131,12 @@ describe('DuelmonCatalog.fromDataset', () => {
 		});
 
 		it('maps drain, recoil, multihit, and critical-hit ratio', () => {
-			const current = catalogWith([
-				move({ drain: [1, 2], id: 'drain-move' }),
-				move({ id: 'recoil-move', recoil: [33, 100] }),
-				move({ id: 'range-move', multihit: [2, 5] }),
-				move({ id: 'fixed-move', multihit: 3 }),
-				move({ critRatio: 2, id: 'crit-move' }),
+			const current = CatalogFixture.catalogWith([
+				CatalogFixture.move({ drain: [1, 2], id: 'drain-move' }),
+				CatalogFixture.move({ id: 'recoil-move', recoil: [33, 100] }),
+				CatalogFixture.move({ id: 'range-move', multihit: [2, 5] }),
+				CatalogFixture.move({ id: 'fixed-move', multihit: 3 }),
+				CatalogFixture.move({ critRatio: 2, id: 'crit-move' }),
 			]);
 
 			expect(current.findMove('drain-move')?.attributes.toPrimitives()).toMatchObject({ drain: [1, 2] });
@@ -146,7 +148,9 @@ describe('DuelmonCatalog.fromDataset', () => {
 
 		it('rejects moves with invalid effect data', () => {
 			const result = DuelmonCatalog.fromDataset(
-				DuelmonDatasetMother.create({ moves: [move({ drain: [1] as never, id: 'broken-move' })] })
+				DuelmonDatasetMother.create({
+					moves: [CatalogFixture.move({ drain: [1] as never, id: 'broken-move' })],
+				})
 			);
 
 			expect(result.isLeft()).toBe(true);
@@ -155,7 +159,7 @@ describe('DuelmonCatalog.fromDataset', () => {
 	});
 
 	describe('typeMultipliers', () => {
-		const current = catalog();
+		const current = CatalogFixture.catalog();
 
 		it('returns one multiplier per defender type', () => {
 			expect(current.typeMultipliers('Ice', ['Water', 'Flying'])).toEqual([0.5, 2]);

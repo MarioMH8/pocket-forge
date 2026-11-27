@@ -7,11 +7,13 @@ import { OneVersusOneCombatRule } from '@pocket-forge/combat-engine/rules';
 import { DuelmonCombatMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
-function combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
-	return combat.groups
-		.flatMap(group => group.combatants)
-		.find(combatant => combatant.id === combatantId)
-		?.attributes.toPrimitives()['power'];
+class CombatEngineFixture {
+	static combatantPower(combat: Combat, combatantId: string): AttributeValue | undefined {
+		return combat.groups
+			.flatMap(group => group.combatants)
+			.find(combatant => combatant.id === combatantId)
+			?.attributes.toPrimitives()['power'];
+	}
 }
 
 describe('Duelmon combat through CombatEngine', () => {
@@ -45,7 +47,7 @@ describe('Duelmon combat through CombatEngine', () => {
 		const resolution = result.getRight();
 
 		expect(resolution.outcome).toBeUndefined();
-		expect(combatantPower(resolution.combat, 'combatant-a')).toBe(35);
+		expect(CombatEngineFixture.combatantPower(resolution.combat, 'combatant-a')).toBe(35);
 		expect(resolution.events).toHaveLength(1);
 		expect(resolution.events[0]?.type).toBe('attribute-modified');
 		expect(engine.validateComposition(resolution.combat).isRight()).toBe(true);

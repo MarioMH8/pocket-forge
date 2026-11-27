@@ -46,14 +46,6 @@ const MOVES = 'moves';
 const SPECIES = 'species';
 const TYPES = 'types';
 
-function isNonEmptyString(value: unknown): value is string {
-	return typeof value === 'string' && value.trim().length > 0;
-}
-
-function isStringArray(value: unknown): value is string[] {
-	return Array.isArray(value) && value.every(item => typeof item === 'string');
-}
-
 /**
  * Builds a validated initial Combat from content or primitives.
  *
@@ -129,8 +121,8 @@ class DuelmonCombatStart {
 			}
 
 			const groupPath = `groups.${String(groupIndex)}`;
-			const groupId = isNonEmptyString(rawGroup['id']) ? rawGroup['id'] : '';
-			const activeCombatantIds = isStringArray(rawGroup[ACTIVE_COMBATANT_IDS])
+			const groupId = this.isNonEmptyString(rawGroup['id']) ? rawGroup['id'] : '';
+			const activeCombatantIds = this.isStringArray(rawGroup[ACTIVE_COMBATANT_IDS])
 				? [...rawGroup[ACTIVE_COMBATANT_IDS]]
 				: [];
 			const combatants = this.resolveGroupCombatants(rawGroup['combatants'], groupId, groupPath, catalog, errors);
@@ -157,6 +149,26 @@ class DuelmonCombatStart {
 		return this.create(primitives, definitions);
 	}
 
+	/**
+	 * Narrows an unknown value to a non-empty string.
+	 *
+	 * @param value - Candidate value.
+	 * @returns Whether the value is a non-empty string.
+	 */
+	private static isNonEmptyString(value: unknown): value is string {
+		return typeof value === 'string' && value.trim().length > 0;
+	}
+
+	/**
+	 * Narrows an unknown value to a string array.
+	 *
+	 * @param value - Candidate value.
+	 * @returns Whether the value is an array of strings.
+	 */
+	private static isStringArray(value: unknown): value is string[] {
+		return Array.isArray(value) && value.every(item => typeof item === 'string');
+	}
+
 	private static resolveCombatant(
 		request: DuelmonCombatStartCombatantRequest,
 		groupId: string,
@@ -164,7 +176,7 @@ class DuelmonCombatStart {
 		catalog: DuelmonCatalog,
 		errors: DuelmonCombatStartError[]
 	): CombatantPrimitives | undefined {
-		if (!isNonEmptyString(request.speciesId)) {
+		if (!this.isNonEmptyString(request.speciesId)) {
 			return undefined;
 		}
 
@@ -185,7 +197,7 @@ class DuelmonCombatStart {
 		const moveIds: readonly unknown[] = Array.isArray(request.moveIds) ? request.moveIds : [];
 
 		for (const [moveIndex, moveId] of moveIds.entries()) {
-			if (!isNonEmptyString(moveId)) {
+			if (!this.isNonEmptyString(moveId)) {
 				continue;
 			}
 
@@ -220,12 +232,12 @@ class DuelmonCombatStart {
 			creature: {
 				abilities: [],
 				attributes: {},
-				id: isNonEmptyString(request.creatureId) ? request.creatureId : '',
+				id: this.isNonEmptyString(request.creatureId) ? request.creatureId : '',
 				moves,
 				species: species.toPrimitives(),
 			},
 			groupId,
-			id: isNonEmptyString(request.id) ? request.id : '',
+			id: this.isNonEmptyString(request.id) ? request.id : '',
 		};
 	}
 
@@ -275,7 +287,7 @@ class DuelmonCombatStart {
 			return errors;
 		}
 
-		if (!isNonEmptyString(primitives.id)) {
+		if (!this.isNonEmptyString(primitives.id)) {
 			errors.push(new DuelmonCombatStartError('invalid-combat', 'Combat id is required', 'id'));
 		}
 
@@ -334,7 +346,7 @@ class DuelmonCombatStart {
 		const activeIds = attributes[ACTIVE_COMBATANT_IDS];
 		const activePath = `${path}.attributes.${ACTIVE_COMBATANT_IDS}`;
 
-		if (!isStringArray(activeIds) || activeIds.length !== 1) {
+		if (!this.isStringArray(activeIds) || activeIds.length !== 1) {
 			errors.push(
 				new DuelmonCombatStartError(
 					'invalid-active-combatant',
@@ -442,7 +454,7 @@ class DuelmonCombatStart {
 
 		const id = combatant['id'];
 
-		if (!isNonEmptyString(id)) {
+		if (!this.isNonEmptyString(id)) {
 			errors.push(new DuelmonCombatStartError('missing-id', 'Combatant id is required', `${path}.id`));
 		} else if (combatantIds.has(id)) {
 			errors.push(new DuelmonCombatStartError('duplicate-id', `Duplicated combatant id: ${id}`, `${path}.id`));
@@ -486,7 +498,7 @@ class DuelmonCombatStart {
 			return;
 		}
 
-		if (!isNonEmptyString(creature['id'])) {
+		if (!this.isNonEmptyString(creature['id'])) {
 			errors.push(new DuelmonCombatStartError('missing-id', 'Creature id is required', `${path}.id`));
 		}
 
@@ -516,7 +528,7 @@ class DuelmonCombatStart {
 		const speciesPath = `${path}.${SPECIES}`;
 
 		if (DuelmonRecord.isRecord(species)) {
-			if (!isNonEmptyString(species['id'])) {
+			if (!this.isNonEmptyString(species['id'])) {
 				errors.push(
 					new DuelmonCombatStartError('missing-species', 'Species id is required', `${speciesPath}.id`)
 				);
@@ -582,7 +594,7 @@ class DuelmonCombatStart {
 
 		const id = group['id'];
 
-		if (!isNonEmptyString(id)) {
+		if (!this.isNonEmptyString(id)) {
 			errors.push(new DuelmonCombatStartError('missing-id', 'Group id is required', `${path}.id`));
 		} else if (groupIds.has(id)) {
 			errors.push(new DuelmonCombatStartError('duplicate-id', `Duplicated group id: ${id}`, `${path}.id`));
@@ -681,7 +693,7 @@ class DuelmonCombatStart {
 		for (const [moveIndex, move] of moves.entries()) {
 			const movePath = `${path}.${String(moveIndex)}`;
 
-			if (!DuelmonRecord.isRecord(move) || !isNonEmptyString(move['id'])) {
+			if (!DuelmonRecord.isRecord(move) || !this.isNonEmptyString(move['id'])) {
 				errors.push(new DuelmonCombatStartError('invalid-moves', 'Move id is required', movePath));
 
 				continue;
@@ -748,7 +760,7 @@ class DuelmonCombatStart {
 			return errors;
 		}
 
-		if (!isNonEmptyString(request.id)) {
+		if (!this.isNonEmptyString(request.id)) {
 			errors.push(new DuelmonCombatStartError('invalid-request', 'Start request id is required', 'id'));
 		}
 
@@ -796,7 +808,7 @@ class DuelmonCombatStart {
 
 			const groupId = group['id'];
 
-			if (!isNonEmptyString(groupId)) {
+			if (!this.isNonEmptyString(groupId)) {
 				errors.push(new DuelmonCombatStartError('invalid-request', 'Group id is required', `${groupPath}.id`));
 			} else if (groupIds.has(groupId)) {
 				errors.push(
@@ -808,7 +820,7 @@ class DuelmonCombatStart {
 
 			const activeCombatantIds = group[ACTIVE_COMBATANT_IDS];
 
-			if (!isStringArray(activeCombatantIds)) {
+			if (!this.isStringArray(activeCombatantIds)) {
 				errors.push(
 					new DuelmonCombatStartError(
 						'invalid-request',
@@ -862,7 +874,7 @@ class DuelmonCombatStart {
 				);
 			}
 
-			if (isStringArray(activeCombatantIds) && activeCombatantIds.length === 1) {
+			if (this.isStringArray(activeCombatantIds) && activeCombatantIds.length === 1) {
 				const [activeId] = activeCombatantIds;
 
 				if (activeId !== undefined && !groupCombatantIds.has(activeId)) {
@@ -894,7 +906,7 @@ class DuelmonCombatStart {
 		}
 
 		for (const key of ['id', 'creatureId', 'speciesId'] as const) {
-			if (!isNonEmptyString(combatant[key])) {
+			if (!this.isNonEmptyString(combatant[key])) {
 				errors.push(
 					new DuelmonCombatStartError('invalid-request', `Combatant ${key} is required`, `${path}.${key}`)
 				);
@@ -903,7 +915,7 @@ class DuelmonCombatStart {
 
 		const combatantId = combatant['id'];
 
-		if (isNonEmptyString(combatantId)) {
+		if (this.isNonEmptyString(combatantId)) {
 			groupCombatantIds.add(combatantId);
 
 			if (combatantIds.has(combatantId)) {
@@ -917,7 +929,7 @@ class DuelmonCombatStart {
 
 		const moveIds = combatant['moveIds'];
 
-		if (!isStringArray(moveIds)) {
+		if (!this.isStringArray(moveIds)) {
 			errors.push(
 				new DuelmonCombatStartError(
 					'invalid-request',
@@ -954,7 +966,7 @@ class DuelmonCombatStart {
 		for (const [moveIndex, moveId] of moveIds.entries()) {
 			const movePath = `${movesPath}.${String(moveIndex)}`;
 
-			if (!isNonEmptyString(moveId)) {
+			if (!this.isNonEmptyString(moveId)) {
 				errors.push(new DuelmonCombatStartError('invalid-moves', 'Move id is required', movePath));
 
 				continue;
@@ -973,7 +985,7 @@ class DuelmonCombatStart {
 	private static validateTypes(attributes: unknown, path: string, errors: DuelmonCombatStartError[]): void {
 		const types = DuelmonRecord.isRecord(attributes) ? attributes[TYPES] : undefined;
 
-		if (!isStringArray(types) || types.length === 0) {
+		if (!this.isStringArray(types) || types.length === 0) {
 			errors.push(
 				new DuelmonCombatStartError('missing-types', 'Species requires at least one type', `${path}.${TYPES}`)
 			);

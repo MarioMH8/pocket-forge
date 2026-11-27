@@ -15,221 +15,243 @@ type DeepMutable<T> = T extends readonly (infer U)[]
 
 type MutableCombat = DeepMutable<CombatPrimitives>;
 
-function valid(): MutableCombat {
-	return structuredClone(DuelmonCombatStartMother.primitives());
-}
-
-function group(primitives: MutableCombat, index: number): DeepMutable<CombatantGroupPrimitives> {
-	const value = primitives.groups[index];
-
-	if (!value) {
-		throw new Error(`Missing group at index ${String(index)}`);
+class CombatStartFixture {
+	static attributes(primitives: MutableCombat, groupIndex = 0): DeepMutable<AttributeValues> {
+		return this.combatant(primitives, groupIndex).attributes;
 	}
 
-	return value;
-}
+	static combatant(
+		primitives: MutableCombat,
+		groupIndex: number,
+		combatantIndex = 0
+	): DeepMutable<CombatantPrimitives> {
+		const value = this.group(primitives, groupIndex).combatants[combatantIndex];
 
-function combatant(
-	primitives: MutableCombat,
-	groupIndex: number,
-	combatantIndex = 0
-): DeepMutable<CombatantPrimitives> {
-	const value = group(primitives, groupIndex).combatants[combatantIndex];
+		if (!value) {
+			throw new Error(`Missing combatant at index ${String(combatantIndex)}`);
+		}
 
-	if (!value) {
-		throw new Error(`Missing combatant at index ${String(combatantIndex)}`);
+		return value;
 	}
 
-	return value;
-}
+	static errorsOf(primitives: MutableCombat): StartError[] {
+		const result = this.start(primitives);
 
-function attributes(primitives: MutableCombat, groupIndex = 0): DeepMutable<AttributeValues> {
-	return combatant(primitives, groupIndex).attributes;
-}
+		expect(result.isLeft()).toBe(true);
 
-function start(primitives: MutableCombat) {
-	return DuelmonCombatStart.create(primitives, DuelmonCombatStartMother.DEFINITIONS);
-}
+		return result.getLeft();
+	}
 
-function errorsOf(primitives: MutableCombat): StartError[] {
-	const result = start(primitives);
+	static expectError(errors: StartError[], expected: { path?: string; reason: string }): void {
+		const matches = errors.filter(
+			error => error.reason === expected.reason && (expected.path === undefined || error.path === expected.path)
+		);
 
-	expect(result.isLeft()).toBe(true);
+		expect(matches.length).toBeGreaterThan(0);
+	}
 
-	return result.getLeft();
-}
+	static group(primitives: MutableCombat, index: number): DeepMutable<CombatantGroupPrimitives> {
+		const value = primitives.groups[index];
 
-function expectError(errors: StartError[], expected: { path?: string; reason: string }): void {
-	const matches = errors.filter(
-		error => error.reason === expected.reason && (expected.path === undefined || error.path === expected.path)
-	);
+		if (!value) {
+			throw new Error(`Missing group at index ${String(index)}`);
+		}
 
-	expect(matches.length).toBeGreaterThan(0);
+		return value;
+	}
+
+	static start(primitives: MutableCombat) {
+		return DuelmonCombatStart.create(primitives, DuelmonCombatStartMother.DEFINITIONS);
+	}
+
+	static valid(): MutableCombat {
+		return structuredClone(DuelmonCombatStartMother.primitives());
+	}
 }
 
 describe('DuelmonCombatStart.create', () => {
 	it('hydrates a valid initial state', () => {
-		const primitives = valid();
-		const result = start(primitives);
+		const primitives = CombatStartFixture.valid();
+		const result = CombatStartFixture.start(primitives);
 
 		expect(result.isRight()).toBe(true);
 		expect(result.getRight().toPrimitives()).toEqual(primitives);
 	});
 
 	it('rejects a missing combat id', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
 		primitives.id = '';
 
-		expectError(errorsOf(primitives), { path: 'id', reason: 'invalid-combat' });
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
+			path: 'id',
+			reason: 'invalid-combat',
+		});
 	});
 
 	it('rejects a combat that is not active', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
 		primitives.status = 'completed';
 
-		expectError(errorsOf(primitives), { path: 'status', reason: 'invalid-combat' });
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
+			path: 'status',
+			reason: 'invalid-combat',
+		});
 	});
 
 	it('rejects an invalid random state', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
 		(primitives as { randomPocket?: unknown }).randomPocket = { seed: 1.5, state: 42 };
 
-		expectError(errorsOf(primitives), { path: 'randomPocket', reason: 'invalid-random-pocket' });
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
+			path: 'randomPocket',
+			reason: 'invalid-random-pocket',
+		});
 	});
 
 	it('rejects a combat without exactly two groups', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
-		primitives.groups.push(structuredClone(group(primitives, 1)));
+		primitives.groups.push(structuredClone(CombatStartFixture.group(primitives, 1)));
 
-		expectError(errorsOf(primitives), { path: 'groups', reason: 'invalid-group-count' });
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
+			path: 'groups',
+			reason: 'invalid-group-count',
+		});
 	});
 
 	it('rejects a group without exactly one combatant', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
-		group(primitives, 1).combatants.push(structuredClone(combatant(primitives, 0)));
+		CombatStartFixture.group(primitives, 1).combatants.push(
+			structuredClone(CombatStartFixture.combatant(primitives, 0))
+		);
 
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.1.combatants',
 			reason: 'invalid-combatant-count',
 		});
 	});
 
 	it('rejects duplicated group ids', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
-		group(primitives, 1).id = 'player';
+		CombatStartFixture.group(primitives, 1).id = 'player';
 
-		expectError(errorsOf(primitives), { path: 'groups.1.id', reason: 'duplicate-id' });
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
+			path: 'groups.1.id',
+			reason: 'duplicate-id',
+		});
 	});
 
 	it('rejects duplicated combatant ids', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
-		combatant(primitives, 1).id = combatant(primitives, 0).id;
+		CombatStartFixture.combatant(primitives, 1).id = CombatStartFixture.combatant(primitives, 0).id;
 
-		expectError(errorsOf(primitives), { path: 'groups.1.combatants.0.id', reason: 'duplicate-id' });
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
+			path: 'groups.1.combatants.0.id',
+			reason: 'duplicate-id',
+		});
 	});
 
 	it('rejects a combatant that belongs to another group', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
-		combatant(primitives, 0).groupId = 'opponent';
+		CombatStartFixture.combatant(primitives, 0).groupId = 'opponent';
 
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.groupId',
 			reason: 'invalid-membership',
 		});
 	});
 
 	it('rejects groups without exactly one active combatant', () => {
-		const primitives = valid();
-		const groupAttributes = group(primitives, 0).attributes;
+		const primitives = CombatStartFixture.valid();
+		const groupAttributes = CombatStartFixture.group(primitives, 0).attributes;
 
 		groupAttributes['activeCombatantIds'] = [];
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.attributes.activeCombatantIds',
 			reason: 'invalid-active-combatant',
 		});
 
 		groupAttributes['activeCombatantIds'] = ['player-emberling', 'opponent-aquafin'];
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.attributes.activeCombatantIds',
 			reason: 'invalid-active-combatant',
 		});
 
 		groupAttributes['activeCombatantIds'] = ['missing'];
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.attributes.activeCombatantIds',
 			reason: 'invalid-active-combatant',
 		});
 	});
 
 	it('rejects missing and out-of-range battle attributes', () => {
-		const primitives = valid();
-		const combatantAttributes = attributes(primitives);
+		const primitives = CombatStartFixture.valid();
+		const combatantAttributes = CombatStartFixture.attributes(primitives);
 
 		delete combatantAttributes['level'];
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.attributes.level',
 			reason: 'missing-attribute',
 		});
 
 		combatantAttributes['level'] = 0;
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.attributes.level',
 			reason: 'invalid-attribute',
 		});
 
 		combatantAttributes['movePp'] = [];
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.attributes.movePp',
 			reason: 'invalid-attribute',
 		});
 	});
 
 	it('rejects current hp outside its valid range', () => {
-		const primitives = valid();
-		const combatantAttributes = attributes(primitives);
+		const primitives = CombatStartFixture.valid();
+		const combatantAttributes = CombatStartFixture.attributes(primitives);
 
 		combatantAttributes['hp'] = 0;
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.attributes.hp',
 			reason: 'invalid-hp',
 		});
 
 		combatantAttributes['hp'] = 105;
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.attributes.hp',
 			reason: 'invalid-hp',
 		});
 	});
 
 	it('rejects creatures without species or types', () => {
-		const primitives = valid();
-		const first = combatant(primitives, 0);
-		const second = combatant(primitives, 1);
+		const primitives = CombatStartFixture.valid();
+		const first = CombatStartFixture.combatant(primitives, 0);
+		const second = CombatStartFixture.combatant(primitives, 1);
 
 		first.creature.species.id = '';
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.creature.species.id',
 			reason: 'missing-species',
 		});
 
 		second.creature.species.attributes['types'] = [];
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.1.combatants.0.creature.species.attributes.types',
 			reason: 'missing-types',
 		});
 	});
 
 	it('rejects missing, oversized, and duplicated loadouts', () => {
-		const primitives = valid();
-		const first = combatant(primitives, 0);
+		const primitives = CombatStartFixture.valid();
+		const first = CombatStartFixture.combatant(primitives, 0);
 		const [move] = first.creature.moves;
 
 		if (!move) {
@@ -237,50 +259,50 @@ describe('DuelmonCombatStart.create', () => {
 		}
 
 		first.creature.moves = [];
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.creature.moves',
 			reason: 'missing-moves',
 		});
 
 		first.creature.moves = Array.from({ length: 5 }, (_, index) => ({ ...move, id: `move-${String(index)}` }));
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.creature.moves',
 			reason: 'invalid-moves',
 		});
 
 		first.creature.moves = [move, { ...move }];
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.creature.moves.1',
 			reason: 'invalid-moves',
 		});
 	});
 
 	it('rejects species snapshots without their base stats', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
-		delete combatant(primitives, 0).creature.species.attributes['baseHp'];
+		delete CombatStartFixture.combatant(primitives, 0).creature.species.attributes['baseHp'];
 
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.creature.species.attributes.baseHp',
 			reason: 'missing-attribute',
 		});
 	});
 
 	it('rejects species snapshots with invalid base stats', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
-		combatant(primitives, 0).creature.species.attributes['baseHp'] = 0;
+		CombatStartFixture.combatant(primitives, 0).creature.species.attributes['baseHp'] = 0;
 
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.creature.species.attributes.baseHp',
 			reason: 'invalid-attribute',
 		});
 	});
 
 	it('rejects move snapshots without their attributes', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
-		combatant(primitives, 0).creature.moves = [
+		CombatStartFixture.combatant(primitives, 0).creature.moves = [
 			{
 				attributes: {
 					alwaysHits: true,
@@ -294,16 +316,16 @@ describe('DuelmonCombatStart.create', () => {
 			},
 		] as never;
 
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.creature.moves.0.attributes.accuracy',
 			reason: 'missing-attribute',
 		});
 	});
 
 	it('rejects move snapshots outside the Phase 1 slice', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
-		combatant(primitives, 0).creature.moves = [
+		CombatStartFixture.combatant(primitives, 0).creature.moves = [
 			{
 				attributes: {
 					accuracy: 100,
@@ -318,73 +340,76 @@ describe('DuelmonCombatStart.create', () => {
 			},
 		] as never;
 
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.creature.moves.0',
 			reason: 'unsupported-move',
 		});
 	});
 
 	it('rejects move snapshots with unsupported flags', () => {
-		const primitives = valid();
-		const move = combatant(primitives, 0).creature.moves[0];
+		const primitives = CombatStartFixture.valid();
+		const move = CombatStartFixture.combatant(primitives, 0).creature.moves[0];
 
 		if (!move) {
 			throw new Error('Missing fixture move');
 		}
 
-		combatant(primitives, 0).creature.moves = [
+		CombatStartFixture.combatant(primitives, 0).creature.moves = [
 			{ ...move, attributes: { ...move.attributes, flags: [{ name: 'charge', value: 1 }] } },
 		];
 
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.creature.moves.0',
 			reason: 'unsupported-move',
 		});
 	});
 
 	it('rejects combat and creature attributes outside Phase 1', () => {
-		const primitives = valid();
-		const first = combatant(primitives, 0);
+		const primitives = CombatStartFixture.valid();
+		const first = CombatStartFixture.combatant(primitives, 0);
 
 		primitives.attributes = { power: 5 };
 		first.creature.attributes = { power: 5 };
 		first.creature.abilities = [{}] as never;
 
-		expectError(errorsOf(primitives), { path: 'attributes.power', reason: 'invalid-attribute' });
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
+			path: 'attributes.power',
+			reason: 'invalid-attribute',
+		});
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.creature.attributes.power',
 			reason: 'invalid-attribute',
 		});
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.creature.abilities',
 			reason: 'invalid-combat',
 		});
 	});
 
 	it('rejects a creature without an id', () => {
-		const primitives = valid();
+		const primitives = CombatStartFixture.valid();
 
-		combatant(primitives, 0).creature.id = '';
+		CombatStartFixture.combatant(primitives, 0).creature.id = '';
 
-		expectError(errorsOf(primitives), {
+		CombatStartFixture.expectError(CombatStartFixture.errorsOf(primitives), {
 			path: 'groups.0.combatants.0.creature.id',
 			reason: 'missing-id',
 		});
 	});
 
 	it('aggregates every violation instead of stopping at the first', () => {
-		const primitives = valid();
-		const first = combatant(primitives, 0);
+		const primitives = CombatStartFixture.valid();
+		const first = CombatStartFixture.combatant(primitives, 0);
 
-		delete attributes(primitives)['level'];
-		attributes(primitives)['hp'] = 0;
+		delete CombatStartFixture.attributes(primitives)['level'];
+		CombatStartFixture.attributes(primitives)['hp'] = 0;
 		first.groupId = 'missing';
 
-		const errors = errorsOf(primitives);
+		const errors = CombatStartFixture.errorsOf(primitives);
 
 		expect(errors.length).toBeGreaterThanOrEqual(3);
-		expectError(errors, { reason: 'missing-attribute' });
-		expectError(errors, { reason: 'invalid-hp' });
-		expectError(errors, { reason: 'invalid-membership' });
+		CombatStartFixture.expectError(errors, { reason: 'missing-attribute' });
+		CombatStartFixture.expectError(errors, { reason: 'invalid-hp' });
+		CombatStartFixture.expectError(errors, { reason: 'invalid-membership' });
 	});
 });

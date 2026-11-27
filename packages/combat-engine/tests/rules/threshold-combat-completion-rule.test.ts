@@ -6,117 +6,136 @@ import type { ThresholdCompletionConfig } from '@pocket-forge/combat-engine/rule
 import { COMPLETION_CONFIG_KEYS, ThresholdCombatCompletionRule } from '@pocket-forge/combat-engine/rules';
 import { describe, expect, it } from 'bun:test';
 
-import { builtInCombat, completionRule, DEFAULT_COMPLETION_ATTRIBUTES } from './rules.fixtures';
+import { DEFAULT_COMPLETION_ATTRIBUTES, RulesFixture } from './rules.fixtures';
 
 const BOUNDARY = 30;
 
-function rule(overrides?: Partial<ThresholdCompletionConfig>): ThresholdCombatCompletionRule {
-	return completionRule({
-		...DEFAULT_COMPLETION_ATTRIBUTES,
-		[COMPLETION_CONFIG_KEYS.attributeKey]: overrides?.attributeKey ?? 'power',
-		[COMPLETION_CONFIG_KEYS.comparison]: overrides?.comparison ?? 'lte',
-		[COMPLETION_CONFIG_KEYS.threshold]: overrides?.threshold ?? 10,
-		[COMPLETION_CONFIG_KEYS.winnerPolicy]: overrides?.winnerPolicy ?? 'threshold-group',
-	});
-}
+class CompletionFixture {
+	static rule(overrides?: Partial<ThresholdCompletionConfig>): ThresholdCombatCompletionRule {
+		return RulesFixture.completionRule({
+			...DEFAULT_COMPLETION_ATTRIBUTES,
+			[COMPLETION_CONFIG_KEYS.attributeKey]: overrides?.attributeKey ?? 'power',
+			[COMPLETION_CONFIG_KEYS.comparison]: overrides?.comparison ?? 'lte',
+			[COMPLETION_CONFIG_KEYS.threshold]: overrides?.threshold ?? 10,
+			[COMPLETION_CONFIG_KEYS.winnerPolicy]: overrides?.winnerPolicy ?? 'threshold-group',
+		});
+	}
 
-function withCombatantPower(
-	combat: Combat,
-	values: Record<string, AttributeValue>,
-	missingCombatantId?: string
-): Combat {
-	const primitives = combat.toPrimitives();
+	static withCombatantPower(
+		combat: Combat,
+		values: Record<string, AttributeValue>,
+		missingCombatantId?: string
+	): Combat {
+		const primitives = combat.toPrimitives();
 
-	return CombatEntity.fromPrimitives({
-		...primitives,
-		groups: primitives.groups.map(group => ({
-			...group,
-			combatants: group.combatants.map(combatant => {
-				const attributes = { ...combatant.attributes };
+		return CombatEntity.fromPrimitives({
+			...primitives,
+			groups: primitives.groups.map(group => ({
+				...group,
+				combatants: group.combatants.map(combatant => {
+					const attributes = { ...combatant.attributes };
 
-				if (combatant.id === missingCombatantId) {
-					delete attributes['power'];
-				}
+					if (combatant.id === missingCombatantId) {
+						delete attributes['power'];
+					}
 
-				const value = values[combatant.id];
+					const value = values[combatant.id];
 
-				if (value !== undefined) {
-					attributes['power'] = value;
-				}
+					if (value !== undefined) {
+						attributes['power'] = value;
+					}
 
-				return { ...combatant, attributes };
-			}),
-		})),
-	});
+					return { ...combatant, attributes };
+				}),
+			})),
+		});
+	}
 }
 
 describe('ThresholdCombatCompletionRule.evaluateCompletion', () => {
 	it('returns no outcome before the boundary', () => {
-		const outcome = rule({ comparison: 'lt', threshold: BOUNDARY }).evaluateCompletion(builtInCombat());
+		const outcome = CompletionFixture.rule({ comparison: 'lt', threshold: BOUNDARY }).evaluateCompletion(
+			RulesFixture.builtInCombat()
+		);
 
 		expect(outcome).toBeUndefined();
 	});
 
 	it('rewards the threshold group when it reaches an inclusive boundary', () => {
-		const outcome = rule({
+		const outcome = CompletionFixture.rule({
 			comparison: 'lte',
 			threshold: BOUNDARY,
 			winnerPolicy: 'threshold-group',
-		}).evaluateCompletion(builtInCombat());
+		}).evaluateCompletion(RulesFixture.builtInCombat());
 
 		expect(outcome).toEqual(CombatOutcome.victory('group-a'));
 	});
 
 	it('rewards the opposing group when the threshold group reaches an inclusive boundary', () => {
-		const outcome = rule({
+		const outcome = CompletionFixture.rule({
 			comparison: 'lte',
 			threshold: BOUNDARY,
 			winnerPolicy: 'opposing-group',
-		}).evaluateCompletion(builtInCombat());
+		}).evaluateCompletion(RulesFixture.builtInCombat());
 
 		expect(outcome).toEqual(CombatOutcome.victory('group-b'));
 	});
 
 	it('rewards the threshold group when it exceeds an exclusive boundary', () => {
-		const outcome = rule({
+		const outcome = CompletionFixture.rule({
 			comparison: 'gt',
 			threshold: BOUNDARY,
 			winnerPolicy: 'threshold-group',
-		}).evaluateCompletion(builtInCombat());
+		}).evaluateCompletion(RulesFixture.builtInCombat());
 
 		expect(outcome).toEqual(CombatOutcome.victory('group-b'));
 	});
 
 	it('draws when both groups satisfy an inclusive boundary', () => {
-		const combat = builtInCombat();
+		const combat = RulesFixture.builtInCombat();
 
 		expect(
-			rule({ comparison: 'gte', threshold: BOUNDARY, winnerPolicy: 'threshold-group' }).evaluateCompletion(combat)
+			CompletionFixture.rule({
+				comparison: 'gte',
+				threshold: BOUNDARY,
+				winnerPolicy: 'threshold-group',
+			}).evaluateCompletion(combat)
 		).toEqual(CombatOutcome.draw());
 		expect(
-			rule({ comparison: 'gte', threshold: BOUNDARY, winnerPolicy: 'opposing-group' }).evaluateCompletion(combat)
+			CompletionFixture.rule({
+				comparison: 'gte',
+				threshold: BOUNDARY,
+				winnerPolicy: 'opposing-group',
+			}).evaluateCompletion(combat)
 		).toEqual(CombatOutcome.draw());
 	});
 
 	it('skips a combatant without the observed attribute', () => {
-		const combat = withCombatantPower(builtInCombat(), { 'combatant-a': 5 }, 'combatant-b');
-		const outcome = rule({ comparison: 'lte', threshold: 10 }).evaluateCompletion(combat);
+		const combat = CompletionFixture.withCombatantPower(
+			RulesFixture.builtInCombat(),
+			{ 'combatant-a': 5 },
+			'combatant-b'
+		);
+		const outcome = CompletionFixture.rule({ comparison: 'lte', threshold: 10 }).evaluateCompletion(combat);
 
 		expect(outcome).toEqual(CombatOutcome.victory('group-a'));
 	});
 
 	it('skips a non-numeric observed attribute value', () => {
-		const combat = withCombatantPower(builtInCombat(), { 'combatant-a': 'high', 'combatant-b': 5 });
-		const outcome = rule({ comparison: 'lte', threshold: 10 }).evaluateCompletion(combat);
+		const combat = CompletionFixture.withCombatantPower(RulesFixture.builtInCombat(), {
+			'combatant-a': 'high',
+			'combatant-b': 5,
+		});
+		const outcome = CompletionFixture.rule({ comparison: 'lte', threshold: 10 }).evaluateCompletion(combat);
 
 		expect(outcome).toEqual(CombatOutcome.victory('group-b'));
 	});
 
 	it('does not mutate the evaluated combat', () => {
-		const combat = builtInCombat();
+		const combat = RulesFixture.builtInCombat();
 		const before = combat.toPrimitives();
 
-		rule({ comparison: 'lte', threshold: BOUNDARY }).evaluateCompletion(combat);
+		CompletionFixture.rule({ comparison: 'lte', threshold: BOUNDARY }).evaluateCompletion(combat);
 
 		expect(combat.toPrimitives()).toEqual(before);
 	});

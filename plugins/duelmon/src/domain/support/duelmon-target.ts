@@ -142,10 +142,6 @@ class ResolvedDuelmonTarget {
 	}
 }
 
-function isNonEmptyString(value: unknown): value is string {
-	return typeof value === 'string' && value.trim().length > 0;
-}
-
 /**
  * Scope selection carried by the Duelmon plugin input.
  *
@@ -238,7 +234,7 @@ class DuelmonTarget {
 
 		const id = value['id'];
 
-		if (id !== undefined && !isNonEmptyString(id)) {
+		if (id !== undefined && !this.isNonEmptyString(id)) {
 			return DuelmonFailure.fail(
 				'invalid-input',
 				'Duelmon combat input target id must be a non-empty string when provided',
@@ -247,6 +243,16 @@ class DuelmonTarget {
 		}
 
 		return Either.right(new DuelmonTarget(scope, id));
+	}
+
+	/**
+	 * Narrows an unknown value to a non-empty string.
+	 *
+	 * @param value - Candidate value.
+	 * @returns Whether the value is a non-empty string.
+	 */
+	private static isNonEmptyString(value: unknown): value is string {
+		return typeof value === 'string' && value.trim().length > 0;
 	}
 
 	/**

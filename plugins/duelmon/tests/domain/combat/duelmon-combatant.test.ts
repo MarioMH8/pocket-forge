@@ -5,45 +5,47 @@ import { DuelmonCombatant } from '@pocket-forge/duelmon/domain';
 import { DuelmonCombatStartMother } from '@pocket-forge/duelmon/mother/domain';
 import { describe, expect, it } from 'bun:test';
 
-function firstCombatant(primitives: CombatPrimitives): CombatantPrimitives {
-	const group = primitives.groups[0];
-	const combatant = group?.combatants[0];
+class CombatantFixture {
+	static firstCombatant(primitives: CombatPrimitives): CombatantPrimitives {
+		const group = primitives.groups[0];
+		const combatant = group?.combatants[0];
 
-	if (!combatant) {
-		throw new Error('Missing fixture combatant');
+		if (!combatant) {
+			throw new Error('Missing fixture combatant');
+		}
+
+		return combatant;
 	}
 
-	return combatant;
-}
+	static view(primitives: CombatPrimitives = DuelmonCombatStartMother.primitives()): DuelmonCombatant {
+		const combat = Combat.fromPrimitives(primitives);
+		const combatant = combat.groups[0]?.combatants[0];
 
-function view(primitives: CombatPrimitives = DuelmonCombatStartMother.primitives()): DuelmonCombatant {
-	const combat = Combat.fromPrimitives(primitives);
-	const combatant = combat.groups[0]?.combatants[0];
+		if (!combatant) {
+			throw new Error('Missing fixture combatant');
+		}
 
-	if (!combatant) {
-		throw new Error('Missing fixture combatant');
+		return DuelmonCombatant.fromCombatant(combatant);
 	}
 
-	return DuelmonCombatant.fromCombatant(combatant);
-}
+	static withAttributes(attributes: AttributeValues): CombatPrimitives {
+		const primitives = DuelmonCombatStartMother.primitives();
+		const [first, second] = primitives.groups;
 
-function withAttributes(attributes: AttributeValues): CombatPrimitives {
-	const primitives = DuelmonCombatStartMother.primitives();
-	const [first, second] = primitives.groups;
+		if (!first || !second) {
+			throw new Error('Fixture requires two groups');
+		}
 
-	if (!first || !second) {
-		throw new Error('Fixture requires two groups');
+		return {
+			...primitives,
+			groups: [{ ...first, combatants: [{ ...this.firstCombatant(primitives), attributes }] }, second],
+		};
 	}
-
-	return {
-		...primitives,
-		groups: [{ ...first, combatants: [{ ...firstCombatant(primitives), attributes }] }, second],
-	};
 }
 
 describe('DuelmonCombatant', () => {
 	it('exposes the battle attributes as typed getters', () => {
-		const combatant = view();
+		const combatant = CombatantFixture.view();
 
 		expect(combatant.id).toBe('player-emberling');
 		expect(combatant.groupId).toBe('player');
@@ -58,7 +60,7 @@ describe('DuelmonCombatant', () => {
 	});
 
 	it('exposes the embedded species and loadout moves', () => {
-		const combatant = view();
+		const combatant = CombatantFixture.view();
 
 		expect(combatant.species().types).toEqual(['Fire']);
 		expect(combatant.moves().map(move => move.id)).toEqual(['ember-burst', 'tackle']);
@@ -66,17 +68,17 @@ describe('DuelmonCombatant', () => {
 
 	it('reports a fainted combatant', () => {
 		const primitives = DuelmonCombatStartMother.primitives();
-		const attributes = { ...firstCombatant(primitives).attributes, hp: 0 };
+		const attributes = { ...CombatantFixture.firstCombatant(primitives).attributes, hp: 0 };
 
-		expect(view(withAttributes(attributes)).isFainted).toBe(true);
+		expect(CombatantFixture.view(CombatantFixture.withAttributes(attributes)).isFainted).toBe(true);
 	});
 
 	it('throws when a battle attribute is missing', () => {
 		const primitives = DuelmonCombatStartMother.primitives();
-		const attributes = { ...firstCombatant(primitives).attributes };
+		const attributes = { ...CombatantFixture.firstCombatant(primitives).attributes };
 
 		delete attributes['attack'];
 
-		expect(() => view(withAttributes(attributes)).attack).toThrow();
+		expect(() => CombatantFixture.view(CombatantFixture.withAttributes(attributes)).attack).toThrow();
 	});
 });
