@@ -374,7 +374,7 @@ describe('DuelmonCombatTurn', () => {
 		expect(activeCombatant(secondCall.combat, OPPONENT).hp).toBe(94);
 		expect(activeCombatant(secondCall.combat, PLAYER).hp).toBe(99);
 
-		const resolution = result.getRight();
+		const resolution = result.getRight().resolution;
 
 		expect(activeCombatant(resolution.combat, OPPONENT).hp).toBe(94);
 		expect(activeCombatant(resolution.combat, PLAYER).hp).toBe(94);
@@ -387,7 +387,7 @@ describe('DuelmonCombatTurn', () => {
 		expect(result.isRight()).toBe(true);
 		expect(resolver.calls.map(call => call.actorId)).toEqual([PLAYER]);
 
-		const resolution = result.getRight();
+		const resolution = result.getRight().resolution;
 
 		expect(activeCombatant(resolution.combat, OPPONENT).isFainted).toBe(true);
 		expect(resolution.events.map(event => event.sequence)).toEqual([1, 2]);
@@ -415,7 +415,7 @@ describe('DuelmonCombatTurn', () => {
 			return;
 		}
 
-		const resolution = result.getRight();
+		const resolution = result.getRight().resolution;
 
 		expect(resolver.calls.map(call => call.actorId)).toEqual([PLAYER]);
 		expect(resolution.combat.status).toBe('completed');
@@ -506,7 +506,7 @@ describe('DuelmonCombatTurn', () => {
 
 		expect(result.isRight()).toBe(true);
 		expect(resolver.calls.map(call => call.moveId)).toEqual([PLAYER_MOVE, OPPONENT_MOVE]);
-		expect(moveUsedPairs(result.getRight().events)).toEqual([
+		expect(moveUsedPairs(result.getRight().resolution.events)).toEqual([
 			`${PLAYER}:${PLAYER_MOVE}`,
 			`${OPPONENT}:${OPPONENT_MOVE}`,
 		]);
@@ -517,7 +517,7 @@ describe('DuelmonCombatTurn', () => {
 		const result = turnWith(resolver).resolve(combat(), declarations());
 
 		expect(result.isRight()).toBe(true);
-		expect(result.getRight().events.map(event => event.sequence)).toEqual([1, 2, 3, 4]);
+		expect(result.getRight().resolution.events.map(event => event.sequence)).toEqual([1, 2, 3, 4]);
 	});
 
 	it('breaks equal speeds by the fixed combat order', () => {

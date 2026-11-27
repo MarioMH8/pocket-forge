@@ -38,6 +38,7 @@ export { DUELMON_COMBAT_EVENT_TYPES, DuelmonCombatEvents } from './event';
 export type { DuelmonCombatHistoryPrimitives } from './history/duelmon-combat-history';
 export { DuelmonCombatHistory } from './history/duelmon-combat-history';
 export type {
+	DuelmonCombatHistoryActionPrimitives,
 	DuelmonCombatHistoryEntryKind,
 	DuelmonCombatHistoryEntryPrimitives,
 } from './history/duelmon-combat-history-entry';
@@ -69,6 +70,8 @@ export { DuelmonFailure } from './support/duelmon-failure';
 export type { DuelmonTargetScope } from './support/duelmon-target';
 export { DuelmonTarget, ResolvedDuelmonTarget } from './support/duelmon-target';
 export { DuelmonCombatTurn } from './turn/duelmon-combat-turn';
+export { DuelmonCombatTurnAction } from './turn/duelmon-combat-turn-action';
+export { DuelmonCombatTurnResult } from './turn/duelmon-combat-turn-result';
 export { DuelmonSpeedOrder } from './turn/duelmon-speed-order';
 export { DuelmonTurnDeclaration } from './turn/duelmon-turn-declaration';
 export { DuelmonTurnDeclarations } from './turn/duelmon-turn-declarations';

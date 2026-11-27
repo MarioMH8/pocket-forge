@@ -1,13 +1,7 @@
 import Either from '@hexadrop/either';
 import InvalidArgumentError from '@hexadrop/error/invalid-argument';
 import type { Combat } from '@pocket-forge/combat/domain';
-import type {
-	CombatEngine,
-	CombatEngineFailure,
-	CombatEvent,
-	CombatOutcome,
-	CombatResolution,
-} from '@pocket-forge/combat-engine/domain';
+import type { CombatEngine, CombatEngineFailure, CombatEvent, CombatOutcome } from '@pocket-forge/combat-engine/domain';
 import {
 	CombatEngineError as CombatEngineErrorEntity,
 	CombatResolution as CombatResolutionEntity,
@@ -16,6 +10,8 @@ import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 
 import { DuelmonCombat } from '../combat/duelmon-combat';
 import { DuelmonCombatant } from '../combat/duelmon-combatant';
+import { DuelmonCombatTurnAction } from './duelmon-combat-turn-action';
+import { DuelmonCombatTurnResult } from './duelmon-combat-turn-result';
 import { DuelmonSpeedOrder } from './duelmon-speed-order';
 import type { DuelmonTurnDeclaration } from './duelmon-turn-declaration';
 import { DuelmonTurnDeclarations } from './duelmon-turn-declarations';
@@ -42,8 +38,9 @@ interface DuelmonTurnActionInput {
  * The service receives the two declarations of a turn, orders them with
  * {@link DuelmonSpeedOrder}, and resolves each declared action through the
  * injected Combat Engine, threading the successor Combat of one action into the
- * next one. It returns a single {@link CombatResolution} with the merged events
- * renumbered in turn order.
+ * next one. It returns a {@link DuelmonCombatTurnResult} that carries a single
+ * `CombatResolution` with the merged events renumbered in turn order and the
+ * actions in the order they actually ran.
  *
  * The turn stops at the action that completes the combat: the engine outcome is
  * kept, and no further declaration is resolved, emits events, or consumes
@@ -173,24 +170,26 @@ class DuelmonCombatTurn {
 	 * resolution. The caller keeps the original `Combat` and `RandomPocket`: the
 	 * engine and the actions are pure, so no state is persisted on failure.
 	 *
-	 * The returned events are the canonical input for the history added in #127:
-	 * because an omitted declaration never reaches the engine, it cannot produce
-	 * an event or a history entry.
+	 * The returned actions list the exact declarations the service resolved, in
+	 * the real resolution order, each with the successor snapshot of its action.
+	 * It is the canonical input for the history added in #127: because an omitted
+	 * declaration never reaches the engine, it cannot produce an action or a
+	 * history entry.
 	 *
 	 * @param combat - Active combat snapshot that starts the turn.
 	 * @param declarations - Unparsed declarations, one per combat group.
-	 * @returns One resolution with the final combat, merged events, and the
-	 * reached outcome, or every failure.
+	 * @returns The single resolution with the resolved actions in order, or every
+	 * failure.
 	 * @example
 	 * ```ts
 	 * const turn = new DuelmonCombatTurn(catalog, engine);
-	 * const resolution = turn.resolve(combat, [
+	 * const result = turn.resolve(combat, [
 	 * 	{ actorId: 'player-emberling', moveId: 'ember-burst', target: { id: 'opponent-aquafin', scope: 'combatant' } },
 	 * 	{ actorId: 'opponent-aquafin', moveId: 'aqua-burst', target: { id: 'player-emberling', scope: 'combatant' } },
 	 * ]);
 	 * ```
 	 */
-	resolve(combat: Combat, declarations: unknown): Either<CombatEngineFailure[], CombatResolution> {
+	resolve(combat: Combat, declarations: unknown): Either<CombatEngineFailure[], DuelmonCombatTurnResult> {
 		if (combat.status !== 'active') {
 			return Either.left([
 				new CombatEngineErrorEntity('combat-not-active', 'Only an active combat can resolve a turn', 'status'),
@@ -207,6 +206,7 @@ class DuelmonCombatTurn {
 
 		let current = combat;
 		let outcome: CombatOutcome | undefined;
+		const actions: DuelmonCombatTurnAction[] = [];
 		const events: CombatEvent[] = [];
 
 		for (const declaration of ordered) {
@@ -223,6 +223,14 @@ class DuelmonCombatTurn {
 			const resolved = resolution.getRight();
 
 			current = resolved.combat;
+			actions.push(
+				DuelmonCombatTurnAction.create(
+					declaration.actor.id,
+					declaration.moveId,
+					declaration.target.id,
+					resolved.combat
+				)
+			);
 			events.push(...DuelmonCombatTurn.renumber(resolved.events, events.length));
 
 			if (resolved.outcome) {
@@ -252,7 +260,9 @@ class DuelmonCombatTurn {
 			}
 		}
 
-		return Either.right(CombatResolutionEntity.create(current, events, outcome));
+		return Either.right(
+			DuelmonCombatTurnResult.create(CombatResolutionEntity.create(current, events, outcome), actions)
+		);
 	}
 }
 

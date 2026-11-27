@@ -19,7 +19,7 @@ This package is a private implementation outside the neutral Combat core. It may
 
 - `src/domain/` — actions, events, shared support helpers, the plugin composition root, and the initial combat start.
 - `src/domain/combat/` — semantic views over neutral Combat, Combatant Group, and Combatant state.
-- `src/domain/history/` — ordered, serializable combat history and its start entry.
+- `src/domain/history/` — ordered, serializable combat history and its start and action entries.
 - `src/domain/move/` — semantic view over neutral catalog Moves.
 - `src/domain/report/` — human-readable Phase 1 report over the combat views.
 - `src/domain/species/` — semantic view over neutral catalog Species.

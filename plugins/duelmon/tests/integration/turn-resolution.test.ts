@@ -105,7 +105,7 @@ describe('Phase 1 turn resolution', () => {
 		const result = turn().resolve(startCombat(), declarations());
 
 		expect(result.isRight()).toBe(true);
-		expect(moveUsedPairs(result.getRight().events)).toEqual([
+		expect(moveUsedPairs(result.getRight().resolution.events)).toEqual([
 			`${PLAYER}:${PLAYER_MOVE}`,
 			`${OPPONENT}:${OPPONENT_MOVE}`,
 		]);
@@ -120,7 +120,7 @@ describe('Phase 1 turn resolution', () => {
 
 		expect(result.isRight()).toBe(true);
 
-		const resolution = result.getRight();
+		const resolution = result.getRight().resolution;
 
 		expect(resolution.combat.toPrimitives()).toEqual(second.combat.toPrimitives());
 		expect(resolution.events.map(event => event.payload)).toEqual(
@@ -133,7 +133,7 @@ describe('Phase 1 turn resolution', () => {
 		const result = turn().resolve(startCombat(), declarations());
 
 		expect(result.isRight()).toBe(true);
-		expect(moveUsedPairs(result.getRight().events)).toEqual([
+		expect(moveUsedPairs(result.getRight().resolution.events)).toEqual([
 			`${PLAYER}:${PLAYER_MOVE}`,
 			`${OPPONENT}:${OPPONENT_MOVE}`,
 		]);
@@ -146,7 +146,7 @@ describe('Phase 1 turn resolution', () => {
 
 		const declared = new Set([`${OPPONENT}:${OPPONENT_MOVE}`, `${PLAYER}:${PLAYER_MOVE}`]);
 
-		for (const pair of moveUsedPairs(result.getRight().events)) {
+		for (const pair of moveUsedPairs(result.getRight().resolution.events)) {
 			expect(declared.has(pair)).toBe(true);
 		}
 	});
@@ -155,7 +155,7 @@ describe('Phase 1 turn resolution', () => {
 		const inCombatOrder = turn().resolve(combat({ opponentSpeed: 70 }), declarations());
 
 		expect(inCombatOrder.isRight()).toBe(true);
-		expect(moveUsedPairs(inCombatOrder.getRight().events)).toEqual([
+		expect(moveUsedPairs(inCombatOrder.getRight().resolution.events)).toEqual([
 			`${PLAYER}:${PLAYER_MOVE}`,
 			`${OPPONENT}:${OPPONENT_MOVE}`,
 		]);
@@ -163,7 +163,7 @@ describe('Phase 1 turn resolution', () => {
 		const reversedGroups = turn().resolve(combat({ opponentSpeed: 70, playerFirst: false }), declarations());
 
 		expect(reversedGroups.isRight()).toBe(true);
-		expect(moveUsedPairs(reversedGroups.getRight().events)).toEqual([
+		expect(moveUsedPairs(reversedGroups.getRight().resolution.events)).toEqual([
 			`${OPPONENT}:${OPPONENT_MOVE}`,
 			`${PLAYER}:${PLAYER_MOVE}`,
 		]);
@@ -184,7 +184,7 @@ describe('Phase 1 turn resolution', () => {
 
 		expect(result.isRight()).toBe(true);
 
-		const resolution = result.getRight();
+		const resolution = result.getRight().resolution;
 
 		expect(resolution.combat.status).toBe('completed');
 		expect(resolution.outcome).toEqual(CombatOutcome.victory('player'));
@@ -202,7 +202,7 @@ describe('Phase 1 turn resolution', () => {
 
 		expect(result.isRight()).toBe(true);
 
-		const resolution = result.getRight();
+		const resolution = result.getRight().resolution;
 
 		expect(resolution.combat.status).toBe('completed');
 		expect(resolution.combat.toPrimitives()).toEqual(first.combat.toPrimitives());
@@ -220,7 +220,7 @@ describe('Phase 1 turn resolution', () => {
 	it('rejects a turn over a completed combat without resolving or drawing randomness', () => {
 		const completed = turn(knockoutRules())
 			.resolve(combat({ opponentHp: 1 }), declarations())
-			.getRight();
+			.getRight().resolution;
 		const before = completed.combat.toPrimitives();
 		const result = turn(knockoutRules()).resolve(completed.combat, declarations());
 

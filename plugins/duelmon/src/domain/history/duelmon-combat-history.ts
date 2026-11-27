@@ -1,5 +1,6 @@
 import type { Combat } from '@pocket-forge/combat/domain';
 
+import type { DuelmonCombatTurnResult } from '../turn/duelmon-combat-turn-result';
 import type { DuelmonCombatHistoryEntryPrimitives } from './duelmon-combat-history-entry';
 import { DuelmonCombatHistoryEntry } from './duelmon-combat-history-entry';
 
@@ -55,6 +56,29 @@ class DuelmonCombatHistory {
 	 */
 	entries(): readonly DuelmonCombatHistoryEntry[] {
 		return this.list;
+	}
+
+	/**
+	 * Appends one action entry per action the turn actually resolved.
+	 *
+	 * Entries follow the real resolution order of the turn result, and each one
+	 * keeps the successor snapshot produced by its action. A declaration the turn
+	 * skipped or never reached has no action in the result, so it cannot add an
+	 * entry. The returned history is new; the receiver is never mutated.
+	 *
+	 * @param turn - Result of resolving one turn.
+	 * @returns A new history with the action entries appended.
+	 */
+	recordTurn(turn: DuelmonCombatTurnResult): DuelmonCombatHistory {
+		const recorded = turn.actions.map(action =>
+			DuelmonCombatHistoryEntry.action(action.combat, {
+				actorId: action.actorId,
+				moveId: action.moveId,
+				targetId: action.targetId,
+			})
+		);
+
+		return new DuelmonCombatHistory([...this.list, ...recorded]);
 	}
 
 	/**

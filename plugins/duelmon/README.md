@@ -131,18 +131,21 @@ resolves each declared action through the Combat Engine:
 
 ```ts
 const turn = new DuelmonCombatTurn(catalog, engine);
-const resolution = turn.resolve(combat, [
+const result = turn.resolve(combat, [
   { actorId: 'player-emberling', moveId: 'ember-burst', target: { id: 'opponent-aquafin', scope: 'combatant' } },
   { actorId: 'opponent-aquafin', moveId: 'aqua-burst', target: { id: 'player-emberling', scope: 'combatant' } },
 ]);
+const { actions, resolution } = result.getRight();
 ```
 
 The fastest combatant acts first and the slower one acts afterwards when it is
 still standing (`hp > 0`). Each action runs against the successor `Combat` of
 the previous one, so the battle state is updated after every action. The service
-returns one `CombatResolution`: the final combat, the events of every action
-merged in turn order and renumbered from one, and the engine outcome when an
-action completes the combat. Only the declared Move of each side is resolved.
+returns a `DuelmonCombatTurnResult`: one `CombatResolution` with the final
+combat, the events of every action merged in turn order and renumbered from one,
+and the engine outcome when an action completes the combat; plus `actions`, the
+resolved actor, Move, target, and successor snapshot of each action, in the
+order they actually ran. Only the declared Move of each side is resolved.
 
 The turn stops at the action that completes the battle. The service keeps the
 engine outcome and `winnerGroupId`, returns the completed successor, and never
@@ -172,8 +175,26 @@ const entry = history.entries()[0];
 console.log(entry?.text);
 ```
 
-Each entry exposes `kind` (`start` in Phase 1), the serialized `combat`
-primitives, and the readable `text`. The history hydrates back through
+## Recording the turn order
+
+`DuelmonCombatHistory.recordTurn(result)` appends one `action` entry per action
+the turn actually resolved, in the real resolution order. Each entry keeps the
+actor, Move, and target identifiers, the successor `Combat` snapshot of the
+action, and readable text that reuses `DuelmonCombatReport` for that snapshot:
+
+```ts
+const recorded = DuelmonCombatHistory.start(combat).recordTurn(result.getRight());
+const [, firstAction, secondAction] = recorded.entries();
+```
+
+A declaration that the turn skipped, or never reached because an earlier action
+completed the battle, has no action in the turn result and therefore no history
+entry. Recording always returns a new history; the receiver is never mutated.
+See [Recording the turn order in the history](../../docs/content/127-order-history.md).
+
+Each entry exposes `kind` (`start` or `action`), the serialized `combat`
+primitives, the readable `text`, and `action` for an action entry, which
+identifies the actor, Move, and target. The history hydrates back through
 `DuelmonCombatHistory.fromPrimitives`, keeps its entries in record order, and
 never keeps a manual copy of the battle state.
 
