@@ -144,6 +144,14 @@ returns one `CombatResolution`: the final combat, the events of every action
 merged in turn order and renumbered from one, and the engine outcome when an
 action completes the combat. Only the declared Move of each side is resolved.
 
+The turn stops at the action that completes the battle. The service keeps the
+engine outcome and `winnerGroupId`, returns the completed successor, and never
+resolves the remaining declaration, so it emits no event and consumes no PP or
+randomness for it. A turn over a combat that is already `completed` is rejected
+with `CombatEngineError('combat-not-active')` before the declarations are
+validated. See
+[Stopping the turn after the combat completes](../../docs/content/126-stop-after-completion.md).
+
 An invalid declaration or a failed action returns `Either.left` without a
 partial resolution, and the caller keeps the original `Combat` and
 `RandomPocket`. Phase 1 does not apply priority or random tie-breaks; see

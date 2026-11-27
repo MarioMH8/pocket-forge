@@ -8,7 +8,10 @@ import type {
 	CombatOutcome,
 	CombatResolution,
 } from '@pocket-forge/combat-engine/domain';
-import { CombatResolution as CombatResolutionEntity } from '@pocket-forge/combat-engine/domain';
+import {
+	CombatEngineError as CombatEngineErrorEntity,
+	CombatResolution as CombatResolutionEntity,
+} from '@pocket-forge/combat-engine/domain';
 import type { DuelmonCatalog } from '@pocket-forge/duelmon/catalog';
 
 import { DuelmonCombat } from '../combat/duelmon-combat';
@@ -41,6 +44,11 @@ interface DuelmonTurnActionInput {
  * injected Combat Engine, threading the successor Combat of one action into the
  * next one. It returns a single {@link CombatResolution} with the merged events
  * renumbered in turn order.
+ *
+ * The turn stops at the action that completes the combat: the engine outcome is
+ * kept, and no further declaration is resolved, emits events, or consumes
+ * randomness. A combat that is already completed rejects the turn before the
+ * declarations are validated, so no action can be accepted after the end.
  *
  * Phase 1 only compares raw Speed: priority, stat stages, paralysis, and random
  * tie-breaks are not applied. A declaration is input, not state; the service
@@ -147,17 +155,27 @@ class DuelmonCombatTurn {
 	/**
 	 * Resolves the two declarations of one Phase 1 turn.
 	 *
-	 * Declarations are received and validated first; an invalid set resolves
-	 * nothing and consumes no randomness. Valid declarations are sorted by
-	 * Speed, then each action is resolved in sequence through the Combat Engine
-	 * with the successor combat of the previous action. An actor that no longer
-	 * has positive hit points is skipped. The events of every action are merged
-	 * in turn order and renumbered from one, and the engine outcome is kept when
-	 * an action completes the combat, which also stops the loop.
+	 * A non-active combat is rejected before the declarations are validated, so
+	 * no action is accepted after the combat ended. Valid declarations are
+	 * sorted by Speed, then each action is resolved in sequence through the
+	 * Combat Engine with the successor combat of the previous action. An actor
+	 * that no longer has positive hit points is skipped.
+	 *
+	 * The turn stops at the action that completes the combat. The engine outcome
+	 * and the completed successor are kept, the events of that action (including
+	 * `combat-completed`) are merged, and the remaining declarations are never
+	 * resolved: they emit no events and consume no PP or randomness. An outcome
+	 * without a completed combat, or a completed combat without an outcome, is
+	 * rejected as an engine invariant violation instead of returning an
+	 * inconsistent resolution.
 	 *
 	 * A failed action returns the engine failures instead of a partial
 	 * resolution. The caller keeps the original `Combat` and `RandomPocket`: the
 	 * engine and the actions are pure, so no state is persisted on failure.
+	 *
+	 * The returned events are the canonical input for the history added in #127:
+	 * because an omitted declaration never reaches the engine, it cannot produce
+	 * an event or a history entry.
 	 *
 	 * @param combat - Active combat snapshot that starts the turn.
 	 * @param declarations - Unparsed declarations, one per combat group.
@@ -173,6 +191,12 @@ class DuelmonCombatTurn {
 	 * ```
 	 */
 	resolve(combat: Combat, declarations: unknown): Either<CombatEngineFailure[], CombatResolution> {
+		if (combat.status !== 'active') {
+			return Either.left([
+				new CombatEngineErrorEntity('combat-not-active', 'Only an active combat can resolve a turn', 'status'),
+			]);
+		}
+
 		const received = DuelmonTurnDeclarations.receive(this.catalog, combat, declarations);
 
 		if (received.isLeft()) {
@@ -202,9 +226,29 @@ class DuelmonCombatTurn {
 			events.push(...DuelmonCombatTurn.renumber(resolved.events, events.length));
 
 			if (resolved.outcome) {
+				if (resolved.combat.status !== 'completed') {
+					return Either.left([
+						new CombatEngineErrorEntity(
+							'invalid-outcome',
+							'The engine returned an outcome without completing the combat',
+							'resolution.combat.status'
+						),
+					]);
+				}
+
 				outcome = resolved.outcome;
 
 				break;
+			}
+
+			if (resolved.combat.status !== 'active') {
+				return Either.left([
+					new CombatEngineErrorEntity(
+						'invalid-outcome',
+						'The engine completed the combat without an outcome',
+						'resolution.outcome'
+					),
+				]);
 			}
 		}
 

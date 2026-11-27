@@ -254,6 +254,30 @@ export default class DuelmonCombatMother {
 	}
 
 	/**
+	 * Builds the Gen 1 knockout completion rule.
+	 *
+	 * The combat ends when a combatant reaches zero hit points or below, and the
+	 * opposing group wins. It is the real threshold rule, not a test approximation
+	 * of the completion state.
+	 *
+	 * @returns The knockout completion rule.
+	 */
+	static hpCompletionRule(): CombatRule {
+		return ThresholdCombatCompletionRule.create(
+			{
+				attributes: {
+					[COMPLETION_CONFIG_KEYS.attributeKey]: 'hp',
+					[COMPLETION_CONFIG_KEYS.comparison]: 'lte',
+					[COMPLETION_CONFIG_KEYS.threshold]: 0,
+					[COMPLETION_CONFIG_KEYS.winnerPolicy]: 'opposing-group',
+				},
+			},
+			[...COMPLETION_CONFIG_DEFINITIONS],
+			[...Gen1BattleStats.DEFINITIONS]
+		).getRight();
+	}
+
+	/**
 	 * Builds the composed Duelmon plugin with explicit Gen 1 mechanics.
 	 *
 	 * @returns The plugin under test.
